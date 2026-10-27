@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LockKeyhole, Pill, ShieldCheck, Sparkles } from "lucide-react";
-import { ApiClientError } from "@/lib/api/client";
+import { api, ApiClientError } from "@/lib/api/client";
 import { useAuth } from "@/components/providers/auth-provider";
 
 export default function LoginPage() {
@@ -14,12 +14,23 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [setupChecking, setSetupChecking] = useState(true);
 
   useEffect(() => {
     if (status === "authenticated") router.replace("/dashboard");
   }, [status, router]);
 
-  if (status === "checking") {
+  useEffect(() => {
+    if (status !== "anonymous") return;
+    let active = true;
+    void api.get<{ isSetupComplete: boolean }>("/setup/status")
+      .then((result) => { if (active && !result.isSetupComplete) router.replace("/setup"); })
+      .catch(() => { /* Keep sign-in available when setup status is temporarily unreachable. */ })
+      .finally(() => { if (active) setSetupChecking(false); });
+    return () => { active = false; };
+  }, [status, router]);
+
+  if (status === "checking" || (status === "anonymous" && setupChecking)) {
     return <main className="auth-loading"><span className="loading-mark"><Pill size={19} /></span><span>Checking your session…</span></main>;
   }
 
@@ -92,7 +103,7 @@ export default function LoginPage() {
               </button>
             </div>
             {error && <div className="form-error" role="alert">{error}</div>}
-            <button className="primary-button login-submit" disabled={submitting} type="submit">
+            <button className="primary-button login-submit" disabled={submitting || setupChecking} type="submit">
               {submitting ? <><span className="button-spinner" /> Signing in…</> : <>Sign in <span aria-hidden="true">→</span></>}
             </button>
           </form>
