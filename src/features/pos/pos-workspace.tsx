@@ -63,6 +63,9 @@ export function PosWorkspace() {
   const [saving, setSaving] = useState(false);
   const [opening, setOpening] = useState(false);
   const [openingBalance, setOpeningBalance] = useState("0");
+  const [closing, setClosing] = useState(false);
+  const [actualBalance, setActualBalance] = useState("");
+  const [closingNote, setClosingNote] = useState("");
 
   const loadProducts = useCallback(async () => {
     if (!branchId) return;
@@ -181,6 +184,23 @@ export function PosWorkspace() {
     } catch (cause) { setError(getError(cause)); }
     finally { setSaving(false); }
   }
+  async function closeRegister() {
+    const sessionId = String(session?.id ?? session?.sessionId ?? "");
+    if (!sessionId) { setError("The active register session has no usable ID. Refresh the page and try again."); return; }
+    const amount = Number(actualBalance);
+    if (!Number.isFinite(amount) || amount < 0) { setError("Enter a valid actual cash balance of zero or more."); return; }
+    setError(""); setSaving(true);
+    try {
+      await api.post<unknown>(`/pharmacy/cash-register/${encodeURIComponent(sessionId)}/close`, {
+        actualBalance: amount,
+        ...(closingNote.trim() ? { closingNote: closingNote.trim() } : {}),
+      });
+      setClosing(false); setActualBalance(""); setClosingNote("");
+      await loadSession(branchId);
+      setNotice("Register closed. The cash difference has been recorded.");
+    } catch (cause) { setError(getError(cause)); }
+    finally { setSaving(false); }
+  }
   async function submitSale(status: "pending" | "completed") {
     setError(""); setNotice("");
     if (!branchId || cart.length === 0) { setError("Select a branch and add at least one medicine."); return; }
@@ -244,7 +264,7 @@ export function PosWorkspace() {
   </>;
 
   return <section className="pos-page">
-    <div className="pos-page-heading"><div><p className="eyebrow">PHARMACY · SALES</p><h1>Point of sale</h1><p className="page-subtitle">Find medicines, build a basket and check out securely.</p></div><div className="pos-context"><label><span>Branch</span><select value={branchId} onChange={(event) => { setBranchId(event.target.value); setSession(null); }}><option value="">Select branch</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><div className={`pos-register-state ${session ? "is-open" : "is-closed"}`}><span className="pos-state-dot"/><span><strong>{session ? "Register open" : "Register closed"}</strong><small>{session ? `Session ${String(session.sessionNumber ?? session.id ?? "active").slice(0, 12)}` : "Required to complete sales"}</small></span>{!session && <button type="button" onClick={() => setOpening(true)}>Open</button>}</div></div></div>
+    <div className="pos-page-heading"><div><p className="eyebrow">PHARMACY · SALES</p><h1>Point of sale</h1><p className="page-subtitle">Find medicines, build a basket and check out securely.</p></div><div className="pos-context"><label><span>Branch</span><select value={branchId} onChange={(event) => { setBranchId(event.target.value); setSession(null); }}><option value="">Select branch</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><div className={`pos-register-state ${session ? "is-open" : "is-closed"}`}><span className="pos-state-dot"/><span><strong>{session ? "Register open" : "Register closed"}</strong><small>{session ? `Session ${String(session.sessionNumber ?? session.id ?? "active").slice(0, 12)}` : "Required to complete sales"}</small></span>{session ? <button type="button" onClick={() => { setError(""); setActualBalance(String(numeric(session.closingBalance))); setClosing(true); }}>Close</button> : <button type="button" onClick={() => setOpening(true)}>Open</button>}</div></div></div>
     {(error || notice) && <div className={`pos-alert ${error ? "pos-alert-error" : "pos-alert-success"}`} role={error ? "alert" : "status"}>{error ? <CircleAlert size={17} /> : <Check size={17} />}<span>{error || notice}</span><button onClick={() => { setError(""); setNotice(""); }} aria-label="Dismiss message"><X size={15}/></button></div>}
     <div className="pos-workspace">
       <div className="pos-catalog panel">
@@ -266,5 +286,6 @@ export function PosWorkspace() {
     <button className="pos-mobile-cart-bar" onClick={() => setCartOpen(true)}><span className="pos-mobile-cart-icon"><ShoppingCart size={18}/><i>{totalUnits}</i></span><span><strong>{totalUnits} item{totalUnits === 1 ? "" : "s"}</strong><small>Tap to review order</small></span><strong className="pos-mobile-cart-total">{money(total)}</strong><ChevronRight size={17}/></button>
     {cartOpen && <div className="pos-cart-modal-backdrop" role="presentation" onClick={() => setCartOpen(false)}><div className="pos-cart-modal" role="dialog" aria-modal="true" aria-label="Current sale" onClick={(event) => event.stopPropagation()}>{cartContent}</div></div>}
     {opening && <div className="pos-dialog-backdrop" role="presentation" onClick={() => setOpening(false)}><div className="pos-register-dialog" role="dialog" aria-modal="true" aria-labelledby="register-dialog-title" onClick={(event) => event.stopPropagation()}><div className="pos-dialog-icon"><Clock3 size={19}/></div><button className="pos-icon-action pos-dialog-close" onClick={() => setOpening(false)} aria-label="Close"><X size={17}/></button><h2 id="register-dialog-title">Open cash register</h2><p>Record the opening float for {branches.find((branch) => branch.id === branchId)?.name || "this branch"}. This starts your cashier session.</p><label><span>Opening cash balance</span><span className="pos-currency-input"><b>৳</b><input autoFocus inputMode="decimal" value={openingBalance} onChange={(event) => setOpeningBalance(event.target.value)} /></span></label>{accounts.length === 0 && <div className="pos-dialog-warning">No active cash or payment accounts were found. A sale with collected payment needs an active account.</div>}{error && <div className="pos-dialog-error">{error}</div>}<button className="pos-complete-button" disabled={saving || !branchId} onClick={() => void openRegister()}>{saving ? "Opening…" : "Open register"}</button><button className="pos-dialog-cancel" onClick={() => { setOpening(false); setError(""); }}>Cancel</button></div></div>}
+    {closing && <div className="pos-dialog-backdrop" role="presentation" onClick={() => !saving && setClosing(false)}><div className="pos-register-dialog" role="dialog" aria-modal="true" aria-labelledby="register-close-title" onClick={(event) => event.stopPropagation()}><div className="pos-dialog-icon"><Clock3 size={19}/></div><button className="pos-icon-action pos-dialog-close" onClick={() => setClosing(false)} aria-label="Close" disabled={saving}><X size={17}/></button><h2 id="register-close-title">Close cash register</h2><p>Count the cash in the drawer and record any difference before ending this cashier session.</p><div className="pos-register-expected"><span>Expected cash balance</span><strong>{money(numeric(session?.closingBalance))}</strong></div><label><span>Actual cash balance</span><span className="pos-currency-input"><b>৳</b><input autoFocus inputMode="decimal" min="0" type="number" value={actualBalance} onChange={(event) => setActualBalance(event.target.value)} /></span></label><div className="pos-register-expected"><span>Difference</span><strong>{money(numeric(actualBalance) - numeric(session?.closingBalance))}</strong></div><label className="pos-register-note"><span>Closing note <small>Optional</small></span><textarea rows={3} maxLength={500} placeholder="Explain a cash shortage or overage" value={closingNote} onChange={(event) => setClosingNote(event.target.value)} /></label>{error && <div className="pos-dialog-error">{error}</div>}<button className="pos-complete-button" disabled={saving || actualBalance.trim() === ""} onClick={() => void closeRegister()}>{saving ? "Closing…" : "Close register"}</button><button className="pos-dialog-cancel" disabled={saving} onClick={() => { setClosing(false); setError(""); }}>Cancel</button></div></div>}
   </section>;
 }
