@@ -45,13 +45,14 @@ The Next.js route handlers proxy requests to `BACKEND_API_URL/api/v1`. This keep
 - Responsive POS with live medicine/customer search, stock batches, bounded discounts, payment accounts, and register opening
 - Branch-aware medicine catalog and inventory views with category/generic/manufacturer filters, batch/expiry visibility, and client-derived low-stock/expiry states
 - Supplier directory and purchase workflow with batch entry, discounts, supplier payments, pending/receive states, and stock posting
+- Paginated sales history with backend filters, due collection, sale detail and bounded batch-based return requests/review
 - Dhaka-local date labels, BDT formatting, responsive layout, keyboard focus styles, and reduced-motion support
 - Dashboard metrics are loaded from the API; no sample sales or inventory values are presented as real data
 
 ## Backend integration notes
 
 - The backend exposes the JWT refresh token but currently has no refresh-token route. The frontend stores the refresh token in an HttpOnly cookie for future integration; access tokens are not exposed to JavaScript.
-- Catalog and inventory are currently read-only operational views; management forms are still to be added. Sales history/returns, customers/finance, HR, communication, settings, and backup pages remain in the implementation sequence.
+- Catalog and inventory are currently read-only operational views; management forms are still to be added. Customer/finance, HR, communication, settings, and backup pages remain in the implementation sequence.
 - Align backend CORS and deployment origins with the Next.js server before production rollout. Browser requests go through the Next server proxy.
 
 ## Design reference

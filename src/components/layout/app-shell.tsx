@@ -13,6 +13,7 @@ import {
   LogOut,
   PackageSearch,
   Pill,
+  RotateCcw,
   Settings2,
   ShoppingCart,
   UsersRound,
@@ -22,12 +23,15 @@ import { Overview } from "@/components/dashboard/overview";
 import { PosWorkspace } from "@/features/pos/pos-workspace";
 import { CatalogInventoryWorkspace } from "@/features/catalog/catalog-inventory-workspace";
 import { PurchaseWorkspace } from "@/features/purchases/purchase-workspace";
+import { SalesWorkspace } from "@/features/sales/sales-workspace";
 
 const plannedModules = [
   { label: "Point of sale", icon: ShoppingCart, href: "/pos" },
   { label: "Medicine catalog", icon: Pill, href: "/catalog" },
   { label: "Inventory", icon: PackageSearch, href: "/inventory" },
   { label: "Purchases", icon: Boxes, href: "/purchases" },
+  { label: "Sales history", icon: Activity, href: "/sales" },
+  { label: "Sales returns", icon: RotateCcw, href: "/returns" },
   { label: "Customers", icon: UsersRound },
   { label: "Reports", icon: Activity },
 ];
@@ -102,8 +106,8 @@ export function AppShell() {
             </div>
           </div>
         </header>
-        <main className={`workspace-content ${["/pos", "/catalog", "/inventory", "/purchases"].includes(pathname) ? "workspace-content-pos" : ""}`}>
-          {pathname === "/pos" ? <PosWorkspace /> : pathname === "/catalog" || pathname === "/inventory" ? <CatalogInventoryWorkspace mode={pathname === "/catalog" ? "catalog" : "inventory"} /> : pathname === "/purchases" ? <PurchaseWorkspace /> : <Overview />}
+        <main className={`workspace-content ${["/pos", "/catalog", "/inventory", "/purchases", "/sales", "/returns"].includes(pathname) ? "workspace-content-pos" : ""}`}>
+          {pathname === "/pos" ? <PosWorkspace /> : pathname === "/catalog" || pathname === "/inventory" ? <CatalogInventoryWorkspace mode={pathname === "/catalog" ? "catalog" : "inventory"} /> : pathname === "/purchases" ? <PurchaseWorkspace /> : pathname === "/sales" || pathname === "/returns" ? <SalesWorkspace mode={pathname === "/sales" ? "sales" : "returns"} /> : <Overview />}
         </main>
         <footer className="workspace-footer"><span>Pharmacy POS</span><span>Secure workspace · Asia/Dhaka</span></footer>
       </div>
