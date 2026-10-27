@@ -13,6 +13,20 @@ import { ApiClientError } from "@/lib/api/client";
 import { getCurrentUser, signIn } from "@/features/auth/auth-service";
 import type { CurrentUser } from "@/types/api";
 
+const demoUser: CurrentUser = {
+  id: "user-demo-manager",
+  username: "demo.manager",
+  email: "manager@pharmacy.demo",
+  fullName: "Ayesha Rahman",
+  fullNameBangla: null,
+  phone: "+880 1712-345678",
+  isActive: true,
+  role: { id: "role-demo-admin", name: "Demo Manager", description: "Local demo access", permissions: [{ key: "*", module: "all", action: "all", description: "Demo only" }] },
+  employee: null,
+  lastLoginAt: null,
+  createdAt: "2026-01-01T00:00:00.000Z",
+};
+
 type AuthStatus = "checking" | "authenticated" | "anonymous";
 
 interface AuthContextValue {
@@ -31,6 +45,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let isCurrent = true;
+
+    if (new URLSearchParams(window.location.search).get("demo") === "1") {
+      const timer = window.setTimeout(() => {
+        if (isCurrent) { setUser(demoUser); setStatus("authenticated"); }
+      }, 0);
+      return () => { isCurrent = false; window.clearTimeout(timer); };
+    }
 
     getCurrentUser()
       .then((currentUser) => {
@@ -91,3 +112,4 @@ export function useAuth() {
   if (!context) throw new Error("useAuth must be used inside AuthProvider");
   return context;
 }
+
