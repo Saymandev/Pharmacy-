@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { AlertCircle, CalendarCheck2, Check, Clock3, Edit3, Plus, Search, Trash2, UsersRound, X } from "lucide-react";
+import { AlertCircle, CalendarCheck2, Check, Clock3, Edit3, Filter, Plus, Search, Trash2, UsersRound, X } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api/client";
 import { useAuth } from "@/components/providers/auth-provider";
 
@@ -28,6 +28,12 @@ export function HrWorkspace() {
   const [search, setSearch] = useState("");
   const [branchId, setBranchId] = useState("");
   const [status, setStatus] = useState("");
+  const [employeeTypeFilter, setEmployeeTypeFilter] = useState("");
+  const [attendanceShift, setAttendanceShift] = useState("");
+  const [attendanceDepartment, setAttendanceDepartment] = useState("");
+  const [attendanceStartDate, setAttendanceStartDate] = useState("");
+  const [attendanceEndDate, setAttendanceEndDate] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -46,13 +52,20 @@ export function HrWorkspace() {
       const params = new URLSearchParams();
       if (search.trim()) params.set(tab === "employees" ? "search" : "searchTerm", search.trim());
       if (branchId) params.set("branchId", branchId);
-      if (status) params.set("status", status);
+      if ((tab === "employees" || tab === "leaves") && status) params.set("status", status);
+      if (tab === "employees" && employeeTypeFilter) params.set("employeeType", employeeTypeFilter);
+      if (tab === "attendance") {
+        if (attendanceShift.trim()) params.set("shift", attendanceShift.trim());
+        if (attendanceDepartment.trim()) params.set("department", attendanceDepartment.trim());
+        if (attendanceStartDate) params.set("startDate", attendanceStartDate);
+        if (attendanceEndDate) params.set("endDate", attendanceEndDate);
+      }
       if (tab !== "leaves") { params.set("page", "1"); params.set("limit", "100"); }
       setRows(records(await api.get<unknown>(`/hr/${tab}?${params}`)));
       setError("");
     } catch (cause) { setError(errorText(cause)); setRows([]); }
     finally { setLoading(false); }
-  }, [branchId, search, status, tab]);
+  }, [attendanceDepartment, attendanceEndDate, attendanceShift, attendanceStartDate, branchId, employeeTypeFilter, search, status, tab]);
 
   useEffect(() => { const timer = window.setTimeout(() => void load(), 120); return () => window.clearTimeout(timer); }, [load]);
   useEffect(() => {
@@ -115,8 +128,8 @@ export function HrWorkspace() {
     <div className="page-heading-row"><div><p className="eyebrow">PEOPLE · SHIFT OPERATIONS</p><h1>HR &amp; attendance</h1><p className="page-subtitle">Manage your team, record daily attendance and review leave requests.</p></div>{(tab==="employees"?hasPermission("employee:create"):tab==="attendance"?hasPermission("attendance:create"):hasPermission("leave:create"))&&<button className="purchase-primary-action" onClick={openDialog}><Plus size={15}/>{tab === "employees" ? "Add employee" : tab === "attendance" ? "Record attendance" : "New leave request"}</button>}</div>
     {(error || notice) && <div className={`sales-alert ${error ? "error" : "success"}`}>{error ? <AlertCircle size={15}/> : <Check size={15}/>}<span>{error || notice}</span><button onClick={() => { setError(""); setNotice(""); }} aria-label="Dismiss"><X size={14}/></button></div>}
     <div className="hr-summary"><article className="panel"><i><UsersRound size={17}/></i><span><small>Team members in view</small><strong>{tab === "employees" && !loading ? rows.length : employeeOptions.length || "—"}</strong></span></article><article className="panel"><i className="attendance-icon"><CalendarCheck2 size={17}/></i><span><small>{tab === "attendance" ? "Attendance records" : "Activity records"}</small><strong>{tab !== "employees" && !loading ? rows.length : "—"}</strong></span></article><article className="panel"><i className="leave-icon"><Clock3 size={17}/></i><span><small>Pending leave requests</small><strong>{pending}</strong></span></article></div>
-    <div className="hr-card panel"><nav className="data-tabs hr-tabs">{sections.map((section) => <button key={section.id} className={tab === section.id ? "selected" : ""} onClick={() => { setTab(section.id); setSearch(""); setStatus(""); }}>{section.label}</button>)}</nav>
-      <div className="hr-toolbar"><div className="sales-search"><Search size={15}/><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`Search ${tab === "employees" ? "name, phone or employee ID" : tab === "attendance" ? "employee attendance" : "leave requests"}`}/></div><select value={branchId} onChange={(e) => setBranchId(e.target.value)}><option value="">All branches</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select>{tab === "leaves" && <select value={status} onChange={(e) => setStatus(e.target.value)}><option value="">All statuses</option>{["pending", "approved", "rejected"].map((value) => <option key={value}>{value}</option>)}</select>}</div>
+    <div className="hr-card panel"><nav className="data-tabs hr-tabs">{sections.map((section) => <button key={section.id} className={tab === section.id ? "selected" : ""} onClick={() => { setTab(section.id); setSearch(""); setStatus(""); setEmployeeTypeFilter(""); setAttendanceShift(""); setAttendanceDepartment(""); setAttendanceStartDate(""); setAttendanceEndDate(""); setFiltersOpen(false); }}>{section.label}</button>)}</nav>
+      <div className="hr-toolbar"><div className="sales-search"><Search size={15}/><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`Search ${tab === "employees" ? "name, phone or employee ID" : tab === "attendance" ? "employee attendance" : "leave requests"}`}/></div><select value={branchId} onChange={(e) => setBranchId(e.target.value)}><option value="">All branches</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select>{tab === "leaves" && <select value={status} onChange={(e) => setStatus(e.target.value)}><option value="">All statuses</option>{["pending", "approved", "rejected"].map((value) => <option key={value}>{value}</option>)}</select>}<button className="data-filter-button" onClick={()=>setFiltersOpen(!filtersOpen)}><Filter size={14}/> Filters</button></div>{filtersOpen&&<div className="data-filter-drawer">{tab==="employees"?<><label><span>Employment type</span><select value={employeeTypeFilter} onChange={e=>setEmployeeTypeFilter(e.target.value)}><option value="">All employee types</option>{["doctor","nurse","staff","guest-doctor"].map(type=><option key={type}>{type}</option>)}</select></label><label><span>Status</span><select value={status} onChange={e=>setStatus(e.target.value)}><option value="">All statuses</option>{["active","inactive","on_leave","terminated"].map(value=><option key={value} value={value}>{value.replace("_"," ")}</option>)}</select></label><button onClick={()=>{setEmployeeTypeFilter("");setStatus("");}}>Clear filters</button></>:tab==="attendance"?<><label><span>Shift</span><input value={attendanceShift} onChange={e=>setAttendanceShift(e.target.value)} placeholder="Filter shift"/></label><label><span>Department</span><input value={attendanceDepartment} onChange={e=>setAttendanceDepartment(e.target.value)} placeholder="Filter department"/></label><label><span>From date</span><input type="date" value={attendanceStartDate} onChange={e=>setAttendanceStartDate(e.target.value)}/></label><label><span>Through date</span><input type="date" value={attendanceEndDate} onChange={e=>setAttendanceEndDate(e.target.value)}/></label><button onClick={()=>{setAttendanceShift("");setAttendanceDepartment("");setAttendanceStartDate("");setAttendanceEndDate("");}}>Clear filters</button></>:<span>Use status selector to filter leave requests.</span>}</div>}
       {tab === "employees" ? <div className="hr-table-wrap"><table className="hr-table"><thead><tr><th>Employee</th><th>Role</th><th>Branch</th><th>Phone</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td><strong>{row.name || row.fullName || "Unnamed"}</strong><small>{row.employeeNumber || row.employeeType || "Team member"}</small></td><td>{row.designation?.name || row.employeeType || "—"}<small>{row.department?.name || ""}</small></td><td>{row.branch?.name || "—"}</td><td>{row.phone || "—"}</td><td>{dateText(row.joiningDate)}</td><td><span className={`hr-status ${row.status || "active"}`}>{(row.status || "active").replace("_", " ")}</span></td><td><div className="hr-row-actions">{hasPermission("employee:update")&&<button onClick={()=>openEmployeeEditor(row)}><Edit3 size={13}/> Edit</button>}{hasPermission("employee:delete")&&<button disabled={saving} onClick={()=>void deleteEmployee(row)}><Trash2 size={13}/> Delete</button>}</div></td></tr>)}</tbody></table></div> : tab === "attendance" ? <div className="hr-table-wrap"><table className="hr-table"><thead><tr><th>Employee</th><th>Date</th><th>Shift</th><th>Clock in</th><th>Clock out</th><th>Hours / state</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td><strong>{row.employee?.name || row.employeeName || "—"}</strong><small>{row.employee?.employeeNumber || row.employeeNumber || ""}</small></td><td>{dateText(row.isoDate || row.date || row.createdAt)}</td><td>{row.shift || "—"}</td><td>{row.clockIn || "—"}</td><td>{row.clockOut || "—"}</td><td>{row.workTime || row.exception || "Recorded"}</td></tr>)}</tbody></table></div> : <div className="hr-table-wrap"><table className="hr-table"><thead><tr><th>Employee</th><th>Leave type</th><th>Dates</th><th>Reason</th><th>Status</th><th>Review</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td><strong>{row.employee?.name || row.employeeName || "—"}</strong><small>{row.employee?.employeeNumber || ""}</small></td><td>{row.leaveType?.name || "—"}</td><td>{dateText(row.startDate)} – {dateText(row.endDate)}</td><td>{row.reason || row.note || "—"}</td><td><span className={`hr-status ${row.status || "pending"}`}>{row.status || "pending"}</span></td><td>{row.status === "pending" && <button className="hr-review-trigger" onClick={() => { setReviewId(row.id); setReviewNote(""); }}>Review</button>}</td></tr>)}</tbody></table></div>}
       {!loading && rows.length === 0 && <div className="data-empty"><UsersRound size={22}/><strong>No {tab === "employees" ? "employees" : tab === "attendance" ? "attendance" : "leave requests"} found</strong><span>Add a record or adjust the filters.</span></div>}{loading && <div className="data-loading">Loading {tab}…</div>}
     </div>
