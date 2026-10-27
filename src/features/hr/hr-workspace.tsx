@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { AlertCircle, CalendarCheck2, Check, Clock3, Edit3, Filter, Plus, Search, Trash2, UsersRound, X } from "lucide-react";
+import { AlertCircle, CalendarCheck2, Check, Clock3, Edit3, Filter, Plus, Search, Trash2, Upload, UsersRound, X } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api/client";
 import { useAuth } from "@/components/providers/auth-provider";
 
@@ -36,6 +36,7 @@ export function HrWorkspace() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [importingAttendance, setImportingAttendance] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [dialog, setDialog] = useState(false);
@@ -123,6 +124,21 @@ export function HrWorkspace() {
     catch (cause) { setError(errorText(cause)); }
     finally { setSaving(false); }
   }
+  async function importAttendance(file: File | undefined) {
+    if (!file) return;
+    const selectedBranch = branchId || branches[0]?.id;
+    if (!selectedBranch) { setError("Add or select a branch before importing attendance."); return; }
+    setImportingAttendance(true); setError(""); setNotice("");
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const result = await api.upload<unknown>(`/hr/attendance/import/${selectedBranch}`, form);
+      await load();
+      const response = result && typeof result === "object" ? result as { message?: string; data?: { message?: string } } : {};
+      setNotice(response.data?.message || response.message || "Attendance spreadsheet imported.");
+    } catch (cause) { setError(errorText(cause)); }
+    finally { setImportingAttendance(false); }
+  }
   async function createLeave() {
     if (!leave.employeeId || !leave.leaveTypeId || !(leave.branchId || branches[0]?.id)) { setError("Employee, leave type and branch are required."); return; }
     setSaving(true); setError("");
@@ -140,7 +156,7 @@ export function HrWorkspace() {
 
   const pending = tab === "leaves" ? rows.filter((row) => row.status === "pending").length : "—";
   return <section className="hr-page">
-    <div className="page-heading-row"><div><p className="eyebrow">PEOPLE · SHIFT OPERATIONS</p><h1>HR &amp; attendance</h1><p className="page-subtitle">Manage your team, record daily attendance and review leave requests.</p></div>{(tab==="employees"?hasPermission("employee:create"):tab==="attendance"?hasPermission("attendance:create"):hasPermission("leave:create"))&&<button className="purchase-primary-action" onClick={openDialog}><Plus size={15}/>{tab === "employees" ? "Add employee" : tab === "attendance" ? "Record attendance" : "New leave request"}</button>}</div>
+    <div className="page-heading-row"><div><p className="eyebrow">PEOPLE · SHIFT OPERATIONS</p><h1>HR &amp; attendance</h1><p className="page-subtitle">Manage your team, record daily attendance and review leave requests.</p></div><div className="inventory-heading-actions">{tab === "attendance" && hasPermission("attendance:create") && <label className="purchase-save-pending catalog-import-button"><Upload size={14}/>{importingAttendance ? "Importing…" : "Import spreadsheet"}<input type="file" accept=".xlsx,.xls" disabled={importingAttendance} onChange={event => { void importAttendance(event.target.files?.[0]); event.currentTarget.value = ""; }}/></label>}{(tab==="employees"?hasPermission("employee:create"):tab==="attendance"?hasPermission("attendance:create"):hasPermission("leave:create"))&&<button className="purchase-primary-action" onClick={openDialog}><Plus size={15}/>{tab === "employees" ? "Add employee" : tab === "attendance" ? "Record attendance" : "New leave request"}</button>}</div></div>
     {(error || notice) && <div className={`sales-alert ${error ? "error" : "success"}`}>{error ? <AlertCircle size={15}/> : <Check size={15}/>}<span>{error || notice}</span><button onClick={() => { setError(""); setNotice(""); }} aria-label="Dismiss"><X size={14}/></button></div>}
     <div className="hr-summary"><article className="panel"><i><UsersRound size={17}/></i><span><small>Team members in view</small><strong>{tab === "employees" && !loading ? rows.length : employeeOptions.length || "—"}</strong></span></article><article className="panel"><i className="attendance-icon"><CalendarCheck2 size={17}/></i><span><small>{tab === "attendance" ? "Attendance records" : "Activity records"}</small><strong>{tab !== "employees" && !loading ? rows.length : "—"}</strong></span></article><article className="panel"><i className="leave-icon"><Clock3 size={17}/></i><span><small>Pending leave requests</small><strong>{pending}</strong></span></article></div>
     <div className="hr-card panel"><nav className="data-tabs hr-tabs">{sections.map((section) => <button key={section.id} className={tab === section.id ? "selected" : ""} onClick={() => { setTab(section.id); setSearch(""); setStatus(""); setEmployeeTypeFilter(""); setAttendanceShift(""); setAttendanceDepartment(""); setAttendanceStartDate(""); setAttendanceEndDate(""); setFiltersOpen(false); }}>{section.label}</button>)}</nav>
@@ -153,4 +169,5 @@ export function HrWorkspace() {
     {reviewId && <div className="sales-backdrop hr-review-layer" role="presentation" onClick={() => setReviewId("")}><div className="supplier-dialog panel hr-dialog" role="dialog" aria-modal="true" aria-label="Review leave request" onClick={(e) => e.stopPropagation()}><button className="purchase-close" onClick={() => setReviewId("")} aria-label="Close"><X size={18}/></button><h2>Review leave request</h2><p>Approve or decline this employee’s leave application.</p><label>Review note<input value={reviewNote} onChange={(e) => setReviewNote(e.target.value)}/></label><div className="hr-review-actions"><button disabled={saving} onClick={() => void reviewLeave("rejected")}>Decline</button><button disabled={saving} onClick={() => void reviewLeave("approved")}>Approve request</button></div></div></div>}
   </section>;
 }
+
 
