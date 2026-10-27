@@ -25,14 +25,15 @@ export async function apiRequest<T>(
   const requestHeaders = new Headers(headers);
   requestHeaders.set("Accept", "application/json");
 
-  if (body !== undefined) requestHeaders.set("Content-Type", "application/json");
+  const isMultipart = typeof FormData !== "undefined" && body instanceof FormData;
+  if (body !== undefined && !isMultipart) requestHeaders.set("Content-Type", "application/json");
 
   let response: Response;
   try {
     response = await fetch(`${API_PREFIX}${path}`, {
       ...requestOptions,
       headers: requestHeaders,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isMultipart ? body as FormData : JSON.stringify(body),
       cache: "no-store",
       credentials: "same-origin",
     });
@@ -72,4 +73,10 @@ export const api = {
     apiRequest<T>(path, { ...options, body, method: "POST" }),
   patch: <T>(path: string, body: unknown, options?: Omit<RequestOptions, "method">) =>
     apiRequest<T>(path, { ...options, body, method: "PATCH" }),
+  put: <T>(path: string, body: unknown, options?: Omit<RequestOptions, "method">) =>
+    apiRequest<T>(path, { ...options, body, method: "PUT" }),
+  upload: <T>(path: string, body: FormData, options?: Omit<RequestOptions, "method" | "body">) =>
+    apiRequest<T>(path, { ...options, body, method: "POST" }),
+  delete: <T>(path: string, options?: Omit<RequestOptions, "method" | "body">) =>
+    apiRequest<T>(path, { ...options, method: "DELETE" }),
 };
