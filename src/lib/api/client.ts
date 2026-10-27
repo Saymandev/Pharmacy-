@@ -1,4 +1,5 @@
 import type { ApiEnvelope } from "@/types/api";
+import { demoRequest, isDemoMode } from "@/lib/api/demo-data";
 
 const API_PREFIX = "/api/backend";
 
@@ -24,6 +25,8 @@ export async function apiRequest<T>(
   const { body, headers, includeMeta, ...requestOptions } = options;
   const requestHeaders = new Headers(headers);
   requestHeaders.set("Accept", "application/json");
+
+  if (isDemoMode()) return demoRequest<T>(path, { method: requestOptions.method, body });
 
   const isMultipart = typeof FormData !== "undefined" && body instanceof FormData;
   if (body !== undefined && !isMultipart) requestHeaders.set("Content-Type", "application/json");
@@ -80,3 +83,4 @@ export const api = {
   delete: <T>(path: string, options?: Omit<RequestOptions, "method" | "body">) =>
     apiRequest<T>(path, { ...options, method: "DELETE" }),
 };
+
