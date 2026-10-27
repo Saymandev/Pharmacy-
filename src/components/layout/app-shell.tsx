@@ -61,8 +61,28 @@ const plannedModules = [
   { label: "Team access", icon: UsersRound, href: "/access" },
 ];
 
+const modulePermissions: Record<string, string[]> = {
+  "/pos": ["sale:read", "sale:create"],
+  "/catalog": ["medicine:read"],
+  "/catalog/setup": ["medicine-category:read", "medicine-generic:read", "medicine-manufacturer:read", "medicine-group:read", "medicine-unit:read"],
+  "/inventory": ["stock:read"],
+  "/purchases": ["purchase:read"],
+  "/suppliers": ["supplier:read"],
+  "/sales": ["sale:read"],
+  "/returns": ["sale-return:read"],
+  "/customers": ["customer:read"],
+  "/finance": ["account:read", "transaction:read", "income:read", "expense:read"],
+  "/finance/consultations": ["consultation-charge:read"],
+  "/reports": ["report:read"],
+  "/hr": ["employee:read", "attendance:read", "leave:read"],
+  "/hr/rosters": ["shift:read", "roster:read", "assigned-roster:read"],
+  "/hr/setup": ["department:read", "designation:read", "leave-type:read", "annual-calendar:read"],
+  "/admin": ["settings:read", "branch:read", "media:read", "notice:read", "notice:create", "notification:update"],
+  "/access": ["user:read", "role:read"],
+};
+
 export function AppShell() {
-  const { status, user, logout } = useAuth();
+  const { status, user, logout, hasPermission } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [passwordDialog, setPasswordDialog] = useState(false);
@@ -127,7 +147,7 @@ export function AppShell() {
           <p className="nav-caption">WORKSPACE</p>
           <a className={`nav-link ${pathname === "/dashboard" ? "nav-link-active" : ""}`} href="/dashboard"><LayoutDashboard size={17} /><span>Overview</span></a>
           <p className="nav-caption nav-caption-spaced">PHARMACY</p>
-          {plannedModules.map(({ label, icon: Icon, href }) => href ? (
+          {plannedModules.filter(({ href }) => !href || (modulePermissions[href] ?? []).some(hasPermission)).map(({ label, icon: Icon, href }) => href ? (
             <a className={`nav-link nav-link-planned ${pathname === href ? "nav-link-active" : ""}`} key={label} href={href}>
               <Icon size={17} /><span>{label}</span><span className="nav-soon">Open</span>
             </a>
@@ -166,3 +186,4 @@ export function AppShell() {
     </div>
   );
 }
+
