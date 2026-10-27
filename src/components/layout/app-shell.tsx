@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
   Bell,
+  Boxes,
   ChevronDown,
   CircleHelp,
   Command,
@@ -20,11 +21,13 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { Overview } from "@/components/dashboard/overview";
 import { PosWorkspace } from "@/features/pos/pos-workspace";
 import { CatalogInventoryWorkspace } from "@/features/catalog/catalog-inventory-workspace";
+import { PurchaseWorkspace } from "@/features/purchases/purchase-workspace";
 
 const plannedModules = [
   { label: "Point of sale", icon: ShoppingCart, href: "/pos" },
   { label: "Medicine catalog", icon: Pill, href: "/catalog" },
   { label: "Inventory", icon: PackageSearch, href: "/inventory" },
+  { label: "Purchases", icon: Boxes, href: "/purchases" },
   { label: "Customers", icon: UsersRound },
   { label: "Reports", icon: Activity },
 ];
@@ -99,8 +102,8 @@ export function AppShell() {
             </div>
           </div>
         </header>
-        <main className={`workspace-content ${["/pos", "/catalog", "/inventory"].includes(pathname) ? "workspace-content-pos" : ""}`}>
-          {pathname === "/pos" ? <PosWorkspace /> : pathname === "/catalog" || pathname === "/inventory" ? <CatalogInventoryWorkspace mode={pathname === "/catalog" ? "catalog" : "inventory"} /> : <Overview />}
+        <main className={`workspace-content ${["/pos", "/catalog", "/inventory", "/purchases"].includes(pathname) ? "workspace-content-pos" : ""}`}>
+          {pathname === "/pos" ? <PosWorkspace /> : pathname === "/catalog" || pathname === "/inventory" ? <CatalogInventoryWorkspace mode={pathname === "/catalog" ? "catalog" : "inventory"} /> : pathname === "/purchases" ? <PurchaseWorkspace /> : <Overview />}
         </main>
         <footer className="workspace-footer"><span>Pharmacy POS</span><span>Secure workspace · Asia/Dhaka</span></footer>
       </div>
