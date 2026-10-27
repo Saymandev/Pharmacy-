@@ -1,5 +1,5 @@
-Warning: truncated output (original token count: 35005)
-Total output lines: 1123
+Warning: truncated output (original token count: 35040)
+Total output lines: 1124
 
 @import "tailwindcss";
 
@@ -498,10 +498,7 @@ button.data-summary-card { cursor: pointer; }
 .purchase-medicine-results strong { color: #40564a; font-size: 8px; }
 .purchase-medicine-results small { color: #94a098; font-size: 7px; }
 .purchase-medicine-results button > span:last-child { display: flex; align-items: center; gap: 8px; color: #307b57; font-size: 8px; }
-.purchase-items-lis…10005 tokens truncated…px; left: 54px; font-size: 9px; }
-  .metric-value { font-size: 19px; }
-  .metric-support { font-size: 8px; line-height: 1.4; }
-  .sales-panel, .inventory-panel { padding: 16px 14px; }
+.purchase-items-lis…10040 tokens truncated…nel, .inventory-panel { padding: 16px 14px; }
   .cash-panel { align-items: flex-start; flex-wrap: wrap; }
   .cash-copy { min-width: calc(100% - 55px); }
   .cash-panel > strong { margin-left: 52px; }
@@ -676,4 +673,5 @@ button.data-summary-card { cursor: pointer; }
 .customer-auto-due strong { color: #257452; font-size: 12px; }
 .finance-entry-detail { display: inline-grid; place-items: center; flex: none; width: 28px; height: 28px; margin-left: 8px; border: 1px solid #dfe8e1; border-radius: 7px; background: #fff; color: #587364; cursor: pointer; }
 .finance-entry-detail:hover { border-color: #a9c8b5; color: #217453; }
+.customer-auto-warning { padding: 8px 9px; border: 1px solid #f0d4c7; border-radius: 6px; background: #fff8f4; color: #a35f46 !important; }
 
