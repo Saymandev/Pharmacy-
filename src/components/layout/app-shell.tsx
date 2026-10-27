@@ -92,6 +92,9 @@ export function AppShell() {
   const [passwordError, setPasswordError] = useState("");
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordNotice, setPasswordNotice] = useState("");
+  const [demoMode, setDemoMode] = useState(false);
+
+  useEffect(() => { const timer = window.setTimeout(() => setDemoMode(new URLSearchParams(window.location.search).get("demo") === "1"), 0); return () => window.clearTimeout(timer); }, []);
 
   useEffect(() => {
     if (status === "anonymous") router.replace("/login");
@@ -132,7 +135,7 @@ export function AppShell() {
   return (
     <div className="app-frame">
       <aside className="sidebar">
-        <a className="brand" href="/dashboard" aria-label="Pharmacy home">
+        <a className="brand" href={demoMode ? "/dashboard?demo=1" : "/dashboard"} aria-label="Pharmacy home">
           <span className="brand-mark"><Pill size={21} strokeWidth={2.1} /></span>
           <span className="brand-copy"><strong>Pharmacy</strong><small>CARE · CONTROL · CLARITY</small></span>
         </a>
@@ -145,10 +148,10 @@ export function AppShell() {
 
         <nav className="side-navigation" aria-label="Main navigation">
           <p className="nav-caption">WORKSPACE</p>
-          <a className={`nav-link ${pathname === "/dashboard" ? "nav-link-active" : ""}`} href="/dashboard"><LayoutDashboard size={17} /><span>Overview</span></a>
+          <a className={`nav-link ${pathname === "/dashboard" ? "nav-link-active" : ""}`} href={demoMode ? "/dashboard?demo=1" : "/dashboard"}><LayoutDashboard size={17} /><span>Overview</span></a>
           <p className="nav-caption nav-caption-spaced">PHARMACY</p>
           {plannedModules.filter(({ href }) => !href || (modulePermissions[href] ?? []).some(hasPermission)).map(({ label, icon: Icon, href }) => href ? (
-            <a className={`nav-link nav-link-planned ${pathname === href ? "nav-link-active" : ""}`} key={label} href={href}>
+            <a className={`nav-link nav-link-planned ${pathname === href ? "nav-link-active" : ""}`} key={label} href={demoMode ? `${href}?demo=1` : href}>
               <Icon size={17} /><span>{label}</span><span className="nav-soon">Open</span>
             </a>
           ) : <button className="nav-link nav-link-planned" key={label} type="button" disabled title={`${label} is planned for an upcoming implementation phase`}><Icon size={17} /><span>{label}</span><span className="nav-soon">Soon</span></button>)}
@@ -165,7 +168,7 @@ export function AppShell() {
         <header className="topbar">
           <div className="breadcrumb"><span>Workspace</span><span className="breadcrumb-slash">/</span><strong>Overview</strong></div>
           <div className="topbar-actions">
-            <span className="shortcut-hint"><Command size={12} /> K</span>
+            {demoMode && <span className="demo-mode-badge">DEMO DATA · Local only</span>}<span className="shortcut-hint"><Command size={12} /> K</span>
             <button className="icon-button notification-button" type="button" aria-label="Notifications"><Bell size={18} /><i /></button>
             <div className="topbar-divider" />
             <div className="user-menu">
