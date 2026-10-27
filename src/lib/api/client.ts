@@ -14,13 +14,14 @@ export class ApiClientError extends Error {
 
 interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
+  includeMeta?: boolean;
 }
 
 export async function apiRequest<T>(
   path: string,
   options: RequestOptions = {},
 ): Promise<T> {
-  const { body, headers, ...requestOptions } = options;
+  const { body, headers, includeMeta, ...requestOptions } = options;
   const requestHeaders = new Headers(headers);
   requestHeaders.set("Accept", "application/json");
 
@@ -54,16 +55,19 @@ export async function apiRequest<T>(
     throw new ApiClientError(message, response.status);
   }
 
-  if (!payload || !("data" in payload)) {
+  if (!payload) {
     throw new ApiClientError("The server returned an unexpected response.", response.status);
   }
 
-  return payload.data;
+  if (includeMeta) return payload as T;
+  return ("data" in payload ? payload.data : payload) as T;
 }
 
 export const api = {
   get: <T>(path: string, options?: Omit<RequestOptions, "method" | "body">) =>
     apiRequest<T>(path, { ...options, method: "GET" }),
+  getWithMeta: <T>(path: string, options?: Omit<RequestOptions, "method" | "body">) =>
+    apiRequest<T>(path, { ...options, includeMeta: true, method: "GET" }),
   post: <T>(path: string, body: unknown, options?: Omit<RequestOptions, "method">) =>
     apiRequest<T>(path, { ...options, body, method: "POST" }),
   patch: <T>(path: string, body: unknown, options?: Omit<RequestOptions, "method">) =>
