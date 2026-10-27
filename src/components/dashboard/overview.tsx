@@ -15,7 +15,7 @@ import {
   ShoppingBag,
   Wallet,
 } from "lucide-react";
-import { ApiClientError } from "@/lib/api/client";
+import { api, ApiClientError } from "@/lib/api/client";
 import { getTodayPharmacyStats, getWeeklyPharmacyGraph } from "@/features/reports/report-service";
 import { useAuth } from "@/components/providers/auth-provider";
 import type { PharmacyDashboardStats, PharmacyGraphPoint } from "@/types/api";
@@ -25,6 +25,17 @@ const taka = new Intl.NumberFormat("en-BD", {
   currency: "BDT",
   maximumFractionDigits: 0,
 });
+type Branch = { id: string; name: string };
+
+function extractBranches(value: unknown): Branch[] {
+  if (Array.isArray(value)) return value as Branch[];
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if ("data" in record) return extractBranches(record.data);
+    if ("branches" in record) return extractBranches(record.branches);
+  }
+  return [];
+}
 
 function formatDate(value: Date) {
   return new Intl.DateTimeFormat("en-BD", {
@@ -87,6 +98,9 @@ export function Overview() {
   const [graph, setGraph] = useState<PharmacyGraphPoint[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [branchId, setBranchId] = useState("");
+  const [branchLoadFailed, setBranchLoadFailed] = useState(false);
   const canReadReports = hasPermission("report:read");
 
   const loadDashboard = useCallback(async () => {
@@ -98,8 +112,8 @@ export function Overview() {
     setError(null);
     try {
       const [todayStats, weeklyGraph] = await Promise.all([
-        getTodayPharmacyStats(),
-        getWeeklyPharmacyGraph(),
+        getTodayPharmacyStats(branchId || undefined),
+        getWeeklyPharmacyGraph(branchId || undefined),
       ]);
       setStats(todayStats);
       setGraph(weeklyGraph);
@@ -108,7 +122,15 @@ export function Overview() {
     } finally {
       setLoading(false);
     }
-  }, [canReadReports]);
+  }, [canReadReports, branchId]);
+
+  useEffect(() => {
+    let active = true;
+    void api.get<unknown>("/branches?page=1&limit=100")
+      .then((result) => { if (active) setBranches(extractBranches(result)); })
+      .catch(() => { if (active) setBranchLoadFailed(true); });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => { void loadDashboard(); }, 0);
@@ -135,12 +157,13 @@ export function Overview() {
           <h1>{greeting}, {user?.fullName?.split(" ")[0] || "there"}</h1>
           <p className="page-subtitle">Here’s what’s happening at your pharmacy today.</p>
         </div>
-        <div className="date-chip"><CalendarDays size={16} /><span>{formatDate(new Date())}</span></div>
+        <div className="overview-context"><label className="overview-branch-filter"><span>Branch</span><select aria-label="Filter dashboard by branch" value={branchId} onChange={(event) => setBranchId(event.target.value)} disabled={branches.length === 0}><option value="">All branches</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><div className="date-chip"><CalendarDays size={16} /><span>{formatDate(new Date())}</span></div></div>
       </div>
 
       {!canReadReports && (
         <div className="notice-card"><CircleHelp size={18} /><p>Your account does not have report access. Ask an administrator to grant <strong>report:read</strong> to see dashboard figures.</p></div>
       )}
+      {branchLoadFailed && <div className="notice-card"><CircleHelp size={18} /><p>Branch options could not be loaded. Dashboard figures are shown for all branches.</p></div>}
       {error && (
         <div className="notice-card notice-error"><CircleHelp size={18} /><p>{error}</p><button className="text-button" onClick={() => void loadDashboard()}><RefreshCw size={14} /> Try again</button></div>
       )}
