@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
@@ -11,6 +11,7 @@ import {
   CircleHelp,
   Command,
   LayoutDashboard,
+  KeyRound,
   LogOut,
   PackageSearch,
   Pill,
@@ -18,6 +19,7 @@ import {
   Settings2,
   ShoppingCart,
   UsersRound,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Overview } from "@/components/dashboard/overview";
@@ -34,6 +36,7 @@ import { AdminWorkspace } from "@/features/admin/admin-workspace";
 import { HrSetupWorkspace } from "@/features/hr/hr-setup-workspace";
 import { AccessWorkspace } from "@/features/access/access-workspace";
 import { CatalogSetupWorkspace } from "@/features/catalog/catalog-setup-workspace";
+import { api, ApiClientError } from "@/lib/api/client";
 
 const plannedModules = [
   { label: "Point of sale", icon: ShoppingCart, href: "/pos" },
@@ -57,6 +60,13 @@ export function AppShell() {
   const { status, user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [passwordDialog, setPasswordDialog] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordNotice, setPasswordNotice] = useState("");
 
   useEffect(() => {
     if (status === "anonymous") router.replace("/login");
@@ -65,6 +75,23 @@ export function AppShell() {
   function handleLogout() {
     logout();
     router.replace("/login");
+  }
+
+  async function changePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setPasswordError(""); setPasswordNotice("");
+    if (newPassword !== confirmPassword) { setPasswordError("New password and confirmation do not match."); return; }
+    if (newPassword.length < 8 || !/[a-z]/.test(newPassword) || !/[A-Z]/.test(newPassword) || !/\d/.test(newPassword)) {
+      setPasswordError("Use at least 8 characters with an uppercase letter, lowercase letter and number."); return;
+    }
+    setPasswordSaving(true);
+    try {
+      await api.post<unknown>("/auth/change-password", { currentPassword, newPassword, confirmPassword });
+      setPasswordDialog(false); setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+      setPasswordNotice("Your password has been changed.");
+      window.setTimeout(() => setPasswordNotice(""), 5000);
+    } catch (cause) {
+      setPasswordError(cause instanceof ApiClientError ? cause.message : "Password could not be changed. Please try again.");
+    } finally { setPasswordSaving(false); }
   }
 
   if (status !== "authenticated") {
@@ -119,6 +146,7 @@ export function AppShell() {
             <div className="user-menu">
               <span className="user-avatar">{initials}</span>
               <span className="user-menu-copy"><strong>{user?.fullName}</strong><small>{user?.role?.name ?? "Team member"}</small></span>
+              <button className="password-menu-button" type="button" onClick={() => { setPasswordError(""); setPasswordDialog(true); }}><KeyRound size={14}/><span>Change password</span></button>
               <button className="logout-button" type="button" onClick={handleLogout} aria-label="Sign out"><LogOut size={16} /></button>
             </div>
           </div>
@@ -128,6 +156,8 @@ export function AppShell() {
         </main>
         <footer className="workspace-footer"><span>Pharmacy POS</span><span>Secure workspace · Asia/Dhaka</span></footer>
       </div>
+      {passwordNotice && <div className="password-toast" role="status">{passwordNotice}</div>}
+      {passwordDialog && <div className="pos-dialog-backdrop" role="presentation" onClick={() => !passwordSaving && setPasswordDialog(false)}><section className="password-dialog" role="dialog" aria-modal="true" aria-labelledby="password-dialog-title" onClick={(event) => event.stopPropagation()}><div className="password-dialog-heading"><span><KeyRound size={18}/></span><button className="pos-icon-action" type="button" onClick={() => setPasswordDialog(false)} aria-label="Close change password dialog"><X size={16}/></button></div><h2 id="password-dialog-title">Change your password</h2><p>Confirm your current password, then choose a strong replacement.</p><form onSubmit={(event) => void changePassword(event)}><label>Current password<input autoComplete="current-password" type="password" required value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)}/></label><label>New password<input autoComplete="new-password" type="password" minLength={8} required value={newPassword} onChange={(event) => setNewPassword(event.target.value)}/><small>At least 8 characters, including uppercase, lowercase and a number.</small></label><label>Confirm new password<input autoComplete="new-password" type="password" minLength={8} required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)}/></label>{passwordError && <div className="pos-dialog-error" role="alert">{passwordError}</div>}<button className="pos-complete-button" type="submit" disabled={passwordSaving}>{passwordSaving ? "Updating password…" : "Update password"}</button></form></section></div>}
     </div>
   );
 }
