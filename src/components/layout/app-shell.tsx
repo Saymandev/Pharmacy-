@@ -19,11 +19,12 @@ import {
 import { useAuth } from "@/components/providers/auth-provider";
 import { Overview } from "@/components/dashboard/overview";
 import { PosWorkspace } from "@/features/pos/pos-workspace";
+import { CatalogInventoryWorkspace } from "@/features/catalog/catalog-inventory-workspace";
 
 const plannedModules = [
   { label: "Point of sale", icon: ShoppingCart, href: "/pos" },
-  { label: "Medicine catalog", icon: Pill },
-  { label: "Inventory", icon: PackageSearch },
+  { label: "Medicine catalog", icon: Pill, href: "/catalog" },
+  { label: "Inventory", icon: PackageSearch, href: "/inventory" },
   { label: "Customers", icon: UsersRound },
   { label: "Reports", icon: Activity },
 ];
@@ -70,11 +71,11 @@ export function AppShell() {
           <p className="nav-caption">WORKSPACE</p>
           <a className={`nav-link ${pathname === "/dashboard" ? "nav-link-active" : ""}`} href="/dashboard"><LayoutDashboard size={17} /><span>Overview</span></a>
           <p className="nav-caption nav-caption-spaced">PHARMACY</p>
-          {plannedModules.map(({ label, icon: Icon, href }) => (
+          {plannedModules.map(({ label, icon: Icon, href }) => href ? (
             <a className={`nav-link nav-link-planned ${pathname === href ? "nav-link-active" : ""}`} key={label} href={href}>
               <Icon size={17} /><span>{label}</span><span className="nav-soon">Open</span>
             </a>
-          ))}
+          ) : <button className="nav-link nav-link-planned" key={label} type="button" disabled title={`${label} is planned for an upcoming implementation phase`}><Icon size={17} /><span>{label}</span><span className="nav-soon">Soon</span></button>)}
         </nav>
 
         <div className="sidebar-bottom">
@@ -98,7 +99,9 @@ export function AppShell() {
             </div>
           </div>
         </header>
-        <main className={`workspace-content ${pathname === "/pos" ? "workspace-content-pos" : ""}`}>{pathname === "/pos" ? <PosWorkspace /> : <Overview />}</main>
+        <main className={`workspace-content ${["/pos", "/catalog", "/inventory"].includes(pathname) ? "workspace-content-pos" : ""}`}>
+          {pathname === "/pos" ? <PosWorkspace /> : pathname === "/catalog" || pathname === "/inventory" ? <CatalogInventoryWorkspace mode={pathname === "/catalog" ? "catalog" : "inventory"} /> : <Overview />}
+        </main>
         <footer className="workspace-footer"><span>Pharmacy POS</span><span>Secure workspace · Asia/Dhaka</span></footer>
       </div>
     </div>
