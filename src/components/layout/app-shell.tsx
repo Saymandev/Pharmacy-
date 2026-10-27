@@ -31,6 +31,7 @@ import { ReportsWorkspace } from "@/features/reports/reports-workspace";
 import { HrWorkspace } from "@/features/hr/hr-workspace";
 import { DutyRostersWorkspace } from "@/features/hr/duty-rosters-workspace";
 import { AdminWorkspace } from "@/features/admin/admin-workspace";
+import { HrSetupWorkspace } from "@/features/hr/hr-setup-workspace";
 
 const plannedModules = [
   { label: "Point of sale", icon: ShoppingCart, href: "/pos" },
@@ -44,6 +45,7 @@ const plannedModules = [
   { label: "Reports", icon: Activity, href: "/reports" },
   { label: "HR & attendance", icon: UsersRound, href: "/hr" },
   { label: "Duty rosters", icon: Activity, href: "/hr/rosters" },
+  { label: "HR setup", icon: Settings2, href: "/hr/setup" },
   { label: "Communications & settings", icon: Bell, href: "/admin" },
 ];
 
@@ -118,7 +120,7 @@ export function AppShell() {
           </div>
         </header>
         <main className={`workspace-content ${["/pos", "/catalog", "/inventory", "/purchases", "/sales", "/returns", "/customers", "/finance"].includes(pathname) ? "workspace-content-pos" : ""}`}>
-          {pathname === "/pos" ? <PosWorkspace /> : pathname === "/catalog" || pathname === "/inventory" ? <CatalogInventoryWorkspace mode={pathname === "/catalog" ? "catalog" : "inventory"} /> : pathname === "/purchases" ? <PurchaseWorkspace /> : pathname === "/sales" || pathname === "/returns" ? <SalesWorkspace mode={pathname === "/sales" ? "sales" : "returns"} /> : pathname === "/customers" ? <CustomerWorkspace /> : pathname === "/finance" ? <FinanceWorkspace /> : pathname === "/reports" ? <ReportsWorkspace /> : pathname === "/hr" ? <HrWorkspace /> : pathname === "/hr/rosters" ? <DutyRostersWorkspace /> : pathname === "/admin" ? <AdminWorkspace /> : <Overview />}
+          {pathname === "/pos" ? <PosWorkspace /> : pathname === "/catalog" || pathname === "/inventory" ? <CatalogInventoryWorkspace mode={pathname === "/catalog" ? "catalog" : "inventory"} /> : pathname === "/purchases" ? <PurchaseWorkspace /> : pathname === "/sales" || pathname === "/returns" ? <SalesWorkspace mode={pathname === "/sales" ? "sales" : "returns"} /> : pathname === "/customers" ? <CustomerWorkspace /> : pathname === "/finance" ? <FinanceWorkspace /> : pathname === "/reports" ? <ReportsWorkspace /> : pathname === "/hr" ? <HrWorkspace /> : pathname === "/hr/rosters" ? <DutyRostersWorkspace /> : pathname === "/admin" ? <AdminWorkspace /> : pathname === "/hr/setup" ? <HrSetupWorkspace /> : <Overview />}
         </main>
         <footer className="workspace-footer"><span>Pharmacy POS</span><span>Secure workspace · Asia/Dhaka</span></footer>
       </div>
