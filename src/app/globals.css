@@ -1003,3 +1003,6 @@ button.data-summary-card { cursor: pointer; }
 @media(max-width:750px){.access-page>.page-heading-row{align-items:flex-start;flex-direction:column}.access-page>.page-heading-row>.purchase-primary-action{width:100%;justify-content:center}.access-summary{gap:7px}.access-summary article{gap:8px;padding:10px}.access-summary i{width:30px;height:30px}.access-summary small{font-size:10px}.access-summary strong{font-size:15px}.access-role-grid{grid-template-columns:1fr;padding:9px}.access-card .hr-table{min-width:780px}}
 
 .access-role{position:relative}.access-role-detail{margin-top:12px}
+
+.catalog-setup-page .page-heading-row>.purchase-primary-action{display:flex;align-items:center;gap:7px}.catalog-setup-tabs{overflow:auto;white-space:nowrap}.hr-row-actions button{display:inline-flex;align-items:center;gap:4px}.form-optional{color:#95a1af;font-size:10px;font-weight:400}
+@media(max-width:650px){.catalog-setup-page>.page-heading-row{align-items:flex-start;flex-direction:column}.catalog-setup-page>.page-heading-row>.purchase-primary-action{width:100%;justify-content:center}.catalog-setup-page .hr-table{min-width:650px}}

@@ -33,10 +33,12 @@ import { DutyRostersWorkspace } from "@/features/hr/duty-rosters-workspace";
 import { AdminWorkspace } from "@/features/admin/admin-workspace";
 import { HrSetupWorkspace } from "@/features/hr/hr-setup-workspace";
 import { AccessWorkspace } from "@/features/access/access-workspace";
+import { CatalogSetupWorkspace } from "@/features/catalog/catalog-setup-workspace";
 
 const plannedModules = [
   { label: "Point of sale", icon: ShoppingCart, href: "/pos" },
   { label: "Medicine catalog", icon: Pill, href: "/catalog" },
+  { label: "Catalog settings", icon: Settings2, href: "/catalog/setup" },
   { label: "Inventory", icon: PackageSearch, href: "/inventory" },
   { label: "Purchases", icon: Boxes, href: "/purchases" },
   { label: "Sales history", icon: Activity, href: "/sales" },
@@ -122,7 +124,7 @@ export function AppShell() {
           </div>
         </header>
         <main className={`workspace-content ${["/pos", "/catalog", "/inventory", "/purchases", "/sales", "/returns", "/customers", "/finance"].includes(pathname) ? "workspace-content-pos" : ""}`}>
-          {pathname === "/pos" ? <PosWorkspace /> : pathname === "/catalog" || pathname === "/inventory" ? <CatalogInventoryWorkspace mode={pathname === "/catalog" ? "catalog" : "inventory"} /> : pathname === "/purchases" ? <PurchaseWorkspace /> : pathname === "/sales" || pathname === "/returns" ? <SalesWorkspace mode={pathname === "/sales" ? "sales" : "returns"} /> : pathname === "/customers" ? <CustomerWorkspace /> : pathname === "/finance" ? <FinanceWorkspace /> : pathname === "/reports" ? <ReportsWorkspace /> : pathname === "/hr" ? <HrWorkspace /> : pathname === "/hr/rosters" ? <DutyRostersWorkspace /> : pathname === "/admin" ? <AdminWorkspace /> : pathname === "/hr/setup" ? <HrSetupWorkspace /> : pathname === "/access" ? <AccessWorkspace /> : <Overview />}
+          {pathname === "/pos" ? <PosWorkspace /> : pathname === "/catalog" || pathname === "/inventory" ? <CatalogInventoryWorkspace mode={pathname === "/catalog" ? "catalog" : "inventory"} /> : pathname === "/purchases" ? <PurchaseWorkspace /> : pathname === "/sales" || pathname === "/returns" ? <SalesWorkspace mode={pathname === "/sales" ? "sales" : "returns"} /> : pathname === "/customers" ? <CustomerWorkspace /> : pathname === "/finance" ? <FinanceWorkspace /> : pathname === "/reports" ? <ReportsWorkspace /> : pathname === "/hr" ? <HrWorkspace /> : pathname === "/hr/rosters" ? <DutyRostersWorkspace /> : pathname === "/admin" ? <AdminWorkspace /> : pathname === "/hr/setup" ? <HrSetupWorkspace /> : pathname === "/access" ? <AccessWorkspace /> : pathname === "/catalog/setup" ? <CatalogSetupWorkspace /> : <Overview />}
         </main>
         <footer className="workspace-footer"><span>Pharmacy POS</span><span>Secure workspace · Asia/Dhaka</span></footer>
       </div>
