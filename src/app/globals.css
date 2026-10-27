@@ -1,5 +1,5 @@
-Warning: truncated output (original token count: 34931)
-Total output lines: 1121
+Warning: truncated output (original token count: 35005)
+Total output lines: 1123
 
 @import "tailwindcss";
 
@@ -498,12 +498,7 @@ button.data-summary-card { cursor: pointer; }
 .purchase-medicine-results strong { color: #40564a; font-size: 8px; }
 .purchase-medicine-results small { color: #94a098; font-size: 7px; }
 .purchase-medicine-results button > span:last-child { display: flex; align-items: center; gap: 8px; color: #307b57; font-size: 8px; }
-.purchase-items-lis…9931 tokens truncated…page-heading-row { align-items: flex-start; flex-direction: column; gap: 13px; }
-  .date-chip { margin-bottom: 0; }
-  .metric-grid { gap: 10px; }
-  .metric-card { min-height: 136px; padding: 13px; }
-  .metric-icon { width: 31px; height: 31px; margin-bottom: 12px; }
-  .metric-label { top: 21px; left: 54px; font-size: 9px; }
+.purchase-items-lis…10005 tokens truncated…px; left: 54px; font-size: 9px; }
   .metric-value { font-size: 19px; }
   .metric-support { font-size: 8px; line-height: 1.4; }
   .sales-panel, .inventory-panel { padding: 16px 14px; }
@@ -679,4 +674,6 @@ button.data-summary-card { cursor: pointer; }
 .customer-auto-collection input, .customer-auto-collection select { min-height: 34px; padding: 6px 9px; border: 1px solid #dfe7e1; border-radius: 6px; background: #fff; color: #344b3c; font: inherit; }
 .customer-auto-due { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border: 1px solid #e8eee9; border-radius: 7px; background: #fff; color: #75847a; font-size: 9px; }
 .customer-auto-due strong { color: #257452; font-size: 12px; }
+.finance-entry-detail { display: inline-grid; place-items: center; flex: none; width: 28px; height: 28px; margin-left: 8px; border: 1px solid #dfe8e1; border-radius: 7px; background: #fff; color: #587364; cursor: pointer; }
+.finance-entry-detail:hover { border-color: #a9c8b5; color: #217453; }
 
