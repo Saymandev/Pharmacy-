@@ -1,0 +1,19 @@
+import type { Metadata } from "next";
+import { AuthProvider } from "@/components/providers/auth-provider";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "Pharmacy POS | Pharmacy operations",
+  description: "A clear, secure workspace for pharmacy operations.",
+  icons: { icon: "/pharmacy-mark.svg" },
+};
+
+export default function RootLayout({ children }: LayoutProps<"/">) {
+  return (
+    <html lang="en" className="h-full antialiased">
+      <body className="min-h-full flex flex-col">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
+    </html>
+  );
+}
