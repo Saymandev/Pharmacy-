@@ -1006,3 +1006,7 @@ button.data-summary-card { cursor: pointer; }
 
 .catalog-setup-page .page-heading-row>.purchase-primary-action{display:flex;align-items:center;gap:7px}.catalog-setup-tabs{overflow:auto;white-space:nowrap}.hr-row-actions button{display:inline-flex;align-items:center;gap:4px}.form-optional{color:#95a1af;font-size:10px;font-weight:400}
 @media(max-width:650px){.catalog-setup-page>.page-heading-row{align-items:flex-start;flex-direction:column}.catalog-setup-page>.page-heading-row>.purchase-primary-action{width:100%;justify-content:center}.catalog-setup-page .hr-table{min-width:650px}}
+
+.inventory-heading-actions{display:flex;align-items:center;gap:8px}.inventory-heading-actions>button{display:flex;align-items:center;gap:6px}
+@media(max-width:760px){.data-page>.page-heading-row{align-items:flex-start;flex-direction:column}.inventory-heading-actions{width:100%;flex-wrap:wrap}.inventory-heading-actions .data-branch-select{margin-left:auto}}
+
