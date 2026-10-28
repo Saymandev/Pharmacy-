@@ -13,10 +13,10 @@ const manufacturers = [{ id: "maker-demo-1", name: "Square Pharmaceuticals" }, {
 const groups = [{ id: "group-demo-1", name: "Prescription" }, { id: "group-demo-2", name: "OTC" }];
 const units = [{ id: "unit-demo-1", name: "Tablet" }, { id: "unit-demo-2", name: "Bottle" }, { id: "unit-demo-3", name: "Capsule" }];
 const medicines = [
-  { id: "med-demo-1", name: "Azithrocin", nameBangla: "অ্যাজিথ্রোসিন", genericName: "Azithromycin", strength: "500 mg", dosageForm: "Tablet", unit: "Tablet", barcode: "8941100123456", salePrice: 35, purchasePrice: 27, mrp: 40, reorderLevel: 20, isActive: true, category: categories[0], generic: generics[0], medicineManufacturer: manufacturers[0], stocks: [{ id: "stock-demo-1", batchNumber: "AZ-2408", expiryDate: "2027-08-31T00:00:00.000Z", quantity: 46, mrp: 40, unitPrice: 27, unit: "Tablet" }] },
-  { id: "med-demo-2", name: "Napa Extra", nameBangla: "নাপা এক্সট্রা", genericName: "Paracetamol + Caffeine", strength: "500 mg + 65 mg", dosageForm: "Tablet", unit: "Tablet", barcode: "8941100456789", salePrice: 3, purchasePrice: 2.1, mrp: 3, reorderLevel: 60, isActive: true, category: categories[1], generic: generics[1], medicineManufacturer: manufacturers[0], stocks: [{ id: "stock-demo-2", batchNumber: "NP-2511", expiryDate: "2027-11-30T00:00:00.000Z", quantity: 184, mrp: 3, unitPrice: 2.1, unit: "Tablet" }] },
-  { id: "med-demo-3", name: "Seclo", nameBangla: "সেকলো", genericName: "Omeprazole", strength: "20 mg", dosageForm: "Capsule", unit: "Capsule", barcode: "8941100789012", salePrice: 6, purchasePrice: 4.3, mrp: 7, reorderLevel: 40, isActive: true, category: categories[2], generic: generics[2], medicineManufacturer: manufacturers[1], stocks: [{ id: "stock-demo-3", batchNumber: "SC-2602", expiryDate: "2028-02-29T00:00:00.000Z", quantity: 27, mrp: 7, unitPrice: 4.3, unit: "Capsule" }] },
-  { id: "med-demo-4", name: "Cef-3", genericName: "Cefixime", strength: "200 mg", dosageForm: "Capsule", unit: "Capsule", barcode: "8941100112233", salePrice: 28, purchasePrice: 21, mrp: 30, reorderLevel: 25, isActive: true, category: categories[0], generic: { id: "gen-demo-4", name: "Cefixime" }, medicineManufacturer: manufacturers[1], stocks: [{ id: "stock-demo-4", batchNumber: "CF-2507", expiryDate: "2027-07-31T00:00:00.000Z", quantity: 12, mrp: 30, unitPrice: 21, unit: "Capsule" }] },
+  { id: "med-demo-1", name: "Azithrocin", nameBangla: "অ্যাজিথ্রোসিন", genericName: "Azithromycin", strength: "500 mg", dosageForm: "Tablet", unit: "Tablet", barcode: "8941100123456", salePrice: 35, purchasePrice: 27, mrp: 40, reorderLevel: 20, isActive: true, category: categories[0], generic: generics[0], group: groups[0], medicineUnit: units[0], medicineManufacturer: manufacturers[0], stocks: [{ id: "stock-demo-1", batchNumber: "AZ-2408", expiryDate: "2027-08-31T00:00:00.000Z", quantity: 46, mrp: 40, unitPrice: 27, unit: "Tablet" }] },
+  { id: "med-demo-2", name: "Napa Extra", nameBangla: "নাপা এক্সট্রা", genericName: "Paracetamol + Caffeine", strength: "500 mg + 65 mg", dosageForm: "Tablet", unit: "Tablet", barcode: "8941100456789", salePrice: 3, purchasePrice: 2.1, mrp: 3, reorderLevel: 60, isActive: true, category: categories[1], generic: generics[1], group: groups[1], medicineUnit: units[0], medicineManufacturer: manufacturers[0], stocks: [{ id: "stock-demo-2", batchNumber: "NP-2511", expiryDate: "2027-11-30T00:00:00.000Z", quantity: 184, mrp: 3, unitPrice: 2.1, unit: "Tablet" }] },
+  { id: "med-demo-3", name: "Seclo", nameBangla: "সেকলো", genericName: "Omeprazole", strength: "20 mg", dosageForm: "Capsule", unit: "Capsule", barcode: "8941100789012", salePrice: 6, purchasePrice: 4.3, mrp: 7, reorderLevel: 40, isActive: true, category: categories[2], generic: generics[2], group: groups[0], medicineUnit: units[2], medicineManufacturer: manufacturers[1], stocks: [{ id: "stock-demo-3", batchNumber: "SC-2602", expiryDate: "2028-02-29T00:00:00.000Z", quantity: 27, mrp: 7, unitPrice: 4.3, unit: "Capsule" }] },
+  { id: "med-demo-4", name: "Cef-3", genericName: "Cefixime", strength: "200 mg", dosageForm: "Capsule", unit: "Capsule", barcode: "8941100112233", salePrice: 28, purchasePrice: 21, mrp: 30, reorderLevel: 25, isActive: true, category: categories[0], generic: { id: "gen-demo-4", name: "Cefixime" }, group: groups[1], medicineUnit: units[2], medicineManufacturer: manufacturers[1], stocks: [{ id: "stock-demo-4", batchNumber: "CF-2507", expiryDate: "2027-07-31T00:00:00.000Z", quantity: 12, mrp: 30, unitPrice: 21, unit: "Capsule" }] },
 ];
 const stockRows = medicines.flatMap((medicine, index) => medicine.stocks!.map((stock, batchIndex) => ({ ...stock, medicineId: medicine.id, branchId: index === 3 ? branches[1].id : branch.id, rackNumber: `R-${index + 1} / ${batchIndex + 1}`, medicine })));
 const customers = [
@@ -77,7 +77,29 @@ export function demoRequest<T>(path: string, request: DemoRequest = {}): Promise
   else if (pathname === "/pharmacy/units") data = units;
   else if (pathname === "/pharmacy/medicines") {
     const search = (query.get("search") || "").toLowerCase();
-    data = medicines.filter((item) => !search || `${item.name} ${item.genericName} ${item.barcode}`.toLowerCase().includes(search));
+    const branchId = query.get("branchId");
+    const matches = medicines.filter((item) => {
+      const stockInBranch = item.stocks?.some((stock) => !branchId || stockRows.some((row) => row.id === stock.id && row.branchId === branchId));
+      const hasSellableStock = item.stocks?.some((stock) => stock.quantity > 0 && (!branchId || stockRows.some((row) => row.id === stock.id && row.branchId === branchId)));
+      const manufacturerId = String(item.medicineManufacturer?.id ?? "");
+      const matchesText = !search || `${item.name} ${item.nameBangla ?? ""} ${item.genericName} ${item.barcode}`.toLowerCase().includes(search);
+      return matchesText
+        && (!query.get("barcode") || (item.barcode ?? "").toLowerCase().includes(query.get("barcode")!.toLowerCase()))
+        && (!query.get("categoryId") || item.category?.id === query.get("categoryId"))
+        && (!query.get("genericId") || item.generic?.id === query.get("genericId"))
+        && (!query.get("medicineManufacturerId") || manufacturerId === query.get("medicineManufacturerId"))
+        && (!query.get("groupId") || item.group?.id === query.get("groupId"))
+        && (!query.get("medicineUnitId") || item.medicineUnit?.id === query.get("medicineUnitId"))
+        && (!query.get("unit") || item.unit === query.get("unit"))
+        && (!query.get("dosageForm") || (item.dosageForm ?? "").toLowerCase().includes(query.get("dosageForm")!.toLowerCase()))
+        && (!query.get("strength") || (item.strength ?? "").toLowerCase().includes(query.get("strength")!.toLowerCase()))
+        && (query.get("isActive") !== "true" || item.isActive)
+        && (query.get("hasStock") === "true" ? hasSellableStock : query.get("hasStock") === "false" ? !hasSellableStock : true)
+        && (!branchId || stockInBranch);
+    });
+    const page = Number(query.get("page") || 1);
+    const limit = Number(query.get("limit") || 10);
+    data = { data: matches.slice((page - 1) * limit, page * limit), pagination: { page, limit, total: matches.length, totalPages: Math.ceil(matches.length / limit) } };
   } else if (pathname === "/pharmacy/stocks") {
     const branchId = query.get("branchId");
     data = stockRows.filter((item) => !branchId || item.branchId === branchId);
@@ -113,6 +135,16 @@ export function demoRequest<T>(path: string, request: DemoRequest = {}): Promise
   else if (pathname === "/users" || pathname === "/roles") data = [];
   else if (pathname === "/hr/employees" || pathname === "/hr/attendance" || pathname === "/hr/leaves") data = [];
   else if (pathname === "/reports/pharmacy") data = { summary: { totalSales: 82450, totalPurchases: 38400, netProfit: 14820 } };
+  else if (pathname === "/reports/pharmacy/stats") data = { totalSales: 82450, salesCount: 128, totalPurchases: 38400, purchasesCount: 9, totalMedicines: 326, lowStockCount: 18, outOfStockCount: 3, totalCashInHand: 48250, expiringIn30Days: 4 };
+  else if (pathname === "/reports/pharmacy/graph") data = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - index));
+    return {
+      date: new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dhaka", year: "numeric", month: "2-digit", day: "2-digit" }).format(date),
+      sales: [18600, 22400, 19750, 28100, 24300, 31500, 26800][index],
+      purchases: [11200, 9400, 16500, 8300, 14200, 11800, 15400][index],
+    };
+  });
   else if (pathname.startsWith("/pharmacy/dashboard")) data = { totalSales: 82450, salesCount: 128, totalPurchases: 38400, purchasesCount: 9, totalMedicines: 326, lowStockCount: 18, outOfStockCount: 3, totalCashInHand: 48250, expiringIn30Days: 4 };
 
   return Promise.resolve(result(data) as T);
