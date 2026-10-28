@@ -172,8 +172,36 @@ body { line-height: 1.55; }
 .app-frame[data-theme="dark"] .nav-link { color: #b8c7be; }
 .app-frame[data-theme="dark"] .nav-link-active { background: #244535; color: #a7e0bf; }
 .app-frame[data-theme="dark"] .nav-link:not(:disabled):hover { background: #263b30; color: #c7efd6; }
-.app-frame[data-theme="dark"] :is(input,select,textarea,.pos-search-box,.pos-input-with-icon,.pos-batch-select,.pos-currency-input,.pos-discount-input,.pos-item-discount-input) { border-color: #40544a; background-color: #142019; color: #e4eee8; }
+.app-frame[data-theme="dark"] :is(input,select,textarea) {
+  border-color: #40544a !important; background-color: #142019 !important; color: #e4eee8 !important; color-scheme: dark;
+}
 .app-frame[data-theme="dark"] :is(input,textarea)::placeholder { color: #81948a; }
+.app-frame[data-theme="dark"] :is(.date-chip,.overview-branch-filter select,.overview-quick-actions,.panel,.metric-card,.data-card,.data-table tr,.customer-card,.customer-detail-drawer,.data-dialog,.data-tabs,.sales-metrics>div,.purchase-metrics>div,.purchase-detail-drawer,.purchase-drawer,.supplier-card,.supplier-dialog,.supplier-delete-confirm,.supplier-summary article,.consultation-dialog,.consultation-summary article,.finance-category-manager,.pos-register-dialog,.pos-history-dialog,.pos-checkout-dialog,.password-dialog) {
+  border-color: #34483d !important; background: #1b2721 !important; color: #e2ebe5;
+}
+.app-frame[data-theme="dark"] :is(.data-toolbar,.data-filter-drawer,.purchase-filter-grid,.pos-filter-drawer,.pos-cart-summary,.pos-cart-footer,.pos-checkout-items,.pos-checkout-heading,.pos-tender-line,.pos-checkout-actions,.pos-due-row,.customer-auto-due,.customer-auto-collection,.finance-entry-filters,.consultation-pay-total,.consultation-voucher-note,.purchase-form-context,.purchase-medicine-results,.purchase-payment-row,.pos-receipt-actions,.pos-search-box,.pos-input-with-icon,.pos-item-discount-input,.pos-discount-input,.pos-currency-input,.purchase-currency-input,.overview-quick-grid a,.cash-panel,.customer-collection,.customer-detail-summary,.data-alert,.customer-table-head,.data-table thead,.hr-table th,.reports-table-heading,.reports-table-scroll th,.consultation-table th,.supplier-table th,.supplier-table tr,.purchase-list-head,.sales-table-head,.sales-detail-metrics,.sales-detail-drawer,.purchase-detail-summary,.purchase-summary,.purchase-detail-note,.pos-history-note,.pos-history-back,.pos-register-expected,.pos-history-status,.purchase-register-pill,.purchase-open-register,.return-estimate) {
+  border-color: #34483d !important; background: #202e27 !important; color: #d6e2da;
+}
+.app-frame[data-theme="dark"] :is(.language-switcher select,.data-branch-select select,.data-filter-button,.data-pagination button,.data-row-action,.data-dialog-close,.finance-account-actions button,.finance-account-delete-actions button,.finance-category-list button,.finance-entry-detail,.finance-entry-filters>button,.hr-review-actions button,.hr-review-trigger,.purchase-filter-clear,.purchase-pagination button,.purchase-close,.purchase-toolbar>select,.purchase-save-pending,.purchase-pay-button,.pos-checkout-back,.pos-add-tender,.pos-pending-button,.pos-filter-button,.pos-history-button,.pos-history-list>button,.pos-history-pagination button,.pos-history-toolbar select,.pos-context select,.pos-product-icon,.pos-receipt-actions button,.consultation-detail-button,.consultation-pagination button,.consultation-toolbar>button,.admin-toolbar button,.admin-notice>button,.admin-notification>button,.catalog-import-button,.return-clear-filters,.sales-compact-select,.sales-pagination button,.supplier-actions button,.supplier-cancel,.supplier-pagination button,.supplier-toolbar>button) {
+  border-color: #40544a !important; background: #25372d !important; color: #d6e4da !important;
+}
+.app-frame[data-theme="dark"] :is(.pos-tender-line label,.pos-checkout-item label,.pos-item-discount-input b,.pos-currency-input b,.pos-tender-heading,.pos-discount-row,.pos-total-row,.pos-due-row,.pos-grand-total,.pos-checkout-items h3,.pos-checkout-heading p:last-child) { color: #b6c6bc !important; }
+.app-frame[data-theme="dark"] :is(.pos-total-row>span:last-child,.pos-tender-heading strong,.pos-due-row strong,.pos-grand-total strong,.pos-checkout-item>strong,.pos-checkout-item>span strong) { color: #e2eee6 !important; }
+.app-frame[data-theme="dark"] :is(.pos-alert-error,.pos-dialog-error,.form-error,.customer-auto-warning,.notice-error) { border-color: #70443d !important; background: #382522 !important; color: #ffc0b4 !important; }
+.app-frame[data-theme="dark"] :is(.pos-alert-success,.notice-card) { border-color: #355944 !important; background: #20372a !important; color: #bde5cb !important; }
+.app-frame[data-theme="dark"] :is(.pos-checkout-backdrop,.pos-dialog-backdrop,.pos-receipt-backdrop,.sales-backdrop,.purchase-backdrop,.data-backdrop,.customer-backdrop) { background-color: #06100bd9; }
+.app-frame[data-theme="dark"] :is(.data-status,.hr-status,.pos-stock-badge,.pos-history-status,.purchase-register-pill,.pos-register-state button) { border-color: transparent; }
+.app-frame[data-theme="dark"] :is(.data-status.good,.hr-status.active,.pos-stock-badge:not(.empty),.purchase-register-pill.open,.pos-history-status.open) { background: #244b35 !important; color: #b8e7c7 !important; }
+.app-frame[data-theme="dark"] :is(.data-status.warn,.data-status.soon,.hr-status.pending,.hr-status.on_leave,.purchase-register-pill) { background: #493a22 !important; color: #f0d69a !important; }
+.app-frame[data-theme="dark"] :is(.data-status.danger,.hr-status.rejected,.hr-status.terminated,.data-status.rejected,.finance-account-delete,.purchase-alert.error,.sales-alert.error) { background: #482a27 !important; color: #ffc0b4 !important; }
+.app-frame[data-theme="dark"] :is(.data-status.muted,.hr-status.inactive,.pos-stock-badge.empty) { background: #303b35 !important; color: #b6c2ba !important; }
+.app-frame[data-theme="dark"] :is(.admin-notification.unread,.pos-history-list>button:hover,.pos-history-button:hover,.pos-icon-action:hover,.notification-button:hover,.logout-button:hover,.password-menu-button:hover,.finance-ledger-interactive:hover) { background: #263a2e !important; color: #c7efd6 !important; }
+.app-frame[data-theme="dark"] :is(.pos-register-expected,.pos-history-note,.purchase-detail-note,.pos-checkout-items,.pos-checkout-heading,.pos-tender-line,.pos-checkout-actions) { color: #c3d1c8; }
+.app-frame[data-theme="dark"] :is(.data-table td,.hr-table td,.sales-row,.return-row,.supplier-table td,.consultation-table td,.purchase-row,.admin-list article,.admin-backup-list article,.customer-row,.data-pagination,.sales-pagination,.purchase-pagination,.supplier-pagination,.consultation-pagination) { border-color: #34483d; color: #cbd8d0; }
+.app-frame[data-theme="dark"] :is(.data-table td,.hr-table td,.sales-row,.return-row,.supplier-table td,.consultation-table td,.purchase-row,.customer-row) small { color: #a5b5aa; }
+.app-frame[data-theme="dark"] .pos-currency-input input,
+.app-frame[data-theme="dark"] .pos-discount-input input,
+.app-frame[data-theme="dark"] .pos-item-discount-input input { background: transparent !important; color: #e4eee8 !important; }
 .app-frame[data-theme="dark"] .pos-customer-options { border-color: #40544a; background: #17231d; }
 .app-frame[data-theme="dark"] .pos-customer-options button { border-color: #34473c; background: #1b2721; color: #e4eee8; }
 .app-frame[data-theme="dark"] .pos-customer-options button:hover { background: #26392e; }
@@ -199,6 +227,57 @@ body { line-height: 1.55; }
 .app-frame[data-theme="dark"] .pos-register-state.is-closed .pos-state-dot { box-shadow: 0 0 0 3px #51402a; }
 .app-frame[data-theme="dark"] .pos-mobile-cart-icon i { border-color: #1b2721; }
 .app-frame[data-theme="dark"] .workspace-footer { color: #83958a; }
+
+/* Close theme gaps left by page-specific light styles. */
+.app-frame[data-theme="dark"] .page-heading-row {
+  border-color: #34483d;
+  background-color: #1b2721;
+  background-image: none;
+}
+.app-frame[data-theme="dark"] :is(.metric-value,.inventory-stat strong,.reports-metrics strong) { color: #e8f1eb !important; }
+.app-frame[data-theme="dark"] :is(.metric-label,.metric-support,.inventory-stat,.inventory-footnote,.reports-report-title p,.reports-metrics small,.reports-table-heading span,.reports-truncated) { color: #a9b8ae !important; }
+.app-frame[data-theme="dark"] :is(.data-tabs a.selected,.data-tabs button.selected,.hr-tabs .selected,.access-tabs .selected,.admin-tabs .selected,.catalog-setup-tabs .selected,.reports-nav-group button.selected) {
+  border-color: #3a6049 !important;
+  background: #244535 !important;
+  color: #b9e8cb !important;
+}
+.app-frame[data-theme="dark"] :is(.pos-scan-button,.pos-load-more,.pos-filter-button.active,.data-filter-button.selected) {
+  border-color: #3a6049 !important;
+  background: #244535 !important;
+  color: #b9e8cb !important;
+}
+.app-frame[data-theme="dark"] :is(.pos-clear-filters,.reports-clear,.finance-ledger-interactive,.overview-quick-actions a,.data-tabs a,.data-tabs button,.hr-tabs a,.hr-tabs button,.access-tabs a,.access-tabs button,.admin-tabs a,.admin-tabs button,.catalog-setup-tabs a,.catalog-setup-tabs button,.reports-nav-group button) { color: #b9c9bf; }
+.app-frame[data-theme="dark"] :is(.reports-period-badge,.period-pill) { border-color: #355443; background: #20372a; color: #bde5cb; }
+.app-frame[data-theme="dark"] :is(.reports-table-scroll th,.reports-table-scroll td,.reports-table-heading,.hr-table th,.hr-table td,.access-permission-groups fieldset,.access-permission-groups fieldset>label) {
+  border-color: #34483d !important;
+  color: #cbd8d0 !important;
+}
+.app-frame[data-theme="dark"] :is(.reports-table-scroll th,.hr-table th) { background: #202e27 !important; color: #aebdb3 !important; }
+.app-frame[data-theme="dark"] :is(.reports-table-heading button,.reports-nav,.reports-filterbar,.reports-report-title,.reports-metrics article,.hr-toolbar,.access-role,.access-role-permissions span,.access-permission-groups fieldset) {
+  border-color: #34483d !important;
+  background-color: #202e27 !important;
+  color: #d6e2da !important;
+}
+.app-frame[data-theme="dark"] :is(.inventory-stat-icon,.metric-icon,.purchase-metric-icon,.sales-metric-icon,.reports-metric-icon,.hr-summary article>i,.access-summary i,.access-role-title>span,.overview-quick-grid a>i,.pos-empty-cart>span) {
+  border-color: #3b5446 !important;
+  background-color: #263a2e !important;
+  color: #bde5cd !important;
+  filter: none;
+}
+.app-frame[data-theme="dark"] :is(.metric-icon-blue,.purchase-metric-icon.blue,.sales-metric-icon.blue,.reports-metric-icon.tone-1,.hr-summary article>i.attendance-icon,.access-summary i.role-icon) { background-color: #27384b !important; color: #b7d4ff !important; }
+.app-frame[data-theme="dark"] :is(.metric-icon-amber,.reports-metric-icon.tone-2,.hr-summary article>i.leave-icon) { background-color: #463722 !important; color: #f1d49a !important; }
+.app-frame[data-theme="dark"] :is(.metric-icon-rose,.data-summary-icon.red,.inventory-stat-icon.inventory-danger) { background-color: #452c2a !important; color: #ffc0b4 !important; }
+.app-frame[data-theme="dark"] :is(.chart-area) { background-image: repeating-linear-gradient(transparent 0, transparent 39px, #34483d 40px) !important; }
+
+/* Ensure dense module pages inherit readable light-on-dark text consistently. */
+.app-frame[data-theme="dark"] .workspace-content :is(p,span,label,small,td,th) { color: #b5c4ba; }
+.app-frame[data-theme="dark"] .workspace-content :is(h1,h2,h3,h4,strong) { color: #e8f1eb; }
+.app-frame[data-theme="dark"] .workspace-content :is(button,a) { color: #cbd8d0; }
+.app-frame[data-theme="dark"] .workspace-content :is(.purchase-primary-action,.pos-proceed-button,.pos-complete-button,.admin-primary-action,.hr-primary-action,.access-primary-action,.return-primary-action,.reports-primary-action) { color: #fff !important; }
+.app-frame[data-theme="dark"] .workspace-content :is(.pos-alert-error,.pos-dialog-error,.form-error,.customer-auto-warning,.notice-error,.sales-alert.error,.purchase-alert.error,.finance-account-delete) { color: #ffc0b4 !important; }
+.app-frame[data-theme="dark"] .workspace-content :is(.pos-alert-success,.notice-card,.data-status.good,.hr-status.active,.hr-status.approved,.purchase-register-pill.open,.pos-history-status.open) { color: #bde5cb !important; }
+.app-frame[data-theme="dark"] .workspace-content :is(.data-status.warn,.data-status.soon,.hr-status.pending,.hr-status.on_leave,.purchase-register-pill) { color: #f0d69a !important; }
+.app-frame[data-theme="dark"] .workspace-content :is(.data-status.danger,.hr-status.rejected,.hr-status.terminated,.data-status.rejected,.pos-stock-badge.empty) { color: #ffc0b4 !important; }
 
 @media (max-width: 800px) {
   .sidebar { flex-basis: 74px; }
