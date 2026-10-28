@@ -158,6 +158,11 @@ export function Overview() {
     { label: "Low stock", value: stats ? formatCount(stats.lowStockCount) : "—", supporting: "Medicines below threshold", icon: AlertTriangle, tone: "amber" as const },
     { label: "Expiry watch", value: stats ? formatCount(stats.expiringIn30Days) : "—", supporting: "Batches expiring in 30 days", icon: Clock3, tone: "rose" as const },
   ];
+  const quickActions = [
+    { label: "Start a sale", detail: "Open point of sale", href: "/pos", icon: ShoppingBag, permission: "sale:create" },
+    { label: "Check inventory", detail: "Review branch stock", href: "/inventory", icon: PackageCheck, permission: "stock:read" },
+    { label: "Record a purchase", detail: "Receive new stock", href: "/purchases", icon: Boxes, permission: "purchase:create" },
+  ].filter((action) => hasPermission(action.permission));
 
   return (
     <div className="overview-page">
@@ -181,6 +186,8 @@ export function Overview() {
       <section className="metric-grid" aria-label="Today’s pharmacy metrics">
         {metrics.map((metric) => <MetricCard key={metric.label} {...metric} value={loading ? "…" : metric.value} />)}
       </section>
+
+      {quickActions.length > 0 && <section className="overview-quick-actions" aria-label="Common pharmacy tasks"><div className="overview-quick-heading"><div><p className="eyebrow">QUICK ACTIONS</p><h2>Get work started</h2></div><span>Common tasks for your role</span></div><div className="overview-quick-grid">{quickActions.map(({ label, detail, href, icon: Icon }) => <a href={href} key={href}><span><Icon size={18}/></span><div><strong>{label}</strong><small>{detail}</small></div><ArrowUpRight size={15}/></a>)}</div></section>}
 
       <div className="dashboard-grid">
         <section className="panel sales-panel">
