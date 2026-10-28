@@ -30,4 +30,3 @@ export function AccessWorkspace(){const {hasPermission}=useAuth();const [view,se
 }
 
 
-

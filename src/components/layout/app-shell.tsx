@@ -40,6 +40,7 @@ import { CatalogSetupWorkspace } from "@/features/catalog/catalog-setup-workspac
 import { api, ApiClientError } from "@/lib/api/client";
 import { SupplierWorkspace } from "@/features/suppliers/supplier-workspace";
 import { ConsultationWorkspace } from "@/features/finance/consultation-workspace";
+import { useLanguage } from "@/lib/i18n/language-provider";
 
 const plannedModules = [
   { label: "Point of sale", icon: ShoppingCart, href: "/pos" },
@@ -83,6 +84,7 @@ const modulePermissions: Record<string, string[]> = {
 
 export function AppShell() {
   const { status, user, logout, hasPermission } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const [passwordDialog, setPasswordDialog] = useState(false);
@@ -107,18 +109,18 @@ export function AppShell() {
 
   async function changePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setPasswordError(""); setPasswordNotice("");
-    if (newPassword !== confirmPassword) { setPasswordError("New password and confirmation do not match."); return; }
+    if (newPassword !== confirmPassword) { setPasswordError(t("New password and confirmation do not match.")); return; }
     if (newPassword.length < 8 || !/[a-z]/.test(newPassword) || !/[A-Z]/.test(newPassword) || !/\d/.test(newPassword)) {
-      setPasswordError("Use at least 8 characters with an uppercase letter, lowercase letter and number."); return;
+      setPasswordError(t("Use at least 8 characters with an uppercase letter, lowercase letter and number.")); return;
     }
     setPasswordSaving(true);
     try {
       await api.post<unknown>("/auth/change-password", { currentPassword, newPassword, confirmPassword });
       setPasswordDialog(false); setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
-      setPasswordNotice("Your password has been changed.");
+      setPasswordNotice(t("Your password has been changed."));
       window.setTimeout(() => setPasswordNotice(""), 5000);
     } catch (cause) {
-      setPasswordError(cause instanceof ApiClientError ? cause.message : "Password could not be changed. Please try again.");
+      setPasswordError(t(cause instanceof ApiClientError ? cause.message : "Password could not be changed. Please try again."));
     } finally { setPasswordSaving(false); }
   }
 
@@ -131,6 +133,9 @@ export function AppShell() {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("");
+  const currentPageName = pathname === "/" || pathname === "/dashboard"
+    ? "Overview"
+    : plannedModules.find(({ href }) => href === pathname)?.label ?? "Overview";
 
   return (
     <div className="app-frame">
@@ -147,46 +152,46 @@ export function AppShell() {
         </div>
 
         <nav className="side-navigation" aria-label="Main navigation">
-          <p className="nav-caption">WORKSPACE</p>
-          <a className={`nav-link ${pathname === "/dashboard" ? "nav-link-active" : ""}`} href={demoMode ? "/dashboard?demo=1" : "/dashboard"}><LayoutDashboard size={17} /><span>Overview</span></a>
-          <p className="nav-caption nav-caption-spaced">PHARMACY</p>
+          <p className="nav-caption">{t("WORKSPACE")}</p>
+          <a className={`nav-link ${pathname === "/dashboard" ? "nav-link-active" : ""}`} href={demoMode ? "/dashboard?demo=1" : "/dashboard"}><LayoutDashboard size={17} /><span>{t("Overview")}</span></a>
+          <p className="nav-caption nav-caption-spaced">{t("PHARMACY")}</p>
           {plannedModules.filter(({ href }) => !href || (modulePermissions[href] ?? []).some(hasPermission)).map(({ label, icon: Icon, href }) => href ? (
             <a className={`nav-link nav-link-planned ${pathname === href ? "nav-link-active" : ""}`} key={label} href={demoMode ? `${href}?demo=1` : href}>
-              <Icon size={17} /><span>{label}</span><span className="nav-soon">Open</span>
+              <Icon size={17} /><span>{t(label)}</span><span className="nav-soon">{t("Open")}</span>
             </a>
-          ) : <button className="nav-link nav-link-planned" key={label} type="button" disabled title={`${label} is planned for an upcoming implementation phase`}><Icon size={17} /><span>{label}</span><span className="nav-soon">Soon</span></button>)}
+          ) : <button className="nav-link nav-link-planned" key={label} type="button" disabled title={`${t(label)} — ${t("Soon")}`}><Icon size={17} /><span>{t(label)}</span><span className="nav-soon">{t("Soon")}</span></button>)}
         </nav>
 
         <div className="sidebar-bottom">
-          <button className="nav-link" type="button" disabled><Settings2 size={17} /><span>Settings</span><span className="nav-soon">Soon</span></button>
-          <button className="nav-link" type="button" disabled><CircleHelp size={17} /><span>Help &amp; support</span></button>
-          <div className="sidebar-footer"><span className="online-dot" />All systems operational</div>
+          <button className="nav-link" type="button" disabled><Settings2 size={17} /><span>{t("Settings")}</span><span className="nav-soon">{t("Soon")}</span></button>
+          <button className="nav-link" type="button" disabled><CircleHelp size={17} /><span>{t("Help & support")}</span></button>
+          <div className="sidebar-footer"><span className="online-dot" />{t("All systems operational")}</div>
         </div>
       </aside>
 
       <div className="main-column">
         <header className="topbar">
-          <div className="breadcrumb"><span>Workspace</span><span className="breadcrumb-slash">/</span><strong>Overview</strong></div>
+          <div className="breadcrumb"><span>{t("Workspace")}</span><span className="breadcrumb-slash">/</span><strong>{t(currentPageName)}</strong></div>
           <div className="topbar-actions">
-            {demoMode && <span className="demo-mode-badge">DEMO DATA · Local only</span>}<span className="shortcut-hint"><Command size={12} /> K</span>
-            <button className="icon-button notification-button" type="button" aria-label="Notifications"><Bell size={18} /><i /></button>
+            <label className="language-switcher"><span className="sr-only">{t("Language")}</span><select aria-label={t("Language")} value={language} onChange={(event) => setLanguage(event.target.value as "en" | "bn")}><option value="en">English</option><option value="bn">বাংলা</option></select></label>
+            {demoMode && <span className="demo-mode-badge"><span className="demo-badge-full">{t("DEMO DATA · Local only")}</span><span className="demo-badge-compact">{language === "bn" ? "ডেমো" : "DEMO"}</span></span>}<span className="shortcut-hint"><Command size={12} /> K</span>
+            <button className="icon-button notification-button" type="button" aria-label={t("Notifications")}><Bell size={18} /><i /></button>
             <div className="topbar-divider" />
             <div className="user-menu">
               <span className="user-avatar">{initials}</span>
               <span className="user-menu-copy"><strong>{user?.fullName}</strong><small>{user?.role?.name ?? "Team member"}</small></span>
-              <button className="password-menu-button" type="button" onClick={() => { setPasswordError(""); setPasswordDialog(true); }}><KeyRound size={14}/><span>Change password</span></button>
-              <button className="logout-button" type="button" onClick={handleLogout} aria-label="Sign out"><LogOut size={16} /></button>
+              <button className="password-menu-button" type="button" onClick={() => { setPasswordError(""); setPasswordDialog(true); }}><KeyRound size={14}/><span>{t("Change password")}</span></button>
+              <button className="logout-button" type="button" onClick={handleLogout} aria-label={t("Sign out")}><LogOut size={16} /></button>
             </div>
           </div>
         </header>
         <main className={`workspace-content ${["/pos", "/catalog", "/inventory", "/purchases", "/sales", "/returns", "/customers", "/finance"].includes(pathname) ? "workspace-content-pos" : ""}`}>
           {pathname === "/pos" ? <PosWorkspace /> : pathname === "/catalog" || pathname === "/inventory" ? <CatalogInventoryWorkspace mode={pathname === "/catalog" ? "catalog" : "inventory"} /> : pathname === "/purchases" ? <PurchaseWorkspace /> : pathname === "/suppliers" ? <SupplierWorkspace /> : pathname === "/sales" || pathname === "/returns" ? <SalesWorkspace mode={pathname === "/sales" ? "sales" : "returns"} /> : pathname === "/customers" ? <CustomerWorkspace /> : pathname === "/finance" ? <FinanceWorkspace /> : pathname === "/finance/consultations" ? <ConsultationWorkspace /> : pathname === "/reports" ? <ReportsWorkspace /> : pathname === "/hr" ? <HrWorkspace /> : pathname === "/hr/rosters" ? <DutyRostersWorkspace /> : pathname === "/admin" ? <AdminWorkspace /> : pathname === "/hr/setup" ? <HrSetupWorkspace /> : pathname === "/access" ? <AccessWorkspace /> : pathname === "/catalog/setup" ? <CatalogSetupWorkspace /> : <Overview />}
         </main>
-        <footer className="workspace-footer"><span>Pharmacy POS</span><span>Secure workspace · Asia/Dhaka</span></footer>
+        <footer className="workspace-footer"><span>{t("Pharmacy POS")}</span><span>{t("Secure workspace · Asia/Dhaka")}</span></footer>
       </div>
       {passwordNotice && <div className="password-toast" role="status">{passwordNotice}</div>}
-      {passwordDialog && <div className="pos-dialog-backdrop" role="presentation" onClick={() => !passwordSaving && setPasswordDialog(false)}><section className="password-dialog" role="dialog" aria-modal="true" aria-labelledby="password-dialog-title" onClick={(event) => event.stopPropagation()}><div className="password-dialog-heading"><span><KeyRound size={18}/></span><button className="pos-icon-action" type="button" onClick={() => setPasswordDialog(false)} aria-label="Close change password dialog"><X size={16}/></button></div><h2 id="password-dialog-title">Change your password</h2><p>Confirm your current password, then choose a strong replacement.</p><form onSubmit={(event) => void changePassword(event)}><label>Current password<input autoComplete="current-password" type="password" required value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)}/></label><label>New password<input autoComplete="new-password" type="password" minLength={8} required value={newPassword} onChange={(event) => setNewPassword(event.target.value)}/><small>At least 8 characters, including uppercase, lowercase and a number.</small></label><label>Confirm new password<input autoComplete="new-password" type="password" minLength={8} required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)}/></label>{passwordError && <div className="pos-dialog-error" role="alert">{passwordError}</div>}<button className="pos-complete-button" type="submit" disabled={passwordSaving}>{passwordSaving ? "Updating password…" : "Update password"}</button></form></section></div>}
+      {passwordDialog && <div className="pos-dialog-backdrop" role="presentation" onClick={() => !passwordSaving && setPasswordDialog(false)}><section className="password-dialog" role="dialog" aria-modal="true" aria-labelledby="password-dialog-title" onClick={(event) => event.stopPropagation()}><div className="password-dialog-heading"><span><KeyRound size={18}/></span><button className="pos-icon-action" type="button" onClick={() => setPasswordDialog(false)} aria-label={`${t("Close")} ${t("Change password")}`}><X size={16}/></button></div><h2 id="password-dialog-title">{t("Change your password")}</h2><p>{t("Confirm your current password, then choose a strong replacement.")}</p><form onSubmit={(event) => void changePassword(event)}><label>{t("Current password")}<input autoComplete="current-password" type="password" required value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)}/></label><label>{t("New password")}<input autoComplete="new-password" type="password" minLength={8} required value={newPassword} onChange={(event) => setNewPassword(event.target.value)}/><small>{t("At least 8 characters, including uppercase, lowercase and a number.")}</small></label><label>{t("Confirm new password")}<input autoComplete="new-password" type="password" minLength={8} required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)}/></label>{passwordError && <div className="pos-dialog-error" role="alert">{t(passwordError)}</div>}<button className="pos-complete-button" type="submit" disabled={passwordSaving}>{passwordSaving ? t("Updating password…") : t("Update password")}</button></form></section></div>}
     </div>
   );
 }
-

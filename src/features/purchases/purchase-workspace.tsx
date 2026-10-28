@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertCircle, ArrowDownLeft, Check, ChevronRight, CircleAlert, Clock3, FilePlus2, Package, Plus, Search, Truck, X } from "lucide-react";
+import { AlertCircle, ArrowDownLeft, Check, ChevronRight, CircleAlert, Clock3, FilePlus2, Filter, Package, Plus, Search, Truck, X } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api/client";
 import { useAuth } from "@/components/providers/auth-provider";
 
@@ -15,6 +15,8 @@ type PurchaseItem = { medicineId: string; itemName: string; itemDescription?: st
 type PurchaseTransaction = { id: string; txnId?: string; amount: number; paymentMethod?: string; note?: string; createdAt: string; flowType?: string };
 type Purchase = { id: string; poNumber?: string; branchId: string; supplierId: string; branch?: { name: string }; supplier?: { name: string; phone?: string }; status: string; paymentStatus: string; totalPrice: number; paidAmount: number; dueAmount: number; discountAmount?: number; createdAt: string; note?: string; purchaseItems?: PurchaseItem[]; transactions?: PurchaseTransaction[] };
 type Tab = "purchases" | "suppliers";
+type PurchasePagination = { total?: number; page?: number; limit?: number; totalPages?: number };
+type PurchaseResponse = { purchases?: Purchase[]; pagination?: PurchasePagination };
 const methods = ["cash", "card", "online", "cheque", "bKash", "Nagad", "Rocket", "Bank Transfer"] as const;
 function list<T>(value: unknown): T[] { if (Array.isArray(value)) return value as T[]; if (value && typeof value === "object") { const obj = value as Data; if ("data" in obj) return list<T>(obj.data); for (const key of ["branches", "suppliers", "purchases", "accounts", "medicines"]) if (key in obj) return list<T>(obj[key]); } return []; }
 function n(value: unknown) { const x = Number(value); return Number.isFinite(x) ? x : 0; }
@@ -36,6 +38,17 @@ export function PurchaseWorkspace() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("");
+  const [supplierFilter, setSupplierFilter] = useState("");
+  const [poNumber, setPoNumber] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [methodFilter, setMethodFilter] = useState("");
+  const [minAmount, setMinAmount] = useState("");
+  const [maxAmount, setMaxAmount] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<Required<PurchasePagination>>({ total: 0, page: 1, limit: 20, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -60,22 +73,34 @@ export function PurchaseWorkspace() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ page: "1", limit: "100" });
+    const params = new URLSearchParams({ page: String(page), limit: "20" });
     if (branchId) params.set("branchId", branchId);
     if (search.trim()) params.set("search", search.trim());
     if (statusFilter) params.set("status", statusFilter);
     if (paymentFilter) params.set("paymentStatus", paymentFilter);
+    if (supplierFilter) params.set("supplierId", supplierFilter);
+    if (poNumber.trim()) params.set("poNumber", poNumber.trim());
+    if (typeFilter) params.set("type", typeFilter);
+    if (methodFilter) params.set("paymentMethod", methodFilter);
+    if (minAmount) params.set("minAmount", minAmount);
+    if (maxAmount) params.set("maxAmount", maxAmount);
+    if (startDate) params.set("startDate", startDate);
+    if (endDate) params.set("endDate", endDate);
     try {
       const [purchaseResult, supplierResult] = await Promise.all([
         api.get<unknown>(`/pharmacy/purchases?${params.toString()}`),
         api.get<unknown>(`/pharmacy/suppliers?page=1&limit=100${search.trim() && tab === "suppliers" ? `&search=${encodeURIComponent(search.trim())}` : ""}`),
       ]);
-      setPurchases(list<Purchase>(purchaseResult));
+      const purchasePayload = purchaseResult && typeof purchaseResult === "object" ? purchaseResult as PurchaseResponse : {};
+      const purchaseRows = list<Purchase>(purchaseResult);
+      const pageMeta = purchasePayload.pagination ?? { total: purchaseRows.length, page, limit: 20, totalPages: Math.max(1, Math.ceil(purchaseRows.length / 20)) };
+      setPurchases(purchaseRows);
+      setPagination({ total: Math.max(n(pageMeta.total), purchaseRows.length), page: n(pageMeta.page) || page, limit: n(pageMeta.limit) || 20, totalPages: Math.max(1, n(pageMeta.totalPages) || Math.ceil(n(pageMeta.total) / 20) || 1) });
       setSuppliers(list<Supplier>(supplierResult));
       setError("");
     } catch (cause) { setError(errorText(cause)); }
     finally { setLoading(false); }
-  }, [branchId, paymentFilter, search, statusFilter, tab]);
+  }, [branchId, endDate, methodFilter, minAmount, maxAmount, page, paymentFilter, poNumber, search, startDate, statusFilter, supplierFilter, tab, typeFilter]);
 
   useEffect(() => {
     let alive = true;
@@ -181,16 +206,22 @@ export function PurchaseWorkspace() {
   }
 
   const filteredSuppliers = useMemo(() => suppliers, [suppliers]);
+  function clearPurchaseFilters() {
+    setPage(1); setSearch(""); setStatusFilter(""); setPaymentFilter(""); setSupplierFilter(""); setPoNumber(""); setTypeFilter(""); setMethodFilter("");
+    setMinAmount(""); setMaxAmount(""); setStartDate(""); setEndDate("");
+  }
   return <section className="purchase-page">
-    <div className="page-heading-row"><div><p className="eyebrow">PHARMACY · PROCUREMENT</p><h1>Suppliers &amp; purchases</h1><p className="page-subtitle">Manage supplier orders, stock receiving and outstanding payments.</p></div><div className="purchase-page-context"><label className="data-branch-select"><span>Branch</span><select value={branchId} onChange={(event) => setBranchId(event.target.value)}><option value="">Select branch</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><span className={`purchase-register-pill ${registerOpen ? "open" : "closed"}`}><i/>{registerOpen ? "Register open" : "Register closed"}</span>{!registerOpen && hasPermission("sale:create") && <button className="purchase-open-register" onClick={() => setRegisterDialog(true)}>Open</button>}</div></div>
+    <div className="page-heading-row"><div><p className="eyebrow">PHARMACY · PROCUREMENT</p><h1>Suppliers &amp; purchases</h1><p className="page-subtitle">Manage supplier orders, stock receiving and outstanding payments.</p></div><div className="purchase-page-context"><label className="data-branch-select"><span>Branch</span><select value={branchId} onChange={(event) => { setPage(1); setBranchId(event.target.value); }}><option value="">Select branch</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><span className={`purchase-register-pill ${registerOpen ? "open" : "closed"}`}><i/>{registerOpen ? "Register open" : "Register closed"}</span>{!registerOpen && hasPermission("sale:create") && <button className="purchase-open-register" onClick={() => setRegisterDialog(true)}>Open</button>}</div></div>
     {(error || notice) && <div className={`purchase-alert ${error ? "error" : "success"}`}>{error ? <CircleAlert size={15}/> : <Check size={15}/>}<span>{error || notice}</span><button onClick={() => { setError(""); setNotice(""); }} aria-label="Dismiss"><X size={14}/></button></div>}
     <nav className="data-tabs">{hasPermission("purchase:read")&&<button className={tab === "purchases" ? "selected" : ""} onClick={() => setTab("purchases")}><FilePlus2 size={15}/> Purchase orders</button>}{hasPermission("supplier:read")&&<button className={tab === "suppliers" ? "selected" : ""} onClick={() => setTab("suppliers")}><Truck size={15}/> Suppliers</button>}</nav>
     {tab === "purchases" ? <>
-      <div className="purchase-metrics"><div><span className="purchase-metric-icon green"><FilePlus2 size={16}/></span><small>Orders shown</small><strong>{loading ? "—" : stats.total}</strong></div><div><span className="purchase-metric-icon amber"><Clock3 size={16}/></span><small>Awaiting receipt</small><strong>{loading ? "—" : stats.pending}</strong></div><div><span className="purchase-metric-icon blue"><ArrowDownLeft size={16}/></span><small>Outstanding dues</small><strong>{loading ? "—" : stats.due}</strong></div><div><span className="purchase-metric-icon slate"><Package size={16}/></span><small>Purchase value shown</small><strong>{loading ? "—" : taka(stats.spend)}</strong></div></div>
-      <div className="purchase-card panel"><div className="purchase-toolbar"><div className="data-search"><Search size={16}/><input placeholder="Search PO, supplier or note…" value={search} onChange={(event) => setSearch(event.target.value)}/></div><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filter by order status"><option value="">All statuses</option><option value="pending">Pending</option><option value="completed">Received</option><option value="rejected">Rejected</option></select><select value={paymentFilter} onChange={(event) => setPaymentFilter(event.target.value)} aria-label="Filter by payment status"><option value="">All payments</option><option value="due">Due</option><option value="partial">Partial</option><option value="paid">Paid</option></select>{hasPermission("purchase:create")&&<button className="purchase-primary-action" onClick={() => { setError(""); setNewPurchase(true); }}><Plus size={15}/> New purchase</button>}</div>
+      <div className="purchase-metrics"><div><span className="purchase-metric-icon green"><FilePlus2 size={16}/></span><small>Orders matching filters</small><strong>{loading ? "—" : pagination.total}</strong></div><div><span className="purchase-metric-icon amber"><Clock3 size={16}/></span><small>Awaiting receipt · page</small><strong>{loading ? "—" : stats.pending}</strong></div><div><span className="purchase-metric-icon blue"><ArrowDownLeft size={16}/></span><small>Orders with dues · page</small><strong>{loading ? "—" : stats.due}</strong></div><div><span className="purchase-metric-icon slate"><Package size={16}/></span><small>Purchase value · page</small><strong>{loading ? "—" : taka(stats.spend)}</strong></div></div>
+      <div className="purchase-card panel"><div className="purchase-toolbar"><div className="data-search"><Search size={16}/><input placeholder="Search PO, supplier or note…" value={search} onChange={(event) => { setPage(1); setSearch(event.target.value); }}/></div><select value={statusFilter} onChange={(event) => { setPage(1); setStatusFilter(event.target.value); }} aria-label="Filter by order status"><option value="">All statuses</option><option value="pending">Pending</option><option value="completed">Received</option><option value="rejected">Rejected</option></select><select value={paymentFilter} onChange={(event) => { setPage(1); setPaymentFilter(event.target.value); }} aria-label="Filter by payment status"><option value="">All payments</option><option value="due">Due</option><option value="partial">Partial</option><option value="paid">Paid</option></select><button className={`data-filter-button ${filtersOpen ? "selected" : ""}`} type="button" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((open) => !open)}><Filter size={15}/> More filters</button>{hasPermission("purchase:create")&&<button className="purchase-primary-action" onClick={() => { setError(""); setNewPurchase(true); }}><Plus size={15}/> New purchase</button>}</div>
+        {filtersOpen && <div className="purchase-filter-grid"><label>Supplier<select value={supplierFilter} onChange={(event) => { setPage(1); setSupplierFilter(event.target.value); }}><option value="">All suppliers</option>{suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}</select></label><label>Purchase type<select value={typeFilter} onChange={(event) => { setPage(1); setTypeFilter(event.target.value); }}><option value="">All types</option><option value="pharmacy">Pharmacy</option><option value="hospital">Hospital</option><option value="clinic">Clinic</option></select></label><label>Payment method<select value={methodFilter} onChange={(event) => { setPage(1); setMethodFilter(event.target.value); }}><option value="">All methods</option>{methods.map((method) => <option key={method}>{method}</option>)}</select></label><label>PO number<input value={poNumber} onChange={(event) => { setPage(1); setPoNumber(event.target.value); }} placeholder="Enter PO number"/></label><label>From date<input type="date" max={endDate || undefined} value={startDate} onChange={(event) => { setPage(1); setStartDate(event.target.value); }}/></label><label>To date<input type="date" min={startDate || undefined} value={endDate} onChange={(event) => { setPage(1); setEndDate(event.target.value); }}/></label><label>Minimum amount<input type="number" min="0" max={maxAmount || undefined} value={minAmount} onChange={(event) => { setPage(1); setMinAmount(event.target.value); }}/></label><label>Maximum amount<input type="number" min={minAmount || "0"} value={maxAmount} onChange={(event) => { setPage(1); setMaxAmount(event.target.value); }}/></label><button type="button" className="purchase-filter-clear" onClick={clearPurchaseFilters}>Clear filters</button></div>}
         <div className="purchase-list-head"><span>Order / supplier</span><span>Date / branch</span><span>Items</span><span>Amount</span><span>Status</span><span></span></div>
         {purchases.map((purchase) => <div className="purchase-row" key={purchase.id}><div className="purchase-main"><span className="purchase-row-icon"><FilePlus2 size={16}/></span><span><strong>{purchase.poNumber || `PO-${purchase.id.slice(0, 7)}`}</strong><small>{purchase.supplier?.name || "Supplier"}</small></span></div><div className="purchase-date"><strong>{new Date(purchase.createdAt).toLocaleDateString("en-GB")}</strong><small>{purchase.branch?.name || branches.find((branch) => branch.id === purchase.branchId)?.name || "Branch"}</small></div><span className="purchase-count">{purchase.purchaseItems?.length ?? 0} lines</span><div className="purchase-amount"><strong>{taka(n(purchase.totalPrice) - n(purchase.discountAmount))}</strong><small>{taka(n(purchase.dueAmount))} due</small></div><div className="purchase-statuses"><span className={`data-status ${statusClass(purchase.status)}`}>{purchase.status === "completed" ? "Received" : purchase.status}</span><span className={`data-status ${statusClass(purchase.paymentStatus)}`}>{purchase.paymentStatus}</span></div><button className="data-row-action" onClick={() => void openPurchase(purchase)} aria-label={`View ${purchase.poNumber || "purchase"}`}><ChevronRight size={16}/></button></div>)}
         {!loading && purchases.length === 0 && <div className="data-empty"><FilePlus2 size={22}/><strong>No purchase orders found</strong><span>Clear filters or create a purchase order.</span></div>}{loading && <div className="data-loading">Loading purchase history…</div>}
+        {pagination.totalPages > 1 && <div className="purchase-pagination"><span>Showing page {pagination.page} of {pagination.totalPages} · {pagination.total.toLocaleString("en-BD")} orders</span><div><button type="button" disabled={loading || page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>Previous</button><button type="button" disabled={loading || page >= pagination.totalPages} onClick={() => setPage((current) => Math.min(pagination.totalPages, current + 1))}>Next</button></div></div>}
       </div>
     </> : <div className="purchase-card panel"><div className="purchase-toolbar"><div className="data-search"><Search size={16}/><input placeholder="Search supplier, phone or address…" value={search} onChange={(event) => setSearch(event.target.value)}/></div>{hasPermission("supplier:create")&&<button className="purchase-primary-action" onClick={() => { setError(""); setNewSupplier(true); }}><Plus size={15}/> Add supplier</button>}</div><div className="supplier-grid">{filteredSuppliers.map((supplier) => <article className="supplier-card" key={supplier.id}><span className="supplier-avatar"><Truck size={17}/></span><strong>{supplier.name}</strong><small>{supplier.phone || "No phone"}</small><small>{supplier.address || "No address on file"}</small><span className="supplier-email">{supplier.email || "Email not provided"}</span></article>)}</div>{!loading && suppliers.length === 0 && <div className="data-empty"><Truck size={22}/><strong>No suppliers found</strong><span>Add your first supplier to create a purchase order.</span></div>}{loading && <div className="data-loading">Loading suppliers…</div>}</div>}
 
@@ -208,4 +239,3 @@ export function PurchaseWorkspace() {
     {registerDialog && <div className="purchase-backdrop register-backdrop" role="presentation" onClick={() => setRegisterDialog(false)}><div className="supplier-dialog panel" role="dialog" aria-modal="true" aria-label="Open cash register" onClick={(event) => event.stopPropagation()}><button className="purchase-close" onClick={() => setRegisterDialog(false)} aria-label="Close"><X size={18}/></button><span className="supplier-dialog-icon"><Clock3 size={19}/></span><h2>Open cash register</h2><p>Purchases require an active cashier session for this branch.</p><label>Opening cash balance<input type="number" min="0" value={openingCash} onChange={(event) => setOpeningCash(event.target.value)}/></label>{error && <div className="purchase-alert error">{error}</div>}<button className="purchase-primary-action full" disabled={saving || !branchId || !hasPermission("sale:create")} onClick={() => void openRegister()}>{saving ? "Opening…" : "Open register"}</button></div></div>}
   </section>;
 }
-

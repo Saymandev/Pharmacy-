@@ -150,4 +150,3 @@ export function demoRequest<T>(path: string, request: DemoRequest = {}): Promise
 
   return Promise.resolve(result(data) as T);
 }
-

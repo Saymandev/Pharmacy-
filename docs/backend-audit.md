@@ -69,4 +69,3 @@ The return UI shows original, already-returned and remaining quantities and caps
 | P1 | Backup routes expose trigger, history, config and download, but no restore operation. | A restore button would promise a backend capability that does not exist. | Add and secure a restore endpoint with auditability before designing a restore workflow. |
 
 These are source-level findings for engineering follow-up. They are not silently papered over by the visual design. Until the backend fixes land, the frontend should send explicit account/tender rows, compute bounded discount amounts, restrict quantities to whole stock units, require an active register in the UI, and display return limits based on the original sale history.
-
