@@ -3,6 +3,7 @@ import { AuthProvider } from "@/components/providers/auth-provider";
 import { LanguageProvider } from "@/lib/i18n/language-provider";
 import "./globals.css";
 import "./workspace-overrides.css";
+import "./modern-pharmacy.css";
 
 export const metadata: Metadata = {
   title: "Pharmacy POS | Pharmacy operations",
