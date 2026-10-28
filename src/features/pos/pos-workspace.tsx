@@ -71,7 +71,7 @@ export function PosWorkspace() {
   const [hasMoreProducts, setHasMoreProducts] = useState(false);
   const productRequestId = useRef(0);
   const sessionRequestId = useRef(0);
-  const paymentIdCounter = useRef(1);
+  const paymentIdCounter = useRef(2);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [customerQuery, setCustomerQuery] = useState("");
