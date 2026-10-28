@@ -384,10 +384,10 @@ export function PosWorkspace() {
       let selected: Customer | null = created?.id ? created : null;
       if (!selected) {
         const found = rows<Customer>(await fetchCustomers(new URLSearchParams({
-          phone: asciiDigits(phone).replace(/\\D/g, ""), page: "1", limit: "10",
+          phone: asciiDigits(phone).replace(/\D/g, ""), page: "1", limit: "10",
         })));
-        const normalized = asciiDigits(phone).replace(/\\D/g, "");
-        selected = found.find((entry) => asciiDigits(entry.phone).replace(/\\D/g, "") === normalized) ?? null;
+        const normalized = asciiDigits(phone).replace(/\D/g, "");
+        selected = found.find((entry) => asciiDigits(entry.phone).replace(/\D/g, "") === normalized) ?? null;
       }
       if (selected) {
         setCustomer(selected);
@@ -499,7 +499,7 @@ export function PosWorkspace() {
       </div>)}
     </div>
     <div className="pos-cart-summary"><span>{t("Cart subtotal")}<small>{totalUnits} {t(totalUnits === 1 ? "unit" : "units")} · {t("discounts at checkout")}</small></span><strong>{money(subtotal)}</strong></div>
-    <div className="pos-cart-footer">{canCreateSales ? <><button className="pos-proceed-button" type="button" disabled={cart.length === 0} onClick={() => { setError(""); setCheckoutOpen(true); setCartOpen(false); }}><span>{t("Proceed to checkout")}</span><span>{money(subtotal)} <ChevronRight size={16}/></span></button><small>{t("Choose a customer during checkout, or leave blank to use the default OPD patient.")}</small></> : <small>{t("Your role can view this cart but cannot create sales.")}</small>}</div>
+    <div className="pos-cart-footer">{canCreateSales ? <><button className="pos-proceed-button" type="button" disabled={cart.length === 0} onClick={() => { setError(""); setCheckoutOpen(true); setCartOpen(false); }}><span>{t("Proceed to checkout")}</span><span>{money(subtotal)} <ChevronRight size={16}/></span></button></> : <small>{t("Your role can view this cart but cannot create sales.")}</small>}</div>
   </>;
 
   const checkoutContent = <>
