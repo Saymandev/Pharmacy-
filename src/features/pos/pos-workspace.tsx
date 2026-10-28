@@ -44,10 +44,10 @@ function asciiDigits(value: string) { return value.replace(/[০-৯]/g, (digit)
 async function fetchCustomers(params: URLSearchParams) {
   const query = params.toString();
   try {
-    return await api.get<unknown>(`/customers?${query}`);
+    return await api.get<unknown>(`/pharmacy/customers?${query}`);
   } catch (cause) {
     if (!(cause instanceof ApiClientError) || cause.status !== 404) throw cause;
-    return api.get<unknown>(`/pharmacy/customers?${query}`);
+    return api.get<unknown>(`/customers?${query}`);
   }
 }
 
@@ -419,13 +419,12 @@ export function PosWorkspace() {
     finally { setSaving(false); }
   }
 
-  const cartContent = <>
-    <div className="pos-cart-heading"><div><h2>{t("Current sale")}</h2><p>{totalUnits} {t(totalUnits === 1 ? "item" : "items")}</p></div><button className="pos-icon-action pos-cart-close" onClick={() => setCartOpen(false)} aria-label={t("Close cart")}><X size={18} /></button></div>
-    <div className="pos-cart-controls">
-      <div className="pos-customer-wrap">
+  const customerPicker = <div className="pos-customer-wrap">
         {customer ? <div className="pos-selected-customer"><span className="pos-customer-icon"><UserRound size={16} /></span><span><strong>{language === "bn" ? customer.nameBangla || customer.name : customer.name}</strong><small>{customer.phone} · {t("Due")} {money(numeric(customer.balance))}</small></span><button className="pos-icon-action" onClick={() => { setCustomer(null); setCustomerQuery(""); setCustomerOpen(true); }} aria-label={t("Change customer")} title={t("Change customer")}><X size={15} /></button></div> : <><label className="pos-field-caption" htmlFor="customer-search">{t("Customer")} <span>{t("optional")}</span></label><div className="pos-input-with-icon"><UserRound size={16} /><input id="customer-search" value={customerQuery} onChange={(event) => { setCustomerQuery(event.target.value); setCustomerOpen(true); }} onFocus={() => setCustomerOpen(true)} placeholder={t("Search name or phone")} autoComplete="off" onKeyDown={(event) => { if (event.key === "Escape") setCustomerOpen(false); if (event.key === "Enter" && customers[0]) { event.preventDefault(); setCustomer(customers[0]); setCustomerQuery(""); setCustomerOpen(false); } }} /></div><small className="pos-opd-hint">{t("If you leave this blank, the sale will use the default OPD patient.")}</small>{customerOpen && customerQuery.trim() && <div className="pos-customer-options">{customerSearchLoading ? <div className="pos-customer-search-state">{t("Searching customers…")}</div> : customerSearchError ? <div className="pos-customer-search-state is-error">{t(customerSearchError)}</div> : customers.length > 0 ? customers.map((item) => <button key={item.id} type="button" onClick={() => { setCustomer(item); setCustomerQuery(""); setCustomerOpen(false); }}><strong>{language === "bn" ? item.nameBangla || item.name : item.name}</strong><small>{item.phone} · {t("Balance")} {money(numeric(item.balance))}</small></button>) : <div className="pos-customer-search-state">{t("No matching customer found.")}</div>}</div>}</>}
       </div>
-    </div>
+
+  const cartContent = <>
+    <div className="pos-cart-heading"><div><h2>{t("Current sale")}</h2><p>{totalUnits} {t(totalUnits === 1 ? "item" : "items")}</p></div><button className="pos-icon-action pos-cart-close" onClick={() => setCartOpen(false)} aria-label={t("Close cart")}><X size={18} /></button></div>
     <div className="pos-cart-lines">
       {cart.length === 0 ? <div className="pos-empty-cart"><span><ShoppingBag size={21} /></span><strong>{t("Your cart is empty")}</strong><small>{t("Search or scan a medicine to begin.")}</small></div> : cart.map((line) => <div className="pos-cart-line" key={line.stock.id}>
         <div className="pos-line-main"><div><strong>{medicineName(line.medicine)}</strong><small>{line.medicine.strength || line.medicine.genericName || t("Medicine")}</small><select className="pos-batch-select" aria-label={`${t("Batch for")} ${medicineName(line.medicine)}`} value={line.stock.id} onChange={(event) => { const nextStock = (line.medicine.stocks ?? []).find((stock) => stock.id === event.target.value); if (nextStock) setCart((current) => current.map((entry) => entry.stock.id === line.stock.id ? { ...entry, stock: nextStock, quantity: Math.min(entry.quantity, nextStock.quantity), price: numeric(entry.medicine.salePrice) || numeric(nextStock.mrp) || entry.price } : entry)); }}>{(line.medicine.stocks ?? []).filter((stock) => stock.branchId === branchId && stock.quantity > 0).map((stock) => <option key={stock.id} value={stock.id}>{t("Batch")} {stock.batchNumber} · {t("exp")} {new Date(stock.expiryDate).toLocaleDateString(locale)} · {stock.quantity} {t("available")}</option>)}</select></div><button className="pos-icon-action pos-remove" onClick={() => setCart((current) => current.filter((item) => item.stock.id !== line.stock.id))} aria-label={`${t("Remove")} ${medicineName(line.medicine)}`}><Trash2 size={15} /></button></div>
@@ -433,13 +432,14 @@ export function PosWorkspace() {
       </div>)}
     </div>
     <div className="pos-cart-summary"><span>{t("Cart subtotal")}<small>{totalUnits} {t(totalUnits === 1 ? "unit" : "units")} · {t("discounts at checkout")}</small></span><strong>{money(subtotal)}</strong></div>
-    <div className="pos-cart-footer">{canCreateSales ? <><button className="pos-proceed-button" type="button" disabled={cart.length === 0} onClick={() => { setError(""); setCheckoutOpen(true); setCartOpen(false); }}><span>{t("Proceed to checkout")}</span><span>{money(subtotal)} <ChevronRight size={16}/></span></button><small>{customer ? t("Review discount, tax and payment on the next step.") : t("Default OPD patient will be used if no customer is selected.")}</small></> : <small>{t("Your role can view this cart but cannot create sales.")}</small>}</div>
+    <div className="pos-cart-footer">{canCreateSales ? <><button className="pos-proceed-button" type="button" disabled={cart.length === 0} onClick={() => { setError(""); setCheckoutOpen(true); setCartOpen(false); }}><span>{t("Proceed to checkout")}</span><span>{money(subtotal)} <ChevronRight size={16}/></span></button><small>{t("Choose a customer during checkout, or leave blank to use the default OPD patient.")}</small></> : <small>{t("Your role can view this cart but cannot create sales.")}</small>}</div>
   </>;
 
   const checkoutContent = <>
     <div className="pos-checkout-heading"><div><p className="eyebrow">{t("FINAL STEP")}</p><h2 id="pos-checkout-title">{t("Review & pay")}</h2><p>{totalUnits} {t(totalUnits === 1 ? "unit" : "units")} · {customer ? language === "bn" ? customer.nameBangla || customer.name : customer.name : t("OPD patient (default)")}</p></div><button type="button" className="pos-checkout-back" onClick={() => { setCheckoutOpen(false); if (window.matchMedia("(max-width: 1050px)").matches) setCartOpen(true); }}><ChevronRight size={15}/> {t("Back to cart")}</button></div>
     {error && <div className="pos-alert pos-alert-error pos-checkout-error" role="alert"><CircleAlert size={16}/><span>{error}</span></div>}
     <div className="pos-checkout-body">
+      <section className="pos-checkout-customer" aria-label={t("Customer optional")}>{customerPicker}</section>
       <section className="pos-checkout-items" aria-label={t("Sale items")}><h3>{t("Items in this sale")}</h3>{cart.map((line) => <div className="pos-checkout-item" key={line.stock.id}><span><strong>{medicineName(line.medicine)}</strong><small>{line.quantity} {line.stock.unit} · {line.stock.batchNumber}</small></span><label><span>{t("Discount")}</span><div className="pos-item-discount-input"><input type="number" min="0" max="100" value={line.discountPercent} onChange={(event) => changeLine(line.stock.id, { discountPercent: Math.min(100, Math.max(0, numeric(event.target.value))) })}/><b>%</b></div></label><strong>{money(line.price * line.quantity * (1 - line.discountPercent / 100))}</strong></div>)}</section>
       <div className="pos-discount-row"><span>{t("Sale discount")}</span><div className="pos-discount-input"><input type="number" min="0" max={discountMode === "percent" ? 100 : saleEligible} value={saleDiscount} onChange={(event) => setSaleDiscount(Math.min(discountMode === "percent" ? 100 : saleEligible, Math.max(0, numeric(event.target.value))))} /><select aria-label={t("Discount type")} value={discountMode} onChange={(event) => setDiscountMode(event.target.value as "percent" | "fixed")}><option value="percent">%</option><option value="fixed">BDT</option></select></div></div>
       <div className="pos-total-row"><span>{t("Subtotal")}</span><span>{money(subtotal)}</span></div><div className="pos-total-row"><span>{t("Item discount")}</span><span>−{money(itemDiscount)}</span></div><div className="pos-total-row"><span>{t("Sale discount")}</span><span>−{money(actualSaleDiscount)}</span></div><div className="pos-total-row"><span>{t("Tax · exclusive")} {taxPercent}%</span><span>{money(taxAmount)}</span></div>
