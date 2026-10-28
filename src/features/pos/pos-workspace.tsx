@@ -59,6 +59,8 @@ export function PosWorkspace() {
   function money(value: number) { return new Intl.NumberFormat(locale, { style: "currency", currency: "BDT", maximumFractionDigits: 2 }).format(value || 0); }
   function medicineName(medicine: Medicine) { return language === "bn" ? medicine.nameBangla || medicine.name : medicine.name; }
   const canCreateSales = hasPermission("sale:create");
+  const canCreateCustomers = hasPermission("customer:create");
+  const canCreateAccounts = hasPermission("account:create");
   const canReadSales = hasPermission("sale:read");
   const [session, setSession] = useState<Row | null>(null);
   const [medicines, setMedicines] = useState<Medicine[]>([]);
@@ -90,6 +92,13 @@ export function PosWorkspace() {
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [confirmStatus, setConfirmStatus] = useState<"pending" | "completed" | null>(null);
+  const [customerQuickOpen, setCustomerQuickOpen] = useState(false);
+  const [customerQuickSaving, setCustomerQuickSaving] = useState(false);
+  const [customerQuickForm, setCustomerQuickForm] = useState({ name: "", phone: "", age: "", gender: "other" });
+  const [accountQuickOpen, setAccountQuickOpen] = useState(false);
+  const [accountQuickSaving, setAccountQuickSaving] = useState(false);
+  const [accountQuickForm, setAccountQuickForm] = useState({ name: "", type: "cash" });
   const [customerQuery, setCustomerQuery] = useState("");
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [customerOpen, setCustomerOpen] = useState(false);
@@ -358,6 +367,64 @@ export function PosWorkspace() {
     } catch (cause) { setHistoryError(getError(cause)); }
     finally { setHistoryLoading(false); }
   }
+  async function createCheckoutCustomer() {
+    if (!canCreateCustomers || !checkoutOpen) return;
+    const { name, phone, age: ageInput, gender } = customerQuickForm;
+    const age = Number(ageInput);
+    if (!name.trim() || !phone.trim() || !ageInput.trim() || !Number.isInteger(age) || age < 0) {
+      setError(t("Customer name, phone and a valid whole-number age are required."));
+      return;
+    }
+    setCustomerQuickSaving(true);
+    setError("");
+    try {
+      const created = await api.post<Customer>("/customers", {
+        name: name.trim(), phone: phone.trim(), age, gender, visitType: "opd",
+      });
+      let selected: Customer | null = created?.id ? created : null;
+      if (!selected) {
+        const found = rows<Customer>(await fetchCustomers(new URLSearchParams({
+          phone: asciiDigits(phone).replace(/\D/g, ""), page: "1", limit: "10",
+        })));
+        const normalized = asciiDigits(phone).replace(/\D/g, "");
+        selected = found.find((entry) => asciiDigits(entry.phone).replace(/\D/g, "") === normalized) ?? null;
+      }
+      if (selected) {
+        setCustomer(selected);
+        setCustomerQuery("");
+        setCustomerOpen(false);
+        setNotice(t("Customer created and selected for checkout."));
+      } else {
+        setError(t("Customer was created. Search for the phone number to select the new customer."));
+      }
+      setCustomerQuickOpen(false);
+      setCustomerQuickForm({ name: "", phone: "", age: "", gender: "other" });
+    } catch (cause) { setError(getError(cause)); }
+    finally { setCustomerQuickSaving(false); }
+  }
+
+  async function createCheckoutAccount() {
+    if (!canCreateAccounts || !checkoutOpen) return;
+    const { name, type } = accountQuickForm;
+    if (!name.trim()) { setError(t("Enter a payment account name.")); return; }
+    setAccountQuickSaving(true);
+    setError("");
+    try {
+      const created = await api.post<Account>("/finance/accounts", {
+        name: name.trim(), type, group: "pharmacy", openingBalance: 0, description: "", isActive: true,
+      });
+      const current = rows<Account>(await api.get<unknown>("/finance/accounts?page=1&limit=100&isActive=true"))
+        .filter((entry) => ["cash", "bank", "mfs"].includes(entry.type));
+      setAccounts(current);
+      const selected = current.find((entry) => entry.id === created?.id) ?? current.find((entry) => entry.name === name.trim() && entry.type === type);
+      if (selected && paymentLines.length === 1) updatePaymentLine(paymentLines[0].id, { accountId: selected.id });
+      setAccountQuickOpen(false);
+      setAccountQuickForm({ name: "", type: "cash" });
+      setNotice(t("Payment account created. Select it for the relevant payment."));
+    } catch (cause) { setError(getError(cause)); }
+    finally { setAccountQuickSaving(false); }
+  }
+
   async function submitSale(status: "pending" | "completed") {
     if (!canCreateSales) { setError(t("Your role cannot create sales.")); return; }
     setError(""); setNotice("");
@@ -432,24 +499,35 @@ export function PosWorkspace() {
       </div>)}
     </div>
     <div className="pos-cart-summary"><span>{t("Cart subtotal")}<small>{totalUnits} {t(totalUnits === 1 ? "unit" : "units")} · {t("discounts at checkout")}</small></span><strong>{money(subtotal)}</strong></div>
-    <div className="pos-cart-footer">{canCreateSales ? <><button className="pos-proceed-button" type="button" disabled={cart.length === 0} onClick={() => { setError(""); setCheckoutOpen(true); setCartOpen(false); }}><span>{t("Proceed to checkout")}</span><span>{money(subtotal)} <ChevronRight size={16}/></span></button><small>{t("Choose a customer during checkout, or leave blank to use the default OPD patient.")}</small></> : <small>{t("Your role can view this cart but cannot create sales.")}</small>}</div>
+    <div className="pos-cart-footer">{canCreateSales ? <><button className="pos-proceed-button" type="button" disabled={cart.length === 0} onClick={() => { setError(""); setCheckoutOpen(true); setCartOpen(false); }}><span>{t("Proceed to checkout")}</span><span>{money(subtotal)} <ChevronRight size={16}/></span></button></> : <small>{t("Your role can view this cart but cannot create sales.")}</small>}</div>
   </>;
 
   const checkoutContent = <>
-    <div className="pos-checkout-heading"><div><p className="eyebrow">{t("FINAL STEP")}</p><h2 id="pos-checkout-title">{t("Review & pay")}</h2><p>{totalUnits} {t(totalUnits === 1 ? "unit" : "units")} · {customer ? language === "bn" ? customer.nameBangla || customer.name : customer.name : t("OPD patient (default)")}</p></div><button type="button" className="pos-checkout-back" onClick={() => { setCheckoutOpen(false); if (window.matchMedia("(max-width: 1050px)").matches) setCartOpen(true); }}><ChevronRight size={15}/> {t("Back to cart")}</button></div>
+    <div className="pos-checkout-heading"><div><p className="eyebrow">{t("STEP 2 OF 2 · CHECKOUT")}</p><h2 id="pos-checkout-title">{t("Review & pay")}</h2><p>{totalUnits} {t(totalUnits === 1 ? "unit" : "units")} · {customer ? language === "bn" ? customer.nameBangla || customer.name : customer.name : t("OPD patient (default)")}</p></div><button type="button" className="pos-checkout-back" onClick={() => { setCheckoutOpen(false); if (window.matchMedia("(max-width: 1050px)").matches) setCartOpen(true); }}><ChevronRight size={15}/> {t("Back to cart")}</button></div>
     {error && <div className="pos-alert pos-alert-error pos-checkout-error" role="alert"><CircleAlert size={16}/><span>{error}</span></div>}
     <div className="pos-checkout-body">
-      <section className="pos-checkout-customer" aria-label={t("Customer optional")}>{customerPicker}</section>
-      <section className="pos-checkout-items" aria-label={t("Sale items")}><h3>{t("Items in this sale")}</h3>{cart.map((line) => <div className="pos-checkout-item" key={line.stock.id}><span><strong>{medicineName(line.medicine)}</strong><small>{line.quantity} {line.stock.unit} · {line.stock.batchNumber}</small></span><label><span>{t("Discount")}</span><div className="pos-item-discount-input"><input type="number" min="0" max="100" value={line.discountPercent} onChange={(event) => changeLine(line.stock.id, { discountPercent: Math.min(100, Math.max(0, numeric(event.target.value))) })}/><b>%</b></div></label><strong>{money(line.price * line.quantity * (1 - line.discountPercent / 100))}</strong></div>)}</section>
-      <div className="pos-discount-row"><span>{t("Sale discount")}</span><div className="pos-discount-input"><input type="number" min="0" max={discountMode === "percent" ? 100 : saleEligible} value={saleDiscount} onChange={(event) => setSaleDiscount(Math.min(discountMode === "percent" ? 100 : saleEligible, Math.max(0, numeric(event.target.value))))} /><select aria-label={t("Discount type")} value={discountMode} onChange={(event) => setDiscountMode(event.target.value as "percent" | "fixed")}><option value="percent">%</option><option value="fixed">BDT</option></select></div></div>
+      <section className="pos-checkout-customer" aria-label={t("Customer optional")}>
+        <div className="pos-checkout-section-top"><div><h3>{t("Customer details")}</h3><small>{t("Select a customer or continue as an OPD patient.")}</small></div>{canCreateCustomers && <button type="button" className="pos-checkout-add-button" aria-expanded={customerQuickOpen} onClick={() => { setError(""); setCustomerQuickOpen((open) => !open); }}><Plus size={15}/>{t("Add customer")}</button>}</div>
+        {customerPicker}
+        {customerQuickOpen && canCreateCustomers && <div className="pos-checkout-quick-form"><div className="pos-checkout-quick-grid">
+          <label>{t("Full name")}<input autoComplete="name" value={customerQuickForm.name} onChange={(event) => setCustomerQuickForm((form) => ({ ...form, name: event.target.value }))}/></label>
+          <label>{t("Phone")}<input autoComplete="tel" type="tel" value={customerQuickForm.phone} onChange={(event) => setCustomerQuickForm((form) => ({ ...form, phone: event.target.value }))}/></label>
+          <label>{t("Age")}<input type="number" step="1" min="0" value={customerQuickForm.age} onChange={(event) => setCustomerQuickForm((form) => ({ ...form, age: event.target.value }))}/></label>
+          <label>{t("Gender")}<select value={customerQuickForm.gender} onChange={(event) => setCustomerQuickForm((form) => ({ ...form, gender: event.target.value }))}><option value="male">{t("Male")}</option><option value="female">{t("Female")}</option><option value="other">{t("Other")}</option></select></label>
+        </div><div className="pos-checkout-quick-actions"><button type="button" disabled={customerQuickSaving} onClick={() => setCustomerQuickOpen(false)}>{t("Cancel")}</button><button type="button" disabled={customerQuickSaving} className="pos-checkout-save" onClick={() => void createCheckoutCustomer()}>{customerQuickSaving ? t("Saving…") : t("Save & select customer")}</button></div></div>}
+      </section>
+      <section className="pos-checkout-items" aria-label={t("Sale items")}><h3>{t("Items & item discounts")}</h3>{cart.map((line) => <div className="pos-checkout-item" key={line.stock.id}><span><strong>{medicineName(line.medicine)}</strong><small>{line.quantity} {line.stock.unit} · {line.stock.batchNumber}</small></span><label><span>{t("Discount")}</span><div className="pos-item-discount-input"><input type="number" min="0" max="100" value={line.discountPercent} onChange={(event) => changeLine(line.stock.id, { discountPercent: Math.min(100, Math.max(0, numeric(event.target.value))) })}/><b>%</b></div></label><strong>{money(line.price * line.quantity * (1 - line.discountPercent / 100))}</strong></div>)}</section>
+      <div className="pos-checkout-section-top pos-checkout-discount-heading"><div><h3>{t("Discount & VAT")}</h3><small>{t("VAT rate comes from pharmacy settings.")}</small></div></div><div className="pos-discount-row"><span>{t("Sale discount")}</span><div className="pos-discount-input"><input type="number" min="0" max={discountMode === "percent" ? 100 : saleEligible} value={saleDiscount} onChange={(event) => setSaleDiscount(Math.min(discountMode === "percent" ? 100 : saleEligible, Math.max(0, numeric(event.target.value))))} /><select aria-label={t("Discount type")} value={discountMode} onChange={(event) => setDiscountMode(event.target.value as "percent" | "fixed")}><option value="percent">%</option><option value="fixed">BDT</option></select></div></div>
       <div className="pos-total-row"><span>{t("Subtotal")}</span><span>{money(subtotal)}</span></div><div className="pos-total-row"><span>{t("Item discount")}</span><span>−{money(itemDiscount)}</span></div><div className="pos-total-row"><span>{t("Sale discount")}</span><span>−{money(actualSaleDiscount)}</span></div><div className="pos-total-row"><span>{t("Tax · exclusive")} {taxPercent}%</span><span>{money(taxAmount)}</span></div>
       <div className="pos-grand-total"><span>{t("Total due")}</span><strong>{money(total)}</strong></div>
+      <div className="pos-checkout-section-top pos-checkout-payment-heading"><div><h3>{t("Payment details")}</h3><small>{t("Choose payment methods and accounts.")}</small></div>{canCreateAccounts && <button type="button" className="pos-checkout-add-button" aria-expanded={accountQuickOpen} onClick={() => { setError(""); setAccountQuickOpen((open) => !open); }}><Plus size={15}/>{t("Add account")}</button>}</div>
+      {accountQuickOpen && canCreateAccounts && <div className="pos-checkout-quick-form"><div className="pos-checkout-quick-grid"><label>{t("Account name")}<input value={accountQuickForm.name} onChange={(event) => setAccountQuickForm((form) => ({ ...form, name: event.target.value }))}/></label><label>{t("Account type")}<select value={accountQuickForm.type} onChange={(event) => setAccountQuickForm((form) => ({ ...form, type: event.target.value }))}><option value="cash">{t("Cash")}</option><option value="bank">{t("Bank")}</option><option value="mfs">{t("Mobile financial service")}</option></select></label></div><p>{t("New pharmacy accounts start with zero opening balance.")}</p><div className="pos-checkout-quick-actions"><button type="button" disabled={accountQuickSaving} onClick={() => setAccountQuickOpen(false)}>{t("Cancel")}</button><button type="button" disabled={accountQuickSaving} className="pos-checkout-save" onClick={() => void createCheckoutAccount()}>{accountQuickSaving ? t("Saving…") : t("Save account")}</button></div></div>}
       <div className="pos-tender-heading"><span>{t("Collected now")}</span><strong>{money(paid)}</strong></div>
       <div className="pos-tender-lines">{paymentLines.map((line, index) => <div className="pos-tender-line" key={line.id}><label><span>{t("Method")}</span><select value={line.paymentMethod} onChange={(event) => updatePaymentLine(line.id, { paymentMethod: event.target.value as (typeof methods)[number] })}>{methods.map((method) => <option key={method} value={method}>{method}</option>)}</select></label><label><span>{t("Account")}</span><select value={line.accountId} onChange={(event) => updatePaymentLine(line.id, { accountId: event.target.value })}><option value="">{t("Select account")}</option>{accounts.map((account) => <option key={account.id} value={account.id}>{account.name} · {account.type}</option>)}</select></label><label><span>{t("Amount")}</span><span className="pos-currency-input"><b>৳</b><input type="number" min="0" step="0.01" inputMode="decimal" placeholder={paymentLines.length === 1 && index === 0 ? total.toFixed(2) : "0.00"} value={line.amount} onChange={(event) => updatePaymentLine(line.id, { amount: event.target.value })} /></span></label>{paymentLines.length > 1 && <button type="button" className="pos-icon-action pos-tender-remove" aria-label={`${t("Remove payment")} ${index + 1}`} onClick={() => removePaymentLine(line.id)}><X size={14}/></button>}</div>)}</div>
       <button type="button" className="pos-add-tender" onClick={addPaymentLine} disabled={saving || paymentLines.length >= 8}><Plus size={14}/> {t("Add payment method")}</button>
       <div className="pos-due-row"><span>{t("Remaining due")}</span><strong>{money(due)}</strong></div>
     </div>
-    {canCreateSales&&<div className="pos-checkout-actions"><button className="pos-complete-button" type="button" disabled={saving || cart.length === 0} onClick={() => void submitSale("completed")}><Check size={17} />{saving ? t("Saving sale…") : t("Complete sale")}</button><button className="pos-pending-button" type="button" disabled={saving || cart.length === 0} onClick={() => void submitSale("pending")}>{t("Save as pending")}</button><small className="pos-checkout-note">{t("Stock is deducted only after a completed sale.")}</small></div>}
+    {canCreateSales&&<div className="pos-checkout-actions"><button className="pos-complete-button" type="button" disabled={saving || cart.length === 0} onClick={() => setConfirmStatus("completed")}><Check size={17} />{saving ? t("Saving sale…") : t("Review & confirm sale")}</button><button className="pos-pending-button" type="button" disabled={saving || cart.length === 0} onClick={() => setConfirmStatus("pending")}>{t("Save as pending")}</button><small className="pos-checkout-note">{t("Stock is deducted only after a completed sale.")}</small></div>}
   </>;
 
   return <section className="pos-page">
@@ -476,6 +554,7 @@ export function PosWorkspace() {
     <button className="pos-mobile-cart-bar" onClick={() => setCartOpen(true)} aria-label={t("Open current sale")}><span className="pos-mobile-cart-icon"><ShoppingCart size={18}/><i>{totalUnits}</i></span><span><strong>{totalUnits} {t(totalUnits === 1 ? "item" : "items")}</strong><small>{t("Tap to review order")}</small></span><strong className="pos-mobile-cart-total">{money(total)}</strong><ChevronRight size={17}/></button>
     {cartOpen && <div className="pos-cart-modal-backdrop" role="presentation" onClick={() => setCartOpen(false)}><div className="pos-cart-modal" role="dialog" aria-modal="true" aria-label={t("Current sale")} onClick={(event) => event.stopPropagation()}>{cartContent}</div></div>}
     {checkoutOpen && <div className="pos-checkout-backdrop" role="presentation" onClick={(event) => { if (event.target === event.currentTarget) setCheckoutOpen(false); }}><section className="pos-checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="pos-checkout-title" onClick={(event) => event.stopPropagation()}>{checkoutContent}</section></div>}
+    {confirmStatus && <div className="pos-confirm-backdrop" role="presentation" onClick={() => { if (!saving) setConfirmStatus(null); }}><section className="pos-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="pos-confirm-title" onClick={(event) => event.stopPropagation()}><div className="pos-confirm-icon"><ShoppingBag size={21}/></div><h2 id="pos-confirm-title">{t(confirmStatus === "completed" ? "Confirm completed sale" : "Confirm pending sale")}</h2><p>{t("Review customer, discount, VAT and payment before saving.")}</p><div className="pos-confirm-items">{cart.map((line) => <div key={line.stock.id}><span><strong>{medicineName(line.medicine)}</strong><small>{t("Batch")} {line.stock.batchNumber} · {line.quantity} {line.stock.unit}</small></span><strong>{money(line.price * line.quantity * (1 - line.discountPercent / 100))}</strong></div>)}</div><dl><div><dt>{t("Branch")}</dt><dd>{activeBranch?.name ?? "—"}</dd></div><div><dt>{t("Customer")}</dt><dd>{customer?.name ?? t("OPD patient (default)")}</dd></div><div><dt>{t("Items")}</dt><dd>{totalUnits}</dd></div><div><dt>{t("Subtotal")}</dt><dd>{money(subtotal)}</dd></div><div><dt>{t("Item discount")}</dt><dd>−{money(itemDiscount)}</dd></div><div><dt>{t("Sale discount")}</dt><dd>−{money(actualSaleDiscount)}</dd></div><div><dt>{t("VAT / Tax")} ({taxPercent}%)</dt><dd>{money(taxAmount)}</dd></div><div className="pos-confirm-total"><dt>{t("Grand total")}</dt><dd>{money(total)}</dd></div><div><dt>{t("Collected now")}</dt><dd>{money(paid)}</dd></div><div><dt>{t("Remaining due")}</dt><dd>{money(due)}</dd></div></dl><div className="pos-confirm-payments">{paymentLines.filter((line) => numeric(line.amount) > 0).map((line) => <div key={line.id}><span>{line.paymentMethod} · {accounts.find((account) => account.id === line.accountId)?.name ?? t("Select account")}</span><strong>{money(numeric(line.amount))}</strong></div>)}</div><small>{t(confirmStatus === "completed" ? "Completed sales deduct stock from selected batches." : "Pending sales do not deduct stock.")}</small><div className="pos-confirm-actions"><button type="button" onClick={() => setConfirmStatus(null)} disabled={saving}>{t("Back to checkout")}</button><button type="button" className="pos-complete-button" disabled={saving} onClick={() => { if (confirmStatus) { const status = confirmStatus; setConfirmStatus(null); void submitSale(status); } }}><Check size={17}/>{t(confirmStatus === "completed" ? "Confirm & complete sale" : "Save pending sale")}</button></div></section></div>}
     {receipt && <div className="pos-receipt-backdrop" role="presentation"><section className="pos-receipt-dialog" role="dialog" aria-modal="true" aria-labelledby="pos-receipt-title"><div className="pos-receipt-actions"><button type="button" className="pos-dialog-cancel" onClick={() => setReceipt(null)}>{t("Close")}</button><button type="button" className="pos-complete-button" onClick={() => window.print()}><Check size={15}/> {t("Print receipt")}</button></div><div className="pos-receipt-paper"><header><span className="pos-receipt-mark"><Pill size={17}/></span><h2 id="pos-receipt-title">{t(receipt.status === "pending" ? "Sale slip" : "Sales receipt")}</h2><strong>{receipt.branch}</strong><small>{t("Pharmacy POS")}</small></header><div className="pos-receipt-meta"><span>{t("Invoice")} <strong>{receipt.invoice}</strong></span><span>{t("Status")} <strong>{t(receipt.status)}</strong></span><span>{t("Date")} <strong>{new Date(receipt.date).toLocaleString(locale, { timeZone: "Asia/Dhaka" })}</strong></span><span>{t("Cashier")} <strong>{receipt.cashier}</strong></span></div><div className="pos-receipt-customer"><small>{t("Customer")}</small><strong>{receipt.customer.name}</strong><span>{receipt.customer.phone}</span></div><div className="pos-receipt-items"><div className="pos-receipt-table-head"><span>{t("Item")}</span><span>{t("Qty")}</span><span>{t("Total")}</span></div>{receipt.items.map((item, index) => <div className="pos-receipt-item" key={`${item.name}-${item.batch}-${index}`}><span><strong>{item.name}</strong><small>{item.description || item.unit} · {t("Batch")} {item.batch}</small><small>{money(item.price)} × {item.quantity}{item.discount ? ` · ${t("Discount")} ${money(item.discount)}` : ""}</small></span><b>{item.quantity}</b><strong>{money(item.total)}</strong></div>)}</div><div className="pos-receipt-totals"><span>{t("Subtotal")}<strong>{money(receipt.subtotal)}</strong></span><span>{t("Item discount")}<strong>−{money(receipt.itemDiscount)}</strong></span><span>{t("Sale discount")}<strong>−{money(receipt.saleDiscount)}</strong></span><span>{t("Tax · exclusive")} {receipt.taxPercent}%<strong>{money(receipt.taxAmount)}</strong></span><span className="pos-receipt-grand">{t("Total")}<strong>{money(receipt.total)}</strong></span><span>{t("Paid")}<strong>{money(receipt.paid)}</strong></span><span>{t("Due")}<strong>{money(receipt.due)}</strong></span></div>{receipt.payments.length > 0 && <div className="pos-receipt-payments"><small>{t("Payment breakdown")}</small>{receipt.payments.map((payment, index) => <span key={`${payment.method}-${index}`}>{payment.method} · {payment.account}<strong>{money(payment.amount)}</strong></span>)}</div>}<footer>{t("Thank you. Please keep this receipt for your records.")}</footer></div></section></div>}
     {opening && canCreateSales && <div className="pos-dialog-backdrop" role="presentation" onClick={() => setOpening(false)}><div className="pos-register-dialog" role="dialog" aria-modal="true" aria-labelledby="register-dialog-title" onClick={(event) => event.stopPropagation()}><div className="pos-dialog-icon"><Clock3 size={19}/></div><button className="pos-icon-action pos-dialog-close" onClick={() => setOpening(false)} aria-label={t("Close")}><X size={17}/></button><h2 id="register-dialog-title">{t("Open cash register")}</h2><p>{t("Record the opening float for ")}{activeBranch?.name || t("this branch")}. {t("This starts your cashier session.")}</p><label><span>{t("Opening cash balance")}</span><span className="pos-currency-input"><b>৳</b><input autoFocus inputMode="decimal" value={openingBalance} onChange={(event) => setOpeningBalance(event.target.value)} /></span></label>{accounts.length === 0 && <div className="pos-dialog-warning">{t("No active cash or payment accounts were found. A sale with collected payment needs an active account.")}</div>}{error && <div className="pos-dialog-error">{t(error)}</div>}<button className="pos-complete-button" disabled={saving || !branchId} onClick={() => void openRegister()}>{saving ? t("Opening…") : t("Open register")}</button><button className="pos-dialog-cancel" onClick={() => { setOpening(false); setError(""); }}>{t("Cancel")}</button></div></div>}
     {closing && canCreateSales && <div className="pos-dialog-backdrop" role="presentation" onClick={() => !saving && setClosing(false)}><div className="pos-register-dialog" role="dialog" aria-modal="true" aria-labelledby="register-close-title" onClick={(event) => event.stopPropagation()}><div className="pos-dialog-icon"><Clock3 size={19}/></div><button className="pos-icon-action pos-dialog-close" onClick={() => setClosing(false)} aria-label={t("Close")} disabled={saving}><X size={17}/></button><h2 id="register-close-title">{t("Close cash register")}</h2><p>{t("Count the cash in the drawer and record any difference before ending this cashier session.")}</p><div className="pos-register-expected"><span>{t("Expected cash balance")}</span><strong>{money(numeric(session?.closingBalance))}</strong></div><label><span>{t("Actual cash balance")}</span><span className="pos-currency-input"><b>৳</b><input autoFocus inputMode="decimal" min="0" type="number" value={actualBalance} onChange={(event) => setActualBalance(event.target.value)} /></span></label><div className="pos-register-expected"><span>{t("Difference")}</span><strong>{money(numeric(actualBalance) - numeric(session?.closingBalance))}</strong></div><label className="pos-register-note"><span>{t("Closing note")} <small>{t("Optional")}</small></span><textarea rows={3} maxLength={500} placeholder={t("Explain a cash shortage or overage")} value={closingNote} onChange={(event) => setClosingNote(event.target.value)} /></label>{error && <div className="pos-dialog-error">{t(error)}</div>}<button className="pos-complete-button" disabled={saving || actualBalance.trim() === ""} onClick={() => void closeRegister()}>{saving ? t("Closing…") : t("Close register")}</button><button className="pos-dialog-cancel" disabled={saving} onClick={() => { setClosing(false); setError(""); }}>{t("Cancel")}</button></div></div>}
