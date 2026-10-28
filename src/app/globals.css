@@ -833,6 +833,8 @@ button.data-summary-card { cursor: pointer; }
   .data-summary-row:not(.data-summary-row-five) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .data-card { padding: 13px; }
   .sidebar { width: 220px; min-width: 220px; }
+  .shortcut-hint, .topbar-divider, .user-menu-copy { display: none; }
+  .topbar-actions { gap: 11px; }
   .workspace-content { padding: 30px 24px; }
   .topbar { padding: 0 25px; }
   .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1069,6 +1071,31 @@ button.data-summary-card { cursor: pointer; }
   .pos-filter-drawer { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
   .pos-cart-panel { max-height: calc(100vh - 112px); }
 }
+@media (max-width: 1050px) {
+  .workspace-content-pos { min-width: 0; overflow-x: clip; padding: 24px 18px 86px; }
+  .pos-page { gap: 14px; }
+  .pos-page-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .pos-context { width: 100%; flex-wrap: wrap; }
+  .pos-context > label { flex: 1; }
+  .pos-context select { width: 100%; min-width: 0; }
+  .pos-register-state { min-width: 0; flex: 1.2; }
+  .pos-history-button { flex: 1 0 100%; }
+  .pos-workspace { display: block; min-height: auto; }
+  .pos-cart-panel { display: none; }
+  .pos-product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .pos-mobile-cart-bar { position: fixed; z-index: 30; right: 18px; bottom: 14px; left: 238px; display: flex; min-height: 56px; align-items: center; gap: 11px; padding: 8px 12px; border: 1px solid #d7e8dc; border-radius: 12px; background: #fff; color: #63766a; box-shadow: 0 8px 28px #1432211c; text-align: left; }
+  .pos-mobile-cart-icon { position: relative; display: grid; place-items: center; width: 35px; height: 35px; border-radius: 9px; background: #eaf5ef; color: #287b58; }
+  .pos-mobile-cart-icon i { position: absolute; top: -4px; right: -5px; display: grid; min-width: 16px; height: 16px; place-items: center; padding: 0 3px; border: 2px solid white; border-radius: 9px; background: #218260; color: white; font-size: 7px; font-style: normal; }
+  .pos-mobile-cart-bar > span:nth-child(2) { display: flex; flex: 1; flex-direction: column; gap: 3px; }
+  .pos-mobile-cart-bar strong { color: #40574a; font-size: 9px; }
+  .pos-mobile-cart-bar small { color: #96a39b; font-size: 8px; }
+  .pos-mobile-cart-bar .pos-mobile-cart-total { color: #187354; font-size: 12px; }
+  .pos-cart-modal-backdrop { position: fixed; z-index: 70; inset: 0; display: flex; justify-content: flex-end; background: #12261d66; backdrop-filter: blur(2px); }
+  .pos-cart-modal { display: flex; width: min(470px, 100%); height: 100%; flex-direction: column; overflow: hidden; background: #fff; box-shadow: -15px 0 40px #11241b1a; }
+  .pos-cart-modal .pos-cart-close { display: grid; }
+  .pos-cart-modal .pos-cart-lines { flex: 1; }
+  .pos-cart-modal .pos-cart-footer { padding-bottom: max(18px, env(safe-area-inset-bottom)); }
+}
 @media (max-width: 800px) {
   .workspace-content-pos { min-width: 0; overflow-x: clip; padding-bottom: 80px; }
   .pos-page-heading { align-items: flex-start; flex-direction: column; }
@@ -1079,7 +1106,7 @@ button.data-summary-card { cursor: pointer; }
   .pos-workspace { display: block; min-height: auto; }
   .pos-cart-panel { display: none; }
   .pos-product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .pos-mobile-cart-bar { position: fixed; z-index: 30; right: 18px; bottom: 14px; left: 92px; display: flex; min-height: 56px; align-items: center; gap: 11px; padding: 8px 12px; border: 1px solid #d7e8dc; border-radius: 12px; background: #fff; color: #63766a; box-shadow: 0 8px 28px #1432211c; text-align: left; }
+  .pos-mobile-cart-bar { right: 18px; left: 18px; }
   .pos-mobile-cart-icon { position: relative; display: grid; place-items: center; width: 35px; height: 35px; border-radius: 9px; background: #eaf5ef; color: #287b58; }
   .pos-mobile-cart-icon i { position: absolute; top: -4px; right: -5px; display: grid; min-width: 16px; height: 16px; place-items: center; padding: 0 3px; border: 2px solid white; border-radius: 9px; background: #218260; color: white; font-size: 7px; font-style: normal; }
   .pos-mobile-cart-bar > span:nth-child(2) { display: flex; flex: 1; flex-direction: column; gap: 3px; }
