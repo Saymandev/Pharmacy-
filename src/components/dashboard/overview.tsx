@@ -27,6 +27,16 @@ const taka = new Intl.NumberFormat("en-BD", {
 });
 type Branch = { id: string; name: string };
 
+function formatCount(value: unknown) {
+  const count = typeof value === "number" ? value : typeof value === "string" && value.trim() ? Number(value) : NaN;
+  return Number.isFinite(count) ? count.toLocaleString("en-BD") : "—";
+}
+
+function formatMoney(value: unknown) {
+  const amount = typeof value === "number" ? value : typeof value === "string" && value.trim() ? Number(value) : NaN;
+  return Number.isFinite(amount) ? taka.format(amount) : "—";
+}
+
 function extractBranches(value: unknown): Branch[] {
   if (Array.isArray(value)) return value as Branch[];
   if (value && typeof value === "object") {
@@ -143,10 +153,10 @@ export function Overview() {
   }, []);
 
   const metrics = [
-    { label: "Sales today", value: stats ? taka.format(stats.totalSales) : "—", supporting: stats ? `${stats.salesCount} completed bills` : "Today’s total", icon: ShoppingBag, tone: "mint" as const },
-    { label: "Purchases today", value: stats ? taka.format(stats.totalPurchases) : "—", supporting: stats ? `${stats.purchasesCount} completed purchases` : "Today’s total", icon: ArrowDownLeft, tone: "blue" as const },
-    { label: "Low stock", value: stats ? stats.lowStockCount.toLocaleString("en-BD") : "—", supporting: "Medicines below threshold", icon: AlertTriangle, tone: "amber" as const },
-    { label: "Expiry watch", value: stats ? stats.expiringIn30Days.toLocaleString("en-BD") : "—", supporting: "Batches expiring in 30 days", icon: Clock3, tone: "rose" as const },
+    { label: "Sales today", value: stats ? formatMoney(stats.totalSales) : "—", supporting: stats ? `${formatCount(stats.salesCount)} completed bills` : "Today’s total", icon: ShoppingBag, tone: "mint" as const },
+    { label: "Purchases today", value: stats ? formatMoney(stats.totalPurchases) : "—", supporting: stats ? `${formatCount(stats.purchasesCount)} completed purchases` : "Today’s total", icon: ArrowDownLeft, tone: "blue" as const },
+    { label: "Low stock", value: stats ? formatCount(stats.lowStockCount) : "—", supporting: "Medicines below threshold", icon: AlertTriangle, tone: "amber" as const },
+    { label: "Expiry watch", value: stats ? formatCount(stats.expiringIn30Days) : "—", supporting: "Batches expiring in 30 days", icon: Clock3, tone: "rose" as const },
   ];
 
   return (
@@ -184,9 +194,9 @@ export function Overview() {
 
         <section className="panel inventory-panel">
           <div className="panel-heading"><div><h2>Inventory pulse</h2><p>Stock health at a glance</p></div><Boxes size={19} className="panel-heading-icon" /></div>
-          <div className="inventory-stat"><span className="inventory-stat-icon inventory-good"><PackageCheck size={17} /></span><span>Active medicines</span><strong>{loading ? "—" : stats?.totalMedicines.toLocaleString("en-BD") ?? "—"}</strong></div>
-          <div className="inventory-stat"><span className="inventory-stat-icon inventory-warning"><AlertTriangle size={17} /></span><span>Low stock items</span><strong>{loading ? "—" : stats?.lowStockCount.toLocaleString("en-BD") ?? "—"}</strong></div>
-          <div className="inventory-stat"><span className="inventory-stat-icon inventory-danger"><Pill size={17} /></span><span>Out of stock</span><strong>{loading ? "—" : stats?.outOfStockCount.toLocaleString("en-BD") ?? "—"}</strong></div>
+          <div className="inventory-stat"><span className="inventory-stat-icon inventory-good"><PackageCheck size={17} /></span><span>Active medicines</span><strong>{loading ? "—" : formatCount(stats?.totalMedicines)}</strong></div>
+          <div className="inventory-stat"><span className="inventory-stat-icon inventory-warning"><AlertTriangle size={17} /></span><span>Low stock items</span><strong>{loading ? "—" : formatCount(stats?.lowStockCount)}</strong></div>
+          <div className="inventory-stat"><span className="inventory-stat-icon inventory-danger"><Pill size={17} /></span><span>Out of stock</span><strong>{loading ? "—" : formatCount(stats?.outOfStockCount)}</strong></div>
           <div className="inventory-footnote">Counts are loaded from the pharmacy inventory and expiry summary.</div>
         </section>
       </div>
@@ -194,9 +204,10 @@ export function Overview() {
       <section className="panel cash-panel">
         <div className="cash-icon"><Wallet size={20} /></div>
         <div className="cash-copy"><h2>Cash in active registers</h2><p>Closing balance recorded for open cash-register sessions</p></div>
-        <strong>{loading ? "—" : stats ? taka.format(stats.totalCashInHand) : "—"}</strong>
+        <strong>{loading ? "—" : stats ? formatMoney(stats.totalCashInHand) : "—"}</strong>
         <ArrowUpRight className="cash-arrow" size={18} />
       </section>
     </div>
   );
 }
+
