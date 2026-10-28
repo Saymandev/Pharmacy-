@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
   ArrowDownLeft,
@@ -185,7 +186,7 @@ export function Overview() {
         {metrics.map((metric) => <MetricCard key={metric.label} {...metric} value={loading ? "…" : metric.value} />)}
       </section>
 
-      {quickActions.length > 0 && <section className="overview-quick-actions" aria-label={t("Common pharmacy tasks")}><div className="overview-quick-heading"><div><p className="eyebrow">{t("QUICK ACTIONS")}</p><h2>{t("Get work started")}</h2></div><span>{t("Common tasks for your role")}</span></div><div className="overview-quick-grid">{quickActions.map(({ label, detail, href, icon: Icon }) => <a href={href} key={href}><span><Icon size={18}/></span><div><strong>{label}</strong><small>{detail}</small></div><ArrowUpRight size={15}/></a>)}</div></section>}
+      {quickActions.length > 0 && <section className="overview-quick-actions" aria-label={t("Common pharmacy tasks")}><div className="overview-quick-heading"><div><p className="eyebrow">{t("QUICK ACTIONS")}</p><h2>{t("Get work started")}</h2></div><span>{t("Common tasks for your role")}</span></div><div className="overview-quick-grid">{quickActions.map(({ label, detail, href, icon: Icon }) => <Link href={href} key={href}><span><Icon size={18}/></span><div><strong>{label}</strong><small>{detail}</small></div><ArrowUpRight size={15}/></Link>)}</div></section>}
 
       <div className="dashboard-grid">
         <section className="panel sales-panel">

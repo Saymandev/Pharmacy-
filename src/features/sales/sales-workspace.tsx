@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { AlertCircle, ArrowDownLeft, Check, ChevronRight, CircleAlert, ClipboardList, CreditCard, FileText, RotateCcw, Search, ShieldAlert, X } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api/client";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -212,7 +213,7 @@ export function SalesWorkspace({ mode }: { mode: Mode }) {
   return <section className="sales-page">
     <div className="page-heading-row"><div><p className="eyebrow">{t("PHARMACY")} · {t(mode === "sales" ? "TRANSACTIONS" : "RETURNS")}</p><h1>{t(mode === "sales" ? "Sales history" : "Sales returns")}</h1><p className="page-subtitle">{t(mode === "sales" ? "Review invoices, payments and customer balances." : "Review return requests against the original invoice and sold batches.")}</p></div><label className="data-branch-select"><span>{t("Branch")}</span><select value={branchId} onChange={(event) => { setBranchId(event.target.value); setPage(1); }}><option value="">{t("All branches")}</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label></div>
     {(error || notice) && <div className={`sales-alert ${error ? "error" : "success"}`}>{error ? <CircleAlert size={15}/> : <Check size={15}/>}<span>{error || notice}</span><button onClick={() => { setError(""); setNotice(""); }} aria-label="Dismiss"><X size={14}/></button></div>}
-    <nav className="data-tabs"><a href="/sales" className={mode === "sales" ? "selected" : ""}><ClipboardList size={15}/> {t("Sales")}</a>{hasPermission("sale-return:read") && <a href="/returns" className={mode === "returns" ? "selected" : ""}><RotateCcw size={15}/> {t("RETURNS")}</a>}</nav>
+    <nav className="data-tabs"><Link href="/sales" className={mode === "sales" ? "selected" : ""}><ClipboardList size={15}/> {t("Sales")}</Link>{hasPermission("sale-return:read") && <Link href="/returns" className={mode === "returns" ? "selected" : ""}><RotateCcw size={15}/> {t("RETURNS")}</Link>}</nav>
     {mode === "sales" ? <>
       <div className="sales-metrics"><div><span className="sales-metric-icon green"><FileText size={16}/></span><small>{t("Invoices matched")}</small><strong>{loading ? "—" : salesStats.count}</strong></div><div><span className="sales-metric-icon blue"><CreditCard size={16}/></span><small>{t("Paid this page")}</small><strong>{loading ? "—" : salesStats.paid}</strong></div><div><span className="sales-metric-icon amber"><ArrowDownLeft size={16}/></span><small>{t("Due shown")}</small><strong>{loading ? "—" : bdt(salesStats.outstanding)}</strong></div><div><span className="sales-metric-icon slate"><FileText size={16}/></span><small>{t("Sales value shown")}</small><strong>{loading ? "—" : bdt(salesStats.total)}</strong></div></div>
       <div className="sales-card panel"><div className="sales-toolbar"><div className="data-search"><Search size={16}/><input placeholder={t("Invoice, customer name, phone or number…")} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }}/></div><button className={`data-filter-button ${filtersOpen ? "selected" : ""}`} onClick={() => setFiltersOpen(!filtersOpen)}><Search size={14}/> {t("Filters")}</button></div>

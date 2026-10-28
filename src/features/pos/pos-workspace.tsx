@@ -40,6 +40,16 @@ function pageSummary(value: unknown) {
 }
 function numeric(value: unknown) { const parsed = Number(value); return Number.isFinite(parsed) ? parsed : 0; }
 function getError(error: unknown) { return error instanceof ApiClientError ? error.message : "Something went wrong. Please try again."; }
+function asciiDigits(value: string) { return value.replace(/[০-৯]/g, (digit) => String("০১২৩৪৫৬৭৮৯".indexOf(digit))); }
+async function fetchCustomers(params: URLSearchParams) {
+  const query = params.toString();
+  try {
+    return await api.get<unknown>(`/customers?${query}`);
+  } catch (cause) {
+    if (!(cause instanceof ApiClientError) || cause.status !== 404) throw cause;
+    return api.get<unknown>(`/pharmacy/customers?${query}`);
+  }
+}
 
 export function PosWorkspace() {
   const { hasPermission, user } = useAuth();
@@ -82,6 +92,10 @@ export function PosWorkspace() {
   const [customerQuery, setCustomerQuery] = useState("");
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [customerOpen, setCustomerOpen] = useState(false);
+  const [customerSearchLoading, setCustomerSearchLoading] = useState(false);
+  const [customerSearchError, setCustomerSearchError] = useState("");
+  const customerRequestId = useRef(0);
+  const opdCustomerRequest = useRef<Promise<Customer | null> | null>(null);
   const [saleDiscount, setSaleDiscount] = useState(0);
   const [discountMode, setDiscountMode] = useState<"percent" | "fixed">("percent");
   const [paymentLines, setPaymentLines] = useState<PaymentLine[]>([{ id: "payment-1", amount: "", accountId: "", paymentMethod: "cash" }]);
@@ -145,6 +159,20 @@ export function PosWorkspace() {
       const active = await api.get<unknown>(`/pharmacy/cash-register/active?branchId=${encodeURIComponent(id)}`);
       if (requestId === sessionRequestId.current) setSession(active && typeof active === "object" ? active as Row : null);
     } catch { if (requestId === sessionRequestId.current) setSession(null); }
+  }, []);
+
+  const resolveOpdCustomer = useCallback(async () => {
+    if (!opdCustomerRequest.current) {
+      opdCustomerRequest.current = fetchCustomers(new URLSearchParams({ name: "OPD customer", page: "1", limit: "10" }))
+        .then((result) => {
+          const candidates = rows<Customer>(result);
+          return candidates.find((item) => item.name.trim().toLowerCase() === "opd customer")
+            ?? candidates.find((item) => item.name.toLowerCase().includes("opd"))
+            ?? null;
+        })
+        .catch(() => null);
+    }
+    return opdCustomerRequest.current;
   }, []);
 
   function selectBranch(nextBranchId: string) {
@@ -217,17 +245,33 @@ export function PosWorkspace() {
     return () => window.clearTimeout(timer);
   }, [loadProducts, branchId]);
   useEffect(() => {
-    if (!customerQuery.trim()) return;
+    const requestId = ++customerRequestId.current;
+    if (!customerQuery.trim()) {
+      setCustomers([]);
+      setCustomerSearchLoading(false);
+      setCustomerSearchError("");
+      return;
+    }
+    setCustomerSearchLoading(true);
+    setCustomerSearchError("");
     const timer = window.setTimeout(async () => {
       try {
         const term = customerQuery.trim();
-        const phoneSearch = /^[+\d\s().-]+$/.test(term);
-        const params = new URLSearchParams({ page: "1", limit: "8", [phoneSearch ? "phone" : "name"]: phoneSearch ? term.replace(/\D/g, "") : term });
-        const result = await api.get<unknown>(`/customers?${params.toString()}`);
-        setCustomers(rows<Customer>(result));
-      } catch { setCustomers([]); }
+        const numericTerm = asciiDigits(term);
+        const phoneSearch = /^[+\d\s().-]+$/.test(numericTerm);
+        const params = new URLSearchParams({ page: "1", limit: "10", [phoneSearch ? "phone" : "name"]: phoneSearch ? numericTerm.replace(/\D/g, "") : term });
+        const result = await fetchCustomers(params);
+        if (requestId === customerRequestId.current) setCustomers(rows<Customer>(result));
+      } catch (cause) {
+        if (requestId === customerRequestId.current) {
+          setCustomers([]);
+          setCustomerSearchError(getError(cause));
+        }
+      } finally {
+        if (requestId === customerRequestId.current) setCustomerSearchLoading(false);
+      }
     }, 250);
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(timer); customerRequestId.current += 1; };
   }, [customerQuery]);
 
   const subtotal = useMemo(() => cart.reduce((sum, line) => sum + line.price * line.quantity, 0), [cart]);
@@ -338,18 +382,18 @@ export function PosWorkspace() {
     if (!canCreateSales) { setError(t("Your role cannot create sales.")); return; }
     setError(""); setNotice("");
     if (!branchId || cart.length === 0) { setError(t("Select a branch and add at least one medicine.")); return; }
-    if (!customer) { setError(t("Select a customer before saving. This avoids the backend’s unresolved walk-in customer behavior.")); return; }
     if (status === "completed" && !session) { setOpening(true); setError(t("Open the cash register before completing a sale.")); return; }
     if (paid > total) { setError(t("Collected amount cannot exceed the sale total. Change is not supported by this backend flow.")); return; }
     if (paymentLines.some((line) => !line.accountId && (numeric(line.amount) > 0 || (paymentLines.length === 1 && line.amount === "" && paid > 0)))) { setError(t("Choose an account for each payment method with an amount.")); return; }
     if (cart.some((line) => !Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > line.stock.quantity)) { setError(t("Each quantity must be a whole number within the selected batch stock.")); return; }
     setSaving(true);
+    const saleCustomer = customer ?? await resolveOpdCustomer();
     const saleDiscountPercent = saleEligible > 0 ? actualSaleDiscount / saleEligible * 100 : 0;
     const paymentPayload = paymentLines.length === 1 && paymentLines[0].amount === ""
       ? [{ accountId: paymentLines[0].accountId, amount: paid, paymentMethod: paymentLines[0].paymentMethod }]
       : paymentLines.filter((line) => numeric(line.amount) > 0).map((line) => ({ accountId: line.accountId, amount: numeric(line.amount), paymentMethod: line.paymentMethod }));
     const payload = {
-      customerId: customer.id, branchId, type: "pos", status,
+      ...(saleCustomer ? { customerId: saleCustomer.id } : {}), branchId, type: "pos", status,
       paymentMethod: paymentLines[0]?.paymentMethod ?? "cash", discountPercentage: saleDiscountPercent, discountAmount: actualSaleDiscount,
       taxPercentage: taxPercent, taxAmount, paidAmount: paid, dueAmount: due,
       paymentStatus: due <= 0 ? "paid" : paid > 0 ? "partial" : "due",
@@ -373,7 +417,7 @@ export function PosWorkspace() {
         status,
         branch: branches.find((item) => item.id === branchId)?.name ?? "Pharmacy branch",
         cashier: user?.fullName ?? "Pharmacy cashier",
-        customer,
+        customer: saleCustomer ?? { id: "opd-customer", name: t("OPD patient"), phone: "" },
         items: cart.map((line) => {
           const discount = Math.round(line.price * line.quantity * line.discountPercent) / 100;
           return { name: line.medicine.name, description: [line.medicine.strength, line.medicine.genericName].filter(Boolean).join(" · "), quantity: line.quantity, unit: line.stock.unit || line.medicine.unit || "Pcs", price: line.price, discount, total: line.price * line.quantity - discount, batch: line.stock.batchNumber };
@@ -399,7 +443,7 @@ export function PosWorkspace() {
     <div className="pos-cart-heading"><div><h2>{t("Current sale")}</h2><p>{totalUnits} {t(totalUnits === 1 ? "item" : "items")}</p></div><button className="pos-icon-action pos-cart-close" onClick={() => setCartOpen(false)} aria-label={t("Close cart")}><X size={18} /></button></div>
     <div className="pos-cart-controls">
       <div className="pos-customer-wrap">
-        {customer ? <div className="pos-selected-customer"><span className="pos-customer-icon"><UserRound size={16} /></span><span><strong>{language === "bn" ? customer.nameBangla || customer.name : customer.name}</strong><small>{customer.phone} · {t("Due")} {money(numeric(customer.balance))}</small></span><button className="pos-icon-action" onClick={() => { setCustomer(null); setCustomerQuery(""); }} aria-label={t("Remove customer")}><X size={15} /></button></div> : <><label className="pos-field-caption" htmlFor="customer-search">{t("Customer")} <span>{t("required")}</span></label><div className="pos-input-with-icon"><UserRound size={16} /><input id="customer-search" value={customerQuery} onChange={(event) => { setCustomerQuery(event.target.value); setCustomerOpen(true); }} onFocus={() => setCustomerOpen(true)} placeholder={t("Search name or phone")} autoComplete="off" /></div>{customerOpen && customerQuery.trim() && customers.length > 0 && <div className="pos-customer-options">{customers.map((item) => <button key={item.id} type="button" onClick={() => { setCustomer(item); setCustomerQuery(""); setCustomerOpen(false); }}><strong>{language === "bn" ? item.nameBangla || item.name : item.name}</strong><small>{item.phone} · {t("Balance")} {money(numeric(item.balance))}</small></button>)}</div>}</>}
+        {customer ? <div className="pos-selected-customer"><span className="pos-customer-icon"><UserRound size={16} /></span><span><strong>{language === "bn" ? customer.nameBangla || customer.name : customer.name}</strong><small>{customer.phone} · {t("Due")} {money(numeric(customer.balance))}</small></span><button className="pos-icon-action" onClick={() => { setCustomer(null); setCustomerQuery(""); setCustomerOpen(true); }} aria-label={t("Change customer")} title={t("Change customer")}><X size={15} /></button></div> : <><label className="pos-field-caption" htmlFor="customer-search">{t("Customer")} <span>{t("optional")}</span></label><div className="pos-input-with-icon"><UserRound size={16} /><input id="customer-search" value={customerQuery} onChange={(event) => { setCustomerQuery(event.target.value); setCustomerOpen(true); }} onFocus={() => setCustomerOpen(true)} placeholder={t("Search name or phone")} autoComplete="off" onKeyDown={(event) => { if (event.key === "Escape") setCustomerOpen(false); if (event.key === "Enter" && customers[0]) { event.preventDefault(); setCustomer(customers[0]); setCustomerQuery(""); setCustomerOpen(false); } }} /></div><small className="pos-opd-hint">{t("If you leave this blank, the sale will use the default OPD patient.")}</small>{customerOpen && customerQuery.trim() && <div className="pos-customer-options">{customerSearchLoading ? <div className="pos-customer-search-state">{t("Searching customers…")}</div> : customerSearchError ? <div className="pos-customer-search-state is-error">{t(customerSearchError)}</div> : customers.length > 0 ? customers.map((item) => <button key={item.id} type="button" onClick={() => { setCustomer(item); setCustomerQuery(""); setCustomerOpen(false); }}><strong>{language === "bn" ? item.nameBangla || item.name : item.name}</strong><small>{item.phone} · {t("Balance")} {money(numeric(item.balance))}</small></button>) : <div className="pos-customer-search-state">{t("No matching customer found.")}</div>}</div>}</>}
       </div>
     </div>
     <div className="pos-cart-lines">
@@ -409,11 +453,11 @@ export function PosWorkspace() {
       </div>)}
     </div>
     <div className="pos-cart-summary"><span>{t("Cart subtotal")}<small>{totalUnits} {t(totalUnits === 1 ? "unit" : "units")} · {t("discounts at checkout")}</small></span><strong>{money(subtotal)}</strong></div>
-    <div className="pos-cart-footer">{canCreateSales ? <><button className="pos-proceed-button" type="button" disabled={cart.length === 0 || !customer} onClick={() => { setError(""); setCheckoutOpen(true); setCartOpen(false); }}><span>{t("Proceed to checkout")}</span><span>{money(subtotal)} <ChevronRight size={16}/></span></button><small>{customer ? t("Review discount, tax and payment on the next step.") : t("Choose a customer to continue.")}</small></> : <small>{t("Your role can view this cart but cannot create sales.")}</small>}</div>
+    <div className="pos-cart-footer">{canCreateSales ? <><button className="pos-proceed-button" type="button" disabled={cart.length === 0} onClick={() => { setError(""); setCheckoutOpen(true); setCartOpen(false); }}><span>{t("Proceed to checkout")}</span><span>{money(subtotal)} <ChevronRight size={16}/></span></button><small>{customer ? t("Review discount, tax and payment on the next step.") : t("Default OPD patient will be used if no customer is selected.")}</small></> : <small>{t("Your role can view this cart but cannot create sales.")}</small>}</div>
   </>;
 
   const checkoutContent = <>
-    <div className="pos-checkout-heading"><div><p className="eyebrow">{t("FINAL STEP")}</p><h2 id="pos-checkout-title">{t("Review & pay")}</h2><p>{totalUnits} {t(totalUnits === 1 ? "unit" : "units")} · {customer ? language === "bn" ? customer.nameBangla || customer.name : customer.name : ""}</p></div><button type="button" className="pos-checkout-back" onClick={() => { setCheckoutOpen(false); if (window.matchMedia("(max-width: 1050px)").matches) setCartOpen(true); }}><ChevronRight size={15}/> {t("Back to cart")}</button></div>
+    <div className="pos-checkout-heading"><div><p className="eyebrow">{t("FINAL STEP")}</p><h2 id="pos-checkout-title">{t("Review & pay")}</h2><p>{totalUnits} {t(totalUnits === 1 ? "unit" : "units")} · {customer ? language === "bn" ? customer.nameBangla || customer.name : customer.name : t("OPD patient (default)")}</p></div><button type="button" className="pos-checkout-back" onClick={() => { setCheckoutOpen(false); if (window.matchMedia("(max-width: 1050px)").matches) setCartOpen(true); }}><ChevronRight size={15}/> {t("Back to cart")}</button></div>
     {error && <div className="pos-alert pos-alert-error pos-checkout-error" role="alert"><CircleAlert size={16}/><span>{error}</span></div>}
     <div className="pos-checkout-body">
       <section className="pos-checkout-items" aria-label={t("Sale items")}><h3>{t("Items in this sale")}</h3>{cart.map((line) => <div className="pos-checkout-item" key={line.stock.id}><span><strong>{medicineName(line.medicine)}</strong><small>{line.quantity} {line.stock.unit} · {line.stock.batchNumber}</small></span><label><span>{t("Discount")}</span><div className="pos-item-discount-input"><input type="number" min="0" max="100" value={line.discountPercent} onChange={(event) => changeLine(line.stock.id, { discountPercent: Math.min(100, Math.max(0, numeric(event.target.value))) })}/><b>%</b></div></label><strong>{money(line.price * line.quantity * (1 - line.discountPercent / 100))}</strong></div>)}</section>

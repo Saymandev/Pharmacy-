@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Activity,
   Banknote,
@@ -13,7 +14,11 @@ import {
   LayoutDashboard,
   KeyRound,
   LogOut,
+  Menu,
+  Moon,
   PackageSearch,
+  PanelLeftClose,
+  PanelLeftOpen,
   Pill,
   RotateCcw,
   Settings2,
@@ -21,6 +26,7 @@ import {
   Truck,
   UsersRound,
   X,
+  Sun,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Overview } from "@/components/dashboard/overview";
@@ -95,6 +101,46 @@ export function AppShell() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordNotice, setPasswordNotice] = useState("");
   const [demoMode, setDemoMode] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [themeReady, setThemeReady] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const savedTheme = window.localStorage.getItem("pharmacy.theme");
+    if (savedTheme === "dark" || savedTheme === "light") setTheme(savedTheme);
+    setThemeReady(true);
+    setSidebarCollapsed(window.localStorage.getItem("pharmacy.sidebar-collapsed") === "true");
+  }, []);
+
+  useEffect(() => {
+    if (themeReady) window.localStorage.setItem("pharmacy.theme", theme);
+  }, [theme, themeReady]);
+
+  useEffect(() => {
+    window.localStorage.setItem("pharmacy.sidebar-collapsed", String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
+  useEffect(() => { setMobileSidebarOpen(false); }, [pathname]);
+  useEffect(() => { setProfileOpen(false); }, [pathname]);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+    function closeOnOutside(event: PointerEvent) {
+      if (event.target instanceof Node && !profileMenuRef.current?.contains(event.target)) setProfileOpen(false);
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setProfileOpen(false);
+    }
+    document.addEventListener("pointerdown", closeOnOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [profileOpen]);
 
   useEffect(() => { const timer = window.setTimeout(() => setDemoMode(new URLSearchParams(window.location.search).get("demo") === "1"), 0); return () => window.clearTimeout(timer); }, []);
 
@@ -138,12 +184,14 @@ export function AppShell() {
     : plannedModules.find(({ href }) => href === pathname)?.label ?? "Overview";
 
   return (
-    <div className="app-frame">
-      <aside className="sidebar">
-        <a className="brand" href={demoMode ? "/dashboard?demo=1" : "/dashboard"} aria-label="Pharmacy home">
+    <div className={`app-frame${sidebarCollapsed ? " sidebar-collapsed" : ""}`} data-theme={theme}>
+      {mobileSidebarOpen && <button type="button" className="sidebar-mobile-backdrop" aria-label={t("Close navigation")} onClick={() => setMobileSidebarOpen(false)} />}
+      <aside className={`sidebar${mobileSidebarOpen ? " sidebar-mobile-open" : ""}`}>
+        <Link className="brand" href={demoMode ? "/dashboard?demo=1" : "/dashboard"} aria-label="Pharmacy home">
           <span className="brand-mark"><Pill size={21} strokeWidth={2.1} /></span>
           <span className="brand-copy"><strong>Pharmacy</strong><small>CARE · CONTROL · CLARITY</small></span>
-        </a>
+        </Link>
+        <button className="sidebar-mobile-close" type="button" aria-label={t("Close navigation")} onClick={() => setMobileSidebarOpen(false)}><X size={18}/></button>
 
         <div className="branch-switcher">
           <span className="branch-avatar">P</span>
@@ -153,12 +201,12 @@ export function AppShell() {
 
         <nav className="side-navigation" aria-label="Main navigation">
           <p className="nav-caption">{t("WORKSPACE")}</p>
-          <a className={`nav-link ${pathname === "/dashboard" ? "nav-link-active" : ""}`} href={demoMode ? "/dashboard?demo=1" : "/dashboard"}><LayoutDashboard size={17} /><span>{t("Overview")}</span></a>
+          <Link className={`nav-link ${pathname === "/dashboard" ? "nav-link-active" : ""}`} title={t("Overview")} href={demoMode ? "/dashboard?demo=1" : "/dashboard"}><LayoutDashboard size={17} /><span>{t("Overview")}</span></Link>
           <p className="nav-caption nav-caption-spaced">{t("PHARMACY")}</p>
           {plannedModules.filter(({ href }) => !href || (modulePermissions[href] ?? []).some(hasPermission)).map(({ label, icon: Icon, href }) => href ? (
-            <a className={`nav-link nav-link-planned ${pathname === href ? "nav-link-active" : ""}`} key={label} href={demoMode ? `${href}?demo=1` : href}>
+            <Link className={`nav-link nav-link-planned ${pathname === href ? "nav-link-active" : ""}`} key={label} title={t(label)} href={demoMode ? `${href}?demo=1` : href}>
               <Icon size={17} /><span>{t(label)}</span><span className="nav-soon">{t("Open")}</span>
-            </a>
+            </Link>
           ) : <button className="nav-link nav-link-planned" key={label} type="button" disabled title={`${t(label)} — ${t("Soon")}`}><Icon size={17} /><span>{t(label)}</span><span className="nav-soon">{t("Soon")}</span></button>)}
         </nav>
 
@@ -171,17 +219,24 @@ export function AppShell() {
 
       <div className="main-column">
         <header className="topbar">
-          <div className="breadcrumb"><span>{t("Workspace")}</span><span className="breadcrumb-slash">/</span><strong>{t(currentPageName)}</strong></div>
+          <div className="topbar-leading"><button className="topbar-menu-button" type="button" aria-label={mobileSidebarOpen ? t("Close navigation") : t("Toggle sidebar")} aria-expanded={mobileSidebarOpen} onClick={() => { if (window.matchMedia("(max-width: 800px)").matches) setMobileSidebarOpen((open) => !open); else setSidebarCollapsed((collapsed) => !collapsed); }}>{mobileSidebarOpen ? <X size={19}/> : sidebarCollapsed ? <PanelLeftOpen size={19}/> : <PanelLeftClose size={19}/>}</button><div className="breadcrumb"><span>{t("Workspace")}</span><span className="breadcrumb-slash">/</span><strong>{t(currentPageName)}</strong></div></div>
           <div className="topbar-actions">
             <label className="language-switcher"><span className="sr-only">{t("Language")}</span><select aria-label={t("Language")} value={language} onChange={(event) => setLanguage(event.target.value as "en" | "bn")}><option value="en">English</option><option value="bn">বাংলা</option></select></label>
+            <button className="icon-button theme-toggle" type="button" aria-label={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} title={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}>{theme === "dark" ? <Sun size={18}/> : <Moon size={18}/>}</button>
             {demoMode && <span className="demo-mode-badge"><span className="demo-badge-full">{t("DEMO DATA · Local only")}</span><span className="demo-badge-compact">{language === "bn" ? "ডেমো" : "DEMO"}</span></span>}<span className="shortcut-hint"><Command size={12} /> K</span>
             <button className="icon-button notification-button" type="button" aria-label={t("Notifications")}><Bell size={18} /><i /></button>
             <div className="topbar-divider" />
-            <div className="user-menu">
-              <span className="user-avatar">{initials}</span>
-              <span className="user-menu-copy"><strong>{user?.fullName}</strong><small>{user?.role?.name ?? "Team member"}</small></span>
-              <button className="password-menu-button" type="button" onClick={() => { setPasswordError(""); setPasswordDialog(true); }}><KeyRound size={14}/><span>{t("Change password")}</span></button>
-              <button className="logout-button" type="button" onClick={handleLogout} aria-label={t("Sign out")}><LogOut size={16} /></button>
+            <div className="profile-menu-wrap" ref={profileMenuRef}>
+              <button className="profile-trigger" type="button" aria-haspopup="menu" aria-expanded={profileOpen} aria-controls="profile-dropdown" onClick={() => setProfileOpen((open) => !open)}>
+                <span className="user-avatar">{initials}</span>
+                <span className="user-menu-copy"><strong>{language === "bn" ? user?.fullNameBangla || user?.fullName : user?.fullName}</strong><small>{user?.role?.name ?? "Team member"}</small></span>
+                <ChevronDown className={profileOpen ? "profile-chevron is-open" : "profile-chevron"} size={16}/>
+              </button>
+              {profileOpen && <div className="profile-dropdown" id="profile-dropdown" role="menu" aria-label={t("Profile menu")}>
+                <div className="profile-dropdown-identity"><span className="user-avatar">{initials}</span><span><strong>{language === "bn" ? user?.fullNameBangla || user?.fullName : user?.fullName}</strong><small>{user?.role?.name ?? "Team member"}</small></span></div>
+                <button type="button" role="menuitem" onClick={() => { setProfileOpen(false); setPasswordError(""); setPasswordDialog(true); }}><KeyRound size={16}/>{t("Change password")}</button>
+                <button type="button" className="profile-signout" role="menuitem" onClick={() => { setProfileOpen(false); handleLogout(); }}><LogOut size={16}/>{t("Sign out")}</button>
+              </div>}
             </div>
           </div>
         </header>

@@ -1,13 +1,13 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { isSameOriginRequest } from "@/lib/server/request-security";
 
 type RouteContext = { params: Promise<{ path: string[] }> };
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 async function proxy(request: Request, context: RouteContext) {
-  const origin = request.headers.get("origin");
-  if (MUTATING_METHODS.has(request.method) && (!origin || new URL(origin).origin !== new URL(request.url).origin)) {
+  if (MUTATING_METHODS.has(request.method) && !isSameOriginRequest(request)) {
     return NextResponse.json({ success: false, message: "Request origin could not be verified." }, { status: 403 });
   }
 

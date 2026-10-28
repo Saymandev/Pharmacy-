@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
+import { isSameOriginRequest } from "@/lib/server/request-security";
 
 export async function POST(request: Request) {
-  const origin = request.headers.get("origin");
-  if (!origin || new URL(origin).origin !== new URL(request.url).origin) {
+  if (!isSameOriginRequest(request)) {
     return NextResponse.json({ success: false, message: "Request origin could not be verified." }, { status: 403 });
   }
 
