@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -14,6 +14,7 @@ import {
   Pill,
   RefreshCw,
   ShoppingBag,
+  MapPin,
   Wallet,
 } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api/client";
@@ -21,8 +22,7 @@ import { getTodayPharmacyStats, getWeeklyPharmacyGraph } from "@/features/report
 import { useAuth } from "@/components/providers/auth-provider";
 import type { PharmacyDashboardStats, PharmacyGraphPoint } from "@/types/api";
 import { useLanguage } from "@/lib/i18n/language-provider";
-
-type Branch = { id: string; name: string };
+import { useActiveBranch } from "@/components/providers/active-branch-provider";
 
 function formatCount(value: unknown, locale: string) {
   const count = typeof value === "number" ? value : typeof value === "string" && value.trim() ? Number(value) : NaN;
@@ -32,16 +32,6 @@ function formatCount(value: unknown, locale: string) {
 function formatMoney(value: unknown, locale: string) {
   const amount = typeof value === "number" ? value : typeof value === "string" && value.trim() ? Number(value) : NaN;
   return Number.isFinite(amount) ? new Intl.NumberFormat(locale, { style: "currency", currency: "BDT", maximumFractionDigits: 0 }).format(amount) : "—";
-}
-
-function extractBranches(value: unknown): Branch[] {
-  if (Array.isArray(value)) return value as Branch[];
-  if (value && typeof value === "object") {
-    const record = value as Record<string, unknown>;
-    if ("data" in record) return extractBranches(record.data);
-    if ("branches" in record) return extractBranches(record.branches);
-  }
-  return [];
 }
 
 function formatDate(value: Date, locale: string) {
@@ -101,15 +91,14 @@ function SalesChart({ points, locale, t }: { points: PharmacyGraphPoint[]; local
 
 export function Overview() {
   const { user, hasPermission } = useAuth();
+  const { activeBranchId: branchId, activeBranch } = useActiveBranch();
   const { language, t } = useLanguage();
   const locale = language === "bn" ? "bn-BD" : "en-BD";
   const [stats, setStats] = useState<PharmacyDashboardStats | null>(null);
   const [graph, setGraph] = useState<PharmacyGraphPoint[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [branchId, setBranchId] = useState("");
-  const [branchLoadFailed, setBranchLoadFailed] = useState(false);
+  const hasLoaded = useRef(false);
   const canReadReports = hasPermission("report:read");
 
   const loadDashboard = useCallback(async () => {
@@ -117,7 +106,7 @@ export function Overview() {
       setLoading(false);
       return;
     }
-    setLoading(true);
+    if (!hasLoaded.current) setLoading(true);
     setError(null);
     try {
       const [todayStats, weeklyGraph] = await Promise.all([
@@ -129,17 +118,10 @@ export function Overview() {
     } catch (caught) {
       setError(caught instanceof ApiClientError ? caught.message : "Dashboard data could not be loaded.");
     } finally {
+      hasLoaded.current = true;
       setLoading(false);
     }
   }, [canReadReports, branchId]);
-
-  useEffect(() => {
-    let active = true;
-    void api.get<unknown>("/branches?page=1&limit=100")
-      .then((result) => { if (active) setBranches(extractBranches(result)); })
-      .catch(() => { if (active) setBranchLoadFailed(true); });
-    return () => { active = false; };
-  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => { void loadDashboard(); }, 0);
@@ -171,13 +153,12 @@ export function Overview() {
           <h1>{greeting}, {language === "bn" ? user?.fullNameBangla?.split(" ")[0] || user?.fullName?.split(" ")[0] || t("there") : user?.fullName?.split(" ")[0] || t("there")}</h1>
           <p className="page-subtitle">{t("Here’s what’s happening at your pharmacy today.")}</p>
         </div>
-        <div className="overview-context"><label className="overview-branch-filter"><span>{t("Branch")}</span><select aria-label={t("Filter dashboard by branch")} value={branchId} onChange={(event) => setBranchId(event.target.value)} disabled={branches.length === 0}><option value="">{t("All branches")}</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><div className="date-chip"><CalendarDays size={16} /><span>{formatDate(new Date(), locale)}</span></div></div>
+        <div className="overview-context"><span className="date-chip"><MapPin size={16} /><span>{activeBranch?.name ?? t("No branch selected")}</span></span><div className="date-chip"><CalendarDays size={16} /><span>{formatDate(new Date(), locale)}</span></div></div>
       </div>
 
       {!canReadReports && (
         <div className="notice-card"><CircleHelp size={18} /><p>{t("Your account does not have report access. Ask an administrator to grant ")}<strong>report:read</strong>{t(" to see dashboard figures.")}</p></div>
       )}
-      {branchLoadFailed && <div className="notice-card"><CircleHelp size={18} /><p>{t("Branch options could not be loaded. Dashboard figures are shown for all branches.")}</p></div>}
       {error && (
         <div className="notice-card notice-error"><CircleHelp size={18} /><p>{t(error)}</p><button className="text-button" onClick={() => void loadDashboard()}><RefreshCw size={14} /> {t("Try again")}</button></div>
       )}

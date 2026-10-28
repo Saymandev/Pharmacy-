@@ -5,6 +5,35 @@ body { line-height: 1.55; }
   font-size: max(13px, 1em) !important;
 }
 .workspace-content :is(small,th,td) { line-height: 1.45; }
+/* Shared form controls: one predictable size, focus ring and contrast across modules. */
+.workspace-content :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),select,textarea),
+.supplier-dialog :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),select,textarea) {
+  min-height: 42px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 9px;
+  background-color: var(--surface); color: var(--ink); font: inherit; font-size: 14px;
+  line-height: 1.4; transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.workspace-content textarea, .supplier-dialog textarea { min-height: 96px; resize: vertical; }
+.workspace-content :is(input,select,textarea):focus-visible,
+.supplier-dialog :is(input,select,textarea):focus-visible {
+  border-color: var(--brand); outline: 0; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent);
+}
+.workspace-content input::placeholder, .supplier-dialog input::placeholder,
+.workspace-content textarea::placeholder, .supplier-dialog textarea::placeholder { color: var(--ink-muted); opacity: .85; }
+.workspace-content :is(input,select,textarea):disabled,
+.supplier-dialog :is(input,select,textarea):disabled { cursor: not-allowed; opacity: .65; }
+/* Search controls sit inside their own visual field; keep their inner input seamless. */
+.workspace-content :is(.data-search,.sales-search,.pos-search-box,.pos-input-with-icon,.consultation-toolbar>span,.supplier-toolbar>div) input {
+  min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none;
+}
+.workspace-content :is(.data-search,.sales-search,.pos-search-box,.pos-input-with-icon,.consultation-toolbar>span,.supplier-toolbar>div) input:focus-visible { border: 0; box-shadow: none; outline: 0; }
+.active-branch-preference { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:14px; padding:16px 18px; border:1px solid var(--line); border-radius:12px; background:var(--canvas); }
+.active-branch-preference>div { display:grid; gap:3px; }
+.active-branch-preference strong { color:var(--ink); font-size:14px; }
+.active-branch-preference small { color:var(--ink-muted); font-size:12px; }
+.active-branch-preference select { width:min(100%,320px); }
+.hr-active-branch { align-self:center; padding:8px 11px; border:1px solid var(--line); border-radius:9px; background:var(--canvas); color:var(--ink-soft); font-size:12px; font-weight:650; }
+.reports-refreshing { color:var(--ink-muted); font-size:12px; }
+@media(max-width:600px){.active-branch-preference{align-items:stretch;flex-direction:column;gap:10px}.active-branch-preference select{width:100%}}
 .sidebar {
   position: sticky; top: 0; z-index: 46; align-self: flex-start; flex: 0 0 256px;
   height: 100dvh; min-height: 0; max-height: 100dvh; overflow-x: hidden; overflow-y: auto;

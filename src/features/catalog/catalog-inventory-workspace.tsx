@@ -6,6 +6,7 @@ import { AlertTriangle, ArrowLeftRight, ArrowUpDown, Boxes, CalendarClock, Check
 import { api, ApiClientError } from "@/lib/api/client";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useLanguage } from "@/lib/i18n/language-provider";
+import { useActiveBranch } from "@/components/providers/active-branch-provider";
 
 type Data = Record<string, unknown>;
 type Branch = { id: string; name: string };
@@ -33,8 +34,7 @@ function daysUntil(date: string) { return Math.ceil((new Date(date).getTime() - 
 export function CatalogInventoryWorkspace({ mode }: { mode: Mode }) {
   const { hasPermission } = useAuth();
   const { t } = useLanguage();
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [branchId, setBranchId] = useState("");
+  const { branches, activeBranchId: branchId } = useActiveBranch();
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [categories, setCategories] = useState<Option[]>([]);
@@ -88,7 +88,6 @@ export function CatalogInventoryWorkspace({ mode }: { mode: Mode }) {
     let active = true;
     async function loadOptions() {
       const results = await Promise.allSettled([
-        api.get<unknown>("/branches?page=1&limit=100"),
         api.get<unknown>("/pharmacy/categories?page=1&limit=100"),
         api.get<unknown>("/pharmacy/generics?page=1&limit=100"),
         api.get<unknown>("/pharmacy/manufacturers?page=1&limit=100"),
@@ -96,17 +95,11 @@ export function CatalogInventoryWorkspace({ mode }: { mode: Mode }) {
         api.get<unknown>("/pharmacy/units?page=1&limit=100"),
       ]);
       if (!active) return;
-      if (results[0].status === "fulfilled") {
-        const items = list<Branch>(results[0].value);
-        setBranches(items);
-        setBranchId(items[0]?.id ?? "");
-      }
-      if (results[1].status === "fulfilled") setCategories(list<Option>(results[1].value));
-      if (results[2].status === "fulfilled") setGenerics(list<Option>(results[2].value));
-      if (results[3].status === "fulfilled") setManufacturers(list<Option>(results[3].value));
-      if (results[4].status === "fulfilled") setGroups(list<Option>(results[4].value));
-      if (results[5].status === "fulfilled") setUnits(list<Option>(results[5].value));
-      if (results[0].status === "rejected") setError(err(results[0].reason));
+      if (results[0].status === "fulfilled") setCategories(list<Option>(results[0].value));
+      if (results[1].status === "fulfilled") setGenerics(list<Option>(results[1].value));
+      if (results[2].status === "fulfilled") setManufacturers(list<Option>(results[2].value));
+      if (results[3].status === "fulfilled") setGroups(list<Option>(results[3].value));
+      if (results[4].status === "fulfilled") setUnits(list<Option>(results[4].value));
     }
     void loadOptions();
     return () => { active = false; };
@@ -234,7 +227,7 @@ export function CatalogInventoryWorkspace({ mode }: { mode: Mode }) {
   const pagination = <div className="data-pagination"><span>{t("Showing page")} {page} {t("of")} {pageInfo.totalPages} · {pageInfo.total.toLocaleString("en-BD")} {t("records")}</span><div><button type="button" disabled={loading || page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>{t("Previous")}</button><button type="button" disabled={loading || page >= pageInfo.totalPages} onClick={() => setPage((current) => Math.min(pageInfo.totalPages, current + 1))}>{t("Next")}</button></div></div>;
 
   return <section className="data-page">
-    <div className="page-heading-row"><div><p className="eyebrow">{t("PHARMACY")} · {t(mode === "catalog" ? "PRODUCTS" : "STOCK CONTROL")}</p><h1>{title}</h1><p className="page-subtitle">{subtitle}</p></div><div className="inventory-heading-actions">{mode === "catalog"&&<>{hasPermission("medicine:create")&&<label className="purchase-save-pending catalog-import-button">{importingMedicines?t("Importing…"):t("Import file")}<input type="file" accept=".csv,.xls,.xlsx" disabled={importingMedicines} onChange={event=>{void importMedicines(event.target.files?.[0]);event.currentTarget.value="";}}/></label>}{hasPermission("medicine:create")&&<button className="purchase-primary-action" onClick={()=>openMedicine()}><Plus size={14}/>{t("Add medicine")}</button>}</>}{mode === "inventory"&&<>{hasPermission("stock:update")&&<button className="purchase-save-pending" onClick={()=>openStockAction("adjust")}><ArrowUpDown size={14}/>{t("Adjust stock")}</button>}{hasPermission("stock:update")&&<button className="purchase-save-pending" onClick={()=>openStockAction("transfer")}><ArrowLeftRight size={14}/>{t("Transfer")}</button>}{hasPermission("medicine:update")&&<button className="purchase-save-pending" onClick={openPriceDialog}>{t("Bulk price")}</button>}{hasPermission("stock:create")&&<button className="purchase-primary-action" onClick={()=>openStockAction("opening")}><Plus size={14}/>{t("Opening stock")}</button>}</>}<label className="data-branch-select"><span>{t("Branch")}</span><select value={branchId} onChange={(event) => { setPage(1); setBranchId(event.target.value); }}><option value="">{t("Select branch")}</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label></div></div>
+    <div className="page-heading-row"><div><p className="eyebrow">{t("PHARMACY")} · {t(mode === "catalog" ? "PRODUCTS" : "STOCK CONTROL")}</p><h1>{title}</h1><p className="page-subtitle">{subtitle}</p></div><div className="inventory-heading-actions">{mode === "catalog"&&<>{hasPermission("medicine:create")&&<label className="purchase-save-pending catalog-import-button">{importingMedicines?t("Importing…"):t("Import file")}<input type="file" accept=".csv,.xls,.xlsx" disabled={importingMedicines} onChange={event=>{void importMedicines(event.target.files?.[0]);event.currentTarget.value="";}}/></label>}{hasPermission("medicine:create")&&<button className="purchase-primary-action" onClick={()=>openMedicine()}><Plus size={14}/>{t("Add medicine")}</button>}</>}{mode === "inventory"&&<>{hasPermission("stock:update")&&<button className="purchase-save-pending" onClick={()=>openStockAction("adjust")}><ArrowUpDown size={14}/>{t("Adjust stock")}</button>}{hasPermission("stock:update")&&<button className="purchase-save-pending" onClick={()=>openStockAction("transfer")}><ArrowLeftRight size={14}/>{t("Transfer")}</button>}{hasPermission("medicine:update")&&<button className="purchase-save-pending" onClick={openPriceDialog}>{t("Bulk price")}</button>}{hasPermission("stock:create")&&<button className="purchase-primary-action" onClick={()=>openStockAction("opening")}><Plus size={14}/>{t("Opening stock")}</button>}</>}</div></div>
     {error && <div className="data-alert"><CircleAlert size={16}/><span>{error}</span><button onClick={() => void load()}>Retry</button></div>}
     {notice && <div className="sales-alert success"><Check size={15}/><span>{notice}</span><button onClick={()=>setNotice("")} aria-label="Dismiss"><X size={14}/></button></div>}
     <nav className="data-tabs" aria-label={t("Pharmacy inventory sections")}><Link href="/catalog" className={mode === "catalog" ? "selected" : ""}><Package size={15}/> {t("Catalog")}</Link><Link href="/inventory" className={mode === "inventory" ? "selected" : ""}><Boxes size={15}/> {t("Inventory")}</Link></nav>

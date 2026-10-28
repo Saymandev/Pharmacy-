@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import { ArrowUpRight, Check, CircleAlert, Clock3, FileText, Search, Wallet, X } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api/client";
 import { useAuth } from "@/components/providers/auth-provider";
+import { useActiveBranch } from "@/components/providers/active-branch-provider";
 
 type Row = Record<string, unknown>;
-type Branch = { id: string; name: string };
 type Account = { id: string; name: string; type: string; currentBalance?: number; isActive?: boolean };
 type Charge = { id: string; branchId: string; doctorId: string; totalAmount: number; commissionPercentage: number; commissionAmount: number; isPaid: boolean; paidAt?: string | null; createdAt: string; doctor?: { id: string; fullName: string }; sale?: { invoiceNumber?: string; createdAt?: string }; appointment?: { serialNumber?: string } };
 type Payment = { id: string; paymentNumber: string; totalAmount: number; paymentMethod: string; note?: string | null; createdAt: string; doctor?: { id: string; fullName: string }; account?: { id: string; name: string } };
@@ -21,10 +21,9 @@ function getError(error: unknown) { return error instanceof ApiClientError ? err
 
 export function ConsultationWorkspace() {
   const { hasPermission } = useAuth();
+  const { activeBranchId: branchId } = useActiveBranch();
   const [view, setView] = useState<View>("unpaid");
-  const [branches, setBranches] = useState<Branch[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [branchId, setBranchId] = useState("");
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -46,9 +45,8 @@ export function ConsultationWorkspace() {
 
   useEffect(() => {
     let active = true;
-    Promise.allSettled([api.get<unknown>("/branches?page=1&limit=100"), api.get<unknown>("/finance/accounts?page=1&limit=100&isActive=true")]).then(([branchResult, accountResult]) => {
+    Promise.allSettled([api.get<unknown>("/finance/accounts?page=1&limit=100&isActive=true")]).then(([accountResult]) => {
       if (!active) return;
-      if (branchResult.status === "fulfilled") { const options = rows<Branch>(branchResult.value); setBranches(options); setBranchId(options[0]?.id ?? ""); }
       if (accountResult.status === "fulfilled") { const options = rows<Account>(accountResult.value).filter((item) => item.isActive !== false); setAccounts(options); setAccountId(options[0]?.id ?? ""); }
     });
     return () => { active = false; };
@@ -103,7 +101,7 @@ export function ConsultationWorkspace() {
   if (!canRead) return <section className="consultation-page"><div className="page-heading-row"><div><p className="eyebrow">FINANCE · DOCTOR SETTLEMENTS</p><h1>Consultation charges</h1></div></div><div className="notice-card"><CircleAlert size={18}/><p>Your account needs <strong>consultation-charge:read</strong> to view doctor consultation charges.</p></div></section>;
   return <section className="consultation-page data-page">
     <div className="page-heading-row"><div><p className="eyebrow">FINANCE · DOCTOR SETTLEMENTS</p><h1>Consultation charges</h1><p className="page-subtitle">Review doctor commissions, settle selected unpaid charges and inspect payment vouchers.</p></div></div>
-    <div className="consultation-summary"><article><i><Clock3 size={17}/></i><span><small>{view === "paid" ? "Paid charges" : view === "payments" ? "Payment vouchers" : "Charges in view"}</small><strong>{loading ? "—" : total.toLocaleString("en-BD")}</strong></span></article><article><i><Wallet size={17}/></i><span><small>Selected payable</small><strong>{money(selectedTotal)}</strong></span></article><label>Branch<select value={branchId} onChange={(event) => setBranchId(event.target.value)}><option value="">All branches</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label></div>
+    <div className="consultation-summary"><article><i><Clock3 size={17}/></i><span><small>{view === "paid" ? "Paid charges" : view === "payments" ? "Payment vouchers" : "Charges in view"}</small><strong>{loading ? "—" : total.toLocaleString("en-BD")}</strong></span></article><article><i><Wallet size={17}/></i><span><small>Selected payable</small><strong>{money(selectedTotal)}</strong></span></article></div>
     <section className="panel consultation-card"><nav className="data-tabs consultation-tabs">{([["unpaid", "Unpaid charges"], ["paid", "Paid charges"], ["payments", "Payment history"]] as [View, string][]).map(([key, label]) => <button type="button" key={key} className={view === key ? "selected" : ""} onClick={() => { setView(key); setSelectedPayment(null); }}>{label}</button>)}</nav>
       <form className="consultation-toolbar" onSubmit={(event) => { event.preventDefault(); setQuery(search); }}><span><Search size={15}/><input aria-label="Search consultation records" placeholder="Search doctor, invoice or appointment" value={search} onChange={(event) => setSearch(event.target.value)}/></span><button type="submit">Search</button></form>
       {error && !payDialog && <div className="data-error"><CircleAlert size={15}/><span>{error}</span><button type="button" onClick={() => void load(page, query)}>Retry</button></div>}

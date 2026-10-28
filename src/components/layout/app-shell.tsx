@@ -47,6 +47,7 @@ import { api, ApiClientError } from "@/lib/api/client";
 import { SupplierWorkspace } from "@/features/suppliers/supplier-workspace";
 import { ConsultationWorkspace } from "@/features/finance/consultation-workspace";
 import { useLanguage } from "@/lib/i18n/language-provider";
+import { ActiveBranchProvider } from "@/components/providers/active-branch-provider";
 
 const plannedModules = [
   { label: "Point of sale", icon: ShoppingCart, href: "/pos" },
@@ -184,7 +185,7 @@ export function AppShell() {
     : plannedModules.find(({ href }) => href === pathname)?.label ?? "Overview";
 
   return (
-    <div className={`app-frame${sidebarCollapsed ? " sidebar-collapsed" : ""}`} data-theme={theme}>
+    <ActiveBranchProvider><div className={`app-frame${sidebarCollapsed ? " sidebar-collapsed" : ""}`} data-theme={theme}>
       {mobileSidebarOpen && <button type="button" className="sidebar-mobile-backdrop" aria-label={t("Close navigation")} onClick={() => setMobileSidebarOpen(false)} />}
       <aside className={`sidebar${mobileSidebarOpen ? " sidebar-mobile-open" : ""}`}>
         <Link className="brand" href={demoMode ? "/dashboard?demo=1" : "/dashboard"} aria-label="Pharmacy home">
@@ -195,8 +196,7 @@ export function AppShell() {
 
         <div className="branch-switcher">
           <span className="branch-avatar">P</span>
-          <span className="branch-name"><strong>Pharmacy</strong><small>Default workspace</small></span>
-          <ChevronDown size={15} />
+          <span className="branch-name"><strong>Pharmacy</strong><small>Workspace</small></span>
         </div>
 
         <nav className="side-navigation" aria-label="Main navigation">
@@ -247,6 +247,6 @@ export function AppShell() {
       </div>
       {passwordNotice && <div className="password-toast" role="status">{passwordNotice}</div>}
       {passwordDialog && <div className="pos-dialog-backdrop" role="presentation" onClick={() => !passwordSaving && setPasswordDialog(false)}><section className="password-dialog" role="dialog" aria-modal="true" aria-labelledby="password-dialog-title" onClick={(event) => event.stopPropagation()}><div className="password-dialog-heading"><span><KeyRound size={18}/></span><button className="pos-icon-action" type="button" onClick={() => setPasswordDialog(false)} aria-label={`${t("Close")} ${t("Change password")}`}><X size={16}/></button></div><h2 id="password-dialog-title">{t("Change your password")}</h2><p>{t("Confirm your current password, then choose a strong replacement.")}</p><form onSubmit={(event) => void changePassword(event)}><label>{t("Current password")}<input autoComplete="current-password" type="password" required value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)}/></label><label>{t("New password")}<input autoComplete="new-password" type="password" minLength={8} required value={newPassword} onChange={(event) => setNewPassword(event.target.value)}/><small>{t("At least 8 characters, including uppercase, lowercase and a number.")}</small></label><label>{t("Confirm new password")}<input autoComplete="new-password" type="password" minLength={8} required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)}/></label>{passwordError && <div className="pos-dialog-error" role="alert">{t(passwordError)}</div>}<button className="pos-complete-button" type="submit" disabled={passwordSaving}>{passwordSaving ? t("Updating password…") : t("Update password")}</button></form></section></div>}
-    </div>
+    </div></ActiveBranchProvider>
   );
 }
