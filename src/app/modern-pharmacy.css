@@ -472,6 +472,28 @@
 }
 .pos-page .pos-checkout-quick-actions button:disabled { cursor: wait; opacity: .6; }
 
+/* The final step previews the actual batches and tender account choices. */
+.pos-page .pos-confirm-items {
+  display: grid; max-height: 185px; overflow-y: auto; margin-bottom: 11px;
+  border: 1px solid var(--ux-line); border-radius: 11px; padding: 2px 11px;
+  background: var(--ux-soft);
+}
+.pos-page .pos-confirm-items > div,
+.pos-page .pos-confirm-payments > div {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 9px 0; border-bottom: 1px solid var(--ux-line); font-size: 12px;
+}
+.pos-page .pos-confirm-items > div:last-child,
+.pos-page .pos-confirm-payments > div:last-child { border-bottom: 0; }
+.pos-page .pos-confirm-items > div > span { display: grid; min-width: 0; gap: 4px; }
+.pos-page .pos-confirm-items strong,
+.pos-page .pos-confirm-payments strong { color: var(--ux-text); }
+.pos-page .pos-confirm-items small,
+.pos-page .pos-confirm-payments span { color: var(--ux-muted); font-size: 11px; }
+.pos-page .pos-confirm-payments {
+  margin: 0 0 12px; padding: 0 11px;
+  border: 1px solid var(--ux-line); border-radius: 11px;
+}
 /* Explicit confirmation, before any POST /sales. */
 .pos-page .pos-confirm-backdrop {
   position: fixed; inset: 0; z-index: 110;
