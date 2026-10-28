@@ -1139,6 +1139,13 @@ button.data-summary-card { cursor: pointer; }
   .pos-mobile-cart-bar .pos-mobile-cart-total { font-size: 14px; }
   .pos-alert { align-items: flex-start; font-size: 9px; line-height: 1.5; }
 }
+@media (min-width: 1500px) {
+  .pos-workspace { width: 100%; max-width: 1900px; margin-inline: auto; }
+  .pos-product-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (min-width: 2200px) {
+  .pos-product-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
