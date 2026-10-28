@@ -28,7 +28,7 @@ All API modules are mounted under `/api/v1` and return the shared `{ success, me
 
 ### Product search and filters
 
-`GET /pharmacy/medicines` supports paginated search across medicine name, Bangla name, barcode, manufacturer, category, generic and group. It also accepts category, generic, group, manufacturer, unit, dosage form, strength, active/stock and branch filters. The product browser therefore shows those filters, barcode entry, available stock, unit, and sale/MRP price. Batch choice is a separate stock lookup because medicine rows include stock records.
+`GET /pharmacy/medicines` supports paginated search across medicine name, Bangla name, barcode, manufacturer, category, generic and group. It also applies category, generic, group, manufacturer, dosage form, strength, active/stock and branch filters. Although the validator accepts `unit` and `medicineUnitId`, the current list service does not apply either field. The POS therefore filters unit locally over paginated results and offers a load-more action so it can reach later pages. The product browser also supports barcode scanner input, available stock, unit, and sale/MRP price. Batch choice is a separate stock lookup because medicine rows include stock records.
 
 `GET /pharmacy/stocks` exposes branch, medicine, batch, unit, rack, expiry date range, manufacturer and search filters. It does not expose a low-stock-status or expiring-soon filter parameter; those need client-side derivation or a backend endpoint.
 
@@ -69,3 +69,4 @@ The return UI shows original, already-returned and remaining quantities and caps
 | P1 | Backup routes expose trigger, history, config and download, but no restore operation. | A restore button would promise a backend capability that does not exist. | Add and secure a restore endpoint with auditability before designing a restore workflow. |
 
 These are source-level findings for engineering follow-up. They are not silently papered over by the visual design. Until the backend fixes land, the frontend should send explicit account/tender rows, compute bounded discount amounts, restrict quantities to whole stock units, require an active register in the UI, and display return limits based on the original sale history.
+
