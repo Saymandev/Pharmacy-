@@ -59,7 +59,8 @@ export function demoRequest<T>(path: string, request: DemoRequest = {}): Promise
   let data: unknown = [];
 
   if (method !== "GET") {
-    if (pathname === "/customers" && method === "POST") data = customers[0];
+    if (pathname === "/sales" && method === "POST") data = { id: "sale-demo-created", invoiceNumber: "DEMO-INV-1001", createdAt: new Date().toISOString(), status: "completed" };
+    else if (pathname === "/customers" && method === "POST") data = customers[0];
     else if (pathname === "/pharmacy/suppliers" && method === "POST") data = suppliers[0];
     else if (pathname.includes("/transactions/") && method === "PATCH") data = transactions[0];
     else data = { success: true, message: "Demo action simulated. No backend data was changed." };
