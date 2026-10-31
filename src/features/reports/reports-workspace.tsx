@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, AlertCircle, ArrowDownToLine, CalendarDays, ChevronDown, CircleDollarSign, FileBarChart2, RefreshCw, Search, TrendingDown, TrendingUp } from "lucide-react";
+import { Activity, AlertCircle, ArrowDownToLine, CalendarDays, CircleDollarSign, FileBarChart2, RefreshCw, Search, TrendingDown, TrendingUp } from "lucide-react";
 import { ApiClientError } from "@/lib/api/client";
 import { getReport, type ReportKey } from "@/features/reports/report-service";
 import { useActiveBranch } from "@/components/providers/active-branch-provider";

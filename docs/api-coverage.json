@@ -1,0 +1,1714 @@
+[
+  {
+    "method": "POST",
+    "path": "/auth/admin/change-password/:userId",
+    "backend_file": "modules/auth/auth.routes.ts",
+    "frontend_candidates": [
+      "src/features/access/access-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/auth/change-password",
+    "backend_file": "modules/auth/auth.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/auth/login",
+    "backend_file": "modules/auth/auth.routes.ts",
+    "frontend_candidates": [
+      "src/app/api/backend/auth/login/route.ts",
+      "src/features/auth/auth-service.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/auth/me",
+    "backend_file": "modules/auth/auth.routes.ts",
+    "frontend_candidates": [
+      "src/features/auth/auth-service.ts"
+    ]
+  },
+  {
+    "method": "PUT",
+    "path": "/backups/config",
+    "backend_file": "modules/backup/backup.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/backups/download/:id",
+    "backend_file": "modules/backup/backup.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/backups/history",
+    "backend_file": "modules/backup/backup.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/backups/trigger",
+    "backend_file": "modules/backup/backup.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/branches",
+    "backend_file": "modules/branch/branch.routes.ts",
+    "frontend_candidates": [
+      "src/components/providers/active-branch-provider.tsx",
+      "src/features/customers/customer-workspace.tsx",
+      "src/features/access/access-workspace.tsx",
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/branches",
+    "backend_file": "modules/branch/branch.routes.ts",
+    "frontend_candidates": [
+      "src/components/providers/active-branch-provider.tsx",
+      "src/features/customers/customer-workspace.tsx",
+      "src/features/access/access-workspace.tsx",
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/branches/:id",
+    "backend_file": "modules/branch/branch.routes.ts",
+    "frontend_candidates": [
+      "src/components/providers/active-branch-provider.tsx",
+      "src/features/customers/customer-workspace.tsx",
+      "src/features/access/access-workspace.tsx",
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/branches/:id",
+    "backend_file": "modules/branch/branch.routes.ts",
+    "frontend_candidates": [
+      "src/components/providers/active-branch-provider.tsx",
+      "src/features/customers/customer-workspace.tsx",
+      "src/features/access/access-workspace.tsx",
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PUT",
+    "path": "/branches/:id",
+    "backend_file": "modules/branch/branch.routes.ts",
+    "frontend_candidates": [
+      "src/components/providers/active-branch-provider.tsx",
+      "src/features/customers/customer-workspace.tsx",
+      "src/features/access/access-workspace.tsx",
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/communication/notices",
+    "backend_file": "modules/communication/notice/notice.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/communication/notices",
+    "backend_file": "modules/communication/notice/notice.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/communication/notices/:id",
+    "backend_file": "modules/communication/notice/notice.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/communication/notices/:id",
+    "backend_file": "modules/communication/notice/notice.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/communication/notifications",
+    "backend_file": "modules/communication/notification/notification.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/communication/notifications/:id/read",
+    "backend_file": "modules/communication/notification/notification.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/communication/notifications/read-all",
+    "backend_file": "modules/communication/notification/notification.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/customers",
+    "backend_file": "modules/customer/customer.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx",
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/customers/customer-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/customers",
+    "backend_file": "modules/customer/customer.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx",
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/customers/customer-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/customers/:id",
+    "backend_file": "modules/customer/customer.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx",
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/customers/customer-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/customers/:id",
+    "backend_file": "modules/customer/customer.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx",
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/customers/customer-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/customers/:id",
+    "backend_file": "modules/customer/customer.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx",
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/customers/customer-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/customers/bulk-sale-payment",
+    "backend_file": "modules/customer/customer.routes.ts",
+    "frontend_candidates": [
+      "src/features/customers/customer-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/customers/pharmacy-payment",
+    "backend_file": "modules/customer/customer.routes.ts",
+    "frontend_candidates": [
+      "src/features/customers/customer-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/finance/accounts",
+    "backend_file": "modules/finance/account/account.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/sales/sales-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx",
+      "src/features/customers/customer-workspace.tsx",
+      "src/features/finance/finance-workspace.tsx",
+      "src/features/finance/consultation-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/finance/accounts",
+    "backend_file": "modules/finance/account/account.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/sales/sales-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx",
+      "src/features/customers/customer-workspace.tsx",
+      "src/features/finance/finance-workspace.tsx",
+      "src/features/finance/consultation-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/finance/accounts/:id",
+    "backend_file": "modules/finance/account/account.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/sales/sales-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx",
+      "src/features/customers/customer-workspace.tsx",
+      "src/features/finance/finance-workspace.tsx",
+      "src/features/finance/consultation-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/finance/accounts/:id",
+    "backend_file": "modules/finance/account/account.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/sales/sales-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx",
+      "src/features/customers/customer-workspace.tsx",
+      "src/features/finance/finance-workspace.tsx",
+      "src/features/finance/consultation-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/finance/accounts/:id",
+    "backend_file": "modules/finance/account/account.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/sales/sales-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx",
+      "src/features/customers/customer-workspace.tsx",
+      "src/features/finance/finance-workspace.tsx",
+      "src/features/finance/consultation-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/finance/consultation-charges/charges",
+    "backend_file": "modules/finance/consultation-charge/consultation-charge.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/consultation-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/finance/consultation-charges/pay",
+    "backend_file": "modules/finance/consultation-charge/consultation-charge.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/consultation-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/finance/consultation-charges/payments",
+    "backend_file": "modules/finance/consultation-charge/consultation-charge.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/consultation-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/finance/consultation-charges/payments/:id",
+    "backend_file": "modules/finance/consultation-charge/consultation-charge.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/consultation-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/finance/expenses",
+    "backend_file": "modules/finance/expense/expense.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/finance/expenses",
+    "backend_file": "modules/finance/expense/expense.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/finance/expenses/:id",
+    "backend_file": "modules/finance/expense/expense.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/finance/expenses/:id",
+    "backend_file": "modules/finance/expense/expense.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/finance/expenses/categories",
+    "backend_file": "modules/finance/expense/expense-category.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/finance/expenses/categories",
+    "backend_file": "modules/finance/expense/expense-category.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/finance/expenses/categories/:id",
+    "backend_file": "modules/finance/expense/expense-category.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/finance/expenses/categories/:id",
+    "backend_file": "modules/finance/expense/expense-category.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/finance/incomes",
+    "backend_file": "modules/finance/income/income.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/finance/incomes",
+    "backend_file": "modules/finance/income/income.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/finance/incomes/:id",
+    "backend_file": "modules/finance/income/income.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/finance/incomes/:id",
+    "backend_file": "modules/finance/income/income.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/finance/incomes/categories",
+    "backend_file": "modules/finance/income/income-category.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/finance/incomes/categories",
+    "backend_file": "modules/finance/income/income-category.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/finance/incomes/categories/:id",
+    "backend_file": "modules/finance/income/income-category.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/finance/incomes/categories/:id",
+    "backend_file": "modules/finance/income/income-category.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/finance/transactions",
+    "backend_file": "modules/finance/transaction/transaction.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/finance/transactions/:id",
+    "backend_file": "modules/finance/transaction/transaction.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/finance/transactions/:id",
+    "backend_file": "modules/finance/transaction/transaction.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/finance/transactions/transfer",
+    "backend_file": "modules/finance/transaction/transaction.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/finance/transactions/withdraw",
+    "backend_file": "modules/finance/transaction/transaction.routes.ts",
+    "frontend_candidates": [
+      "src/features/finance/finance-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hr/annual-calendars",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": []
+  },
+  {
+    "method": "POST",
+    "path": "/hr/annual-calendars",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": []
+  },
+  {
+    "method": "DELETE",
+    "path": "/hr/annual-calendars/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": []
+  },
+  {
+    "method": "GET",
+    "path": "/hr/annual-calendars/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": []
+  },
+  {
+    "method": "PATCH",
+    "path": "/hr/annual-calendars/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": []
+  },
+  {
+    "method": "GET",
+    "path": "/hr/assigned-rosters",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/hr/assigned-rosters",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/hr/assigned-rosters/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hr/assigned-rosters/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/hr/assigned-rosters/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hr/attendance",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/hr/attendance",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/hr/attendance-transactions/webhook",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": []
+  },
+  {
+    "method": "DELETE",
+    "path": "/hr/attendance/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hr/attendance/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/hr/attendance/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/hr/attendance/import/:branchId",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hr/departments",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-setup-workspace.tsx",
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/hr/departments",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-setup-workspace.tsx",
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/hr/departments/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-setup-workspace.tsx",
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/hr/departments/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-setup-workspace.tsx",
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hr/designations",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": []
+  },
+  {
+    "method": "POST",
+    "path": "/hr/designations",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": []
+  },
+  {
+    "method": "DELETE",
+    "path": "/hr/designations/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": []
+  },
+  {
+    "method": "PATCH",
+    "path": "/hr/designations/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": []
+  },
+  {
+    "method": "GET",
+    "path": "/hr/employees",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx",
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/hr/employees",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx",
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/hr/employees/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx",
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hr/employees/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx",
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/hr/employees/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx",
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hr/leave-types",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/hr/leave-types",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/hr/leave-types/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hr/leave-types/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/hr/leave-types/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hr/leaves",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/hr/leaves",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/hr/leaves/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hr/leaves/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/hr/leaves/:id/approve",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/hr-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hr/rosters",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx",
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/hr/rosters",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx",
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/hr/rosters/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx",
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hr/rosters/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx",
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/hr/rosters/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx",
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hr/shifts",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/hr/shifts",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/hr/shifts/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/hr/shifts/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/hr/shifts/:id",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": [
+      "src/features/hr/duty-rosters-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/hr/time-cards/webhook",
+    "backend_file": "modules/hr/hr.routes.ts",
+    "frontend_candidates": []
+  },
+  {
+    "method": "GET",
+    "path": "/media",
+    "backend_file": "modules/media/media.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/media/:id",
+    "backend_file": "modules/media/media.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/media/:id",
+    "backend_file": "modules/media/media.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/media/:id",
+    "backend_file": "modules/media/media.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/media/upload",
+    "backend_file": "modules/media/media.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/media/upload-multiple",
+    "backend_file": "modules/media/media.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/permissions",
+    "backend_file": "modules/auth/role/permission.routes.ts",
+    "frontend_candidates": [
+      "src/features/access/access-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/pharmacy/cash-register",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/pharmacy/cash-register/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/pharmacy/cash-register/:id/close",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/pharmacy/cash-register/active",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/pharmacy/cash-register/open",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/pharmacy/categories",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/pharmacy/categories",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/pharmacy/categories/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/pharmacy/categories/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/pharmacy/generics",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/pharmacy/generics",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/pharmacy/generics/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/pharmacy/generics/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/pharmacy/groups",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/pharmacy/groups",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/pharmacy/groups/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/pharmacy/groups/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/pharmacy/manufacturers",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/pharmacy/manufacturers",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/pharmacy/manufacturers/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/pharmacy/manufacturers/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/pharmacy/medicines",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/pharmacy/medicines",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/pharmacy/medicines/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/pharmacy/medicines/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/pharmacy/medicines/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/pharmacy/medicines/import",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/pharmacy/purchases",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/pharmacy/purchases",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/pharmacy/purchases/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/pharmacy/purchases/:id/payments",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/pharmacy/purchases/:id/status",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/pharmacy/stocks",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/pharmacy/stocks/adjust",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/pharmacy/stocks/bulk-price-update",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/pharmacy/stocks/opening",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/pharmacy/stocks/transfer",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/pharmacy/suppliers",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/suppliers/supplier-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/pharmacy/suppliers",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/suppliers/supplier-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/pharmacy/suppliers/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/suppliers/supplier-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/pharmacy/suppliers/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/suppliers/supplier-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PUT",
+    "path": "/pharmacy/suppliers/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/suppliers/supplier-workspace.tsx",
+      "src/features/purchases/purchase-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/pharmacy/units",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/pharmacy/units",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/pharmacy/units/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/pharmacy/units/:id",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/catalog/catalog-inventory-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/doctor-summary",
+    "backend_file": "modules/report/report.routes.ts",
+    "frontend_candidates": [
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/finance/expense",
+    "backend_file": "modules/report/report.routes.ts",
+    "frontend_candidates": [
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/finance/hospital-collection",
+    "backend_file": "modules/report/report.routes.ts",
+    "frontend_candidates": [
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/finance/income",
+    "backend_file": "modules/report/report.routes.ts",
+    "frontend_candidates": [
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/finance/pharmacy-collection",
+    "backend_file": "modules/report/report.routes.ts",
+    "frontend_candidates": [
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/overall-summary",
+    "backend_file": "modules/report/report.routes.ts",
+    "frontend_candidates": [
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/pharmacy/due-collection",
+    "backend_file": "modules/report/report.routes.ts",
+    "frontend_candidates": [
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/pharmacy/graph",
+    "backend_file": "modules/report/report.routes.ts",
+    "frontend_candidates": [
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/pharmacy/purchase-report",
+    "backend_file": "modules/report/report.routes.ts",
+    "frontend_candidates": [
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/pharmacy/sales-report",
+    "backend_file": "modules/report/report.routes.ts",
+    "frontend_candidates": [
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/pharmacy/stats",
+    "backend_file": "modules/report/report.routes.ts",
+    "frontend_candidates": [
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/pharmacy/summary",
+    "backend_file": "modules/report/report.routes.ts",
+    "frontend_candidates": [
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/roles",
+    "backend_file": "modules/auth/role/role.routes.ts",
+    "frontend_candidates": [
+      "src/features/access/access-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/roles",
+    "backend_file": "modules/auth/role/role.routes.ts",
+    "frontend_candidates": [
+      "src/features/access/access-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/roles/:id",
+    "backend_file": "modules/auth/role/role.routes.ts",
+    "frontend_candidates": [
+      "src/features/access/access-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/roles/:id",
+    "backend_file": "modules/auth/role/role.routes.ts",
+    "frontend_candidates": [
+      "src/features/access/access-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PUT",
+    "path": "/roles/:id",
+    "backend_file": "modules/auth/role/role.routes.ts",
+    "frontend_candidates": [
+      "src/features/access/access-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/roles/permissions",
+    "backend_file": "modules/auth/role/role.routes.ts",
+    "frontend_candidates": [
+      "src/features/access/access-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/sales",
+    "backend_file": "modules/sale/sale.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx",
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/sales/sales-workspace.tsx",
+      "src/features/customers/customer-workspace.tsx",
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/sales",
+    "backend_file": "modules/sale/sale.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx",
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/sales/sales-workspace.tsx",
+      "src/features/customers/customer-workspace.tsx",
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/sales/:id",
+    "backend_file": "modules/sale/sale.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx",
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/sales/sales-workspace.tsx",
+      "src/features/customers/customer-workspace.tsx",
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/sales/:id",
+    "backend_file": "modules/sale/sale.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx",
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/sales/sales-workspace.tsx",
+      "src/features/customers/customer-workspace.tsx",
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/sales/:id/payments",
+    "backend_file": "modules/sale/sale.routes.ts",
+    "frontend_candidates": [
+      "src/components/layout/app-shell.tsx",
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/sales/sales-workspace.tsx",
+      "src/features/customers/customer-workspace.tsx",
+      "src/features/reports/report-service.ts"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/sales/due-bills/:patientId",
+    "backend_file": "modules/sale/sale.routes.ts",
+    "frontend_candidates": []
+  },
+  {
+    "method": "GET",
+    "path": "/sales/returns",
+    "backend_file": "modules/sale/sale.routes.ts",
+    "frontend_candidates": [
+      "src/features/sales/sales-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/sales/returns",
+    "backend_file": "modules/sale/sale.routes.ts",
+    "frontend_candidates": [
+      "src/features/sales/sales-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/sales/returns/:id",
+    "backend_file": "modules/sale/sale.routes.ts",
+    "frontend_candidates": [
+      "src/features/sales/sales-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/sales/returns/:id/status",
+    "backend_file": "modules/sale/sale.routes.ts",
+    "frontend_candidates": [
+      "src/features/sales/sales-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/settings",
+    "backend_file": "modules/setting/setting.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/settings/:name",
+    "backend_file": "modules/setting/setting.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/settings/:name",
+    "backend_file": "modules/setting/setting.routes.ts",
+    "frontend_candidates": [
+      "src/features/pos/pos-workspace.tsx",
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/settings/audit-logs/all",
+    "backend_file": "modules/setting/setting.routes.ts",
+    "frontend_candidates": [
+      "src/features/admin/admin-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/setup",
+    "backend_file": "modules/setup/setup.routes.ts",
+    "frontend_candidates": [
+      "src/app/setup/page.tsx",
+      "src/app/login/page.tsx",
+      "src/components/layout/app-shell.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/setup/status",
+    "backend_file": "modules/setup/setup.routes.ts",
+    "frontend_candidates": [
+      "src/app/setup/page.tsx",
+      "src/app/login/page.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/users",
+    "backend_file": "modules/user/user.routes.ts",
+    "frontend_candidates": [
+      "src/features/access/access-workspace.tsx"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/users",
+    "backend_file": "modules/user/user.routes.ts",
+    "frontend_candidates": [
+      "src/features/access/access-workspace.tsx"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/users/:id",
+    "backend_file": "modules/user/user.routes.ts",
+    "frontend_candidates": [
+      "src/features/access/access-workspace.tsx"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/users/:id",
+    "backend_file": "modules/user/user.routes.ts",
+    "frontend_candidates": [
+      "src/features/access/access-workspace.tsx"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/users/:id",
+    "backend_file": "modules/user/user.routes.ts",
+    "frontend_candidates": [
+      "src/features/access/access-workspace.tsx"
+    ]
+  }
+]

@@ -7,6 +7,11 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { useLanguage } from "@/lib/i18n/language-provider";
 import { useActiveBranch } from "@/components/providers/active-branch-provider";
 
+import { sellableStocks, chooseAvailableStock } from "./stock-selection";
+import { allocatePayments } from "./payment-allocation";
+import { unwrapSavedSale, savedAmount } from "./sale-response";
+import { readPagination } from "@/lib/api/pagination";
+
 type Row = Record<string, unknown>;
 type Stock = { id: string; branchId: string; batchNumber: string; expiryDate: string; quantity: number; mrp: number; unit: string };
 type Medicine = { id: string; name: string; nameBangla?: string; genericName?: string; dosageForm?: string; strength?: string; unit?: string; salePrice?: number; mrp?: number; barcode?: string; category?: { id: string; name: string }; group?: { id: string; name: string }; medicineUnit?: { id: string; name: string }; medicineManufacturer?: { name: string }; stocks?: Stock[] };
@@ -16,7 +21,7 @@ type CartLine = { medicine: Medicine; stock: Stock; quantity: number; price: num
 type FilterOption = { id: string; name: string };
 const methods = ["cash", "card", "online", "cheque", "bKash", "Nagad", "Rocket", "Bank Transfer"] as const;
 type PaymentLine = { id: string; amount: string; accountId: string; paymentMethod: (typeof methods)[number] };
-type Receipt = { invoice: string; date: string; status: "pending" | "completed"; branch: string; cashier: string; customer: Customer; items: { name: string; description: string; quantity: number; unit: string; price: number; discount: number; total: number; batch: string }[]; subtotal: number; itemDiscount: number; saleDiscount: number; taxPercent: number; taxAmount: number; total: number; paid: number; due: number; payments: { method: string; account: string; amount: number }[] };
+type Receipt = { invoice: string; date: string; status: "pending" | "completed"; branch: string; cashier: string; customer: Customer; items: { name: string; description: string; quantity: number; unit: string; price: number; discount: number; total: number; batch: string }[]; subtotal: number; itemDiscount: number; saleDiscount: number; taxPercent: number; taxAmount: number; total: number; paid: number; due: number; tendered: number; change: number; payments: { method: string; account: string; amount: number }[] };
 
 function rows<T>(value: unknown): T[] {
   if (Array.isArray(value)) return value as T[];
@@ -28,15 +33,6 @@ function rows<T>(value: unknown): T[] {
     }
   }
   return [];
-}
-function pageSummary(value: unknown) {
-  if (!value || typeof value !== "object") return null;
-  const record = value as Row;
-  const pagination = record.pagination && typeof record.pagination === "object" ? record.pagination as Row : null;
-  const total = numeric(pagination?.total ?? pagination?.totalItems);
-  const page = numeric(pagination?.page) || 1;
-  const totalPages = numeric(pagination?.totalPages);
-  return pagination ? { total, page, totalPages } : null;
 }
 function numeric(value: unknown) { const parsed = Number(value); return Number.isFinite(parsed) ? parsed : 0; }
 function getError(error: unknown) { return error instanceof ApiClientError ? error.message : "Something went wrong. Please try again."; }
@@ -53,7 +49,7 @@ async function fetchCustomers(params: URLSearchParams) {
 
 export function PosWorkspace() {
   const { hasPermission, user } = useAuth();
-  const { branches, activeBranchId: branchId, activeBranch } = useActiveBranch();
+  const { activeBranchId: branchId, activeBranch } = useActiveBranch();
   const { language, t } = useLanguage();
   const locale = language === "bn" ? "bn-BD" : "en-BD";
   function money(value: number) { return new Intl.NumberFormat(locale, { style: "currency", currency: "BDT", maximumFractionDigits: 2 }).format(value || 0); }
@@ -72,6 +68,7 @@ export function PosWorkspace() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [query, setQuery] = useState("");
+  const [keyboardProduct, setKeyboardProduct] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [categoryId, setCategoryId] = useState("");
   const [genericId, setGenericId] = useState("");
@@ -90,6 +87,10 @@ export function PosWorkspace() {
   const sessionRequestId = useRef(0);
   const paymentIdCounter = useRef(2);
   const [cart, setCart] = useState<CartLine[]>([]);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const submissionLock = useRef(false);
+  const [heldOpen, setHeldOpen] = useState(false);
+  const [heldCarts, setHeldCarts] = useState<{ id: string; branchId: string; cart: CartLine[]; customer: Customer | null; discount: number; discountMode: "percent" | "fixed"; payments: PaymentLine[]; createdAt: string }[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [confirmStatus, setConfirmStatus] = useState<"pending" | "completed" | null>(null);
@@ -145,15 +146,15 @@ export function PosWorkspace() {
     if (!productsLoaded.current) setLoading(true);
     setCatalogRefreshing(productsLoaded.current);
     try {
-      const result = await api.get<unknown>(`/pharmacy/medicines?${params.toString()}`);
+      const result = await api.getWithMeta<unknown>(`/pharmacy/medicines?${params.toString()}`);
       if (requestId !== productRequestId.current) return;
       const items = rows<Medicine>(result);
       productsLoaded.current = true;
       setMedicines((current) => append ? [...current, ...items.filter((item) => !current.some((existing) => existing.id === item.id))] : items);
-      const summary = pageSummary(result);
+      const summary = readPagination(result, items.length, page, limit);
       setProductPage(page);
-      setTotalProducts(summary?.total ?? items.length);
-      setHasMoreProducts(summary ? page < summary.totalPages : items.length === limit);
+      setTotalProducts(summary.total);
+      setHasMoreProducts(summary.hasNextPage);
       setError("");
     } catch (cause) {
       if (requestId === productRequestId.current) {
@@ -236,14 +237,14 @@ export function PosWorkspace() {
   useEffect(() => {
     const requestId = ++customerRequestId.current;
     if (!customerQuery.trim()) {
-      setCustomers([]);
-      setCustomerSearchLoading(false);
-      setCustomerSearchError("");
-      return;
+      const reset = window.setTimeout(() => {
+        setCustomers([]); setCustomerSearchLoading(false); setCustomerSearchError("");
+      }, 0);
+      return () => { window.clearTimeout(reset); customerRequestId.current += 1; };
     }
-    setCustomerSearchLoading(true);
-    setCustomerSearchError("");
     const timer = window.setTimeout(async () => {
+      setCustomerSearchLoading(true);
+      setCustomerSearchError("");
       try {
         const term = customerQuery.trim();
         const numericTerm = asciiDigits(term);
@@ -272,18 +273,23 @@ export function PosWorkspace() {
   const taxable = Math.max(0, saleEligible - actualSaleDiscount);
   const taxAmount = Math.round(taxable * taxPercent) / 100;
   const total = taxable + taxAmount;
-  const paid = paymentLines.length === 1 && paymentLines[0].amount === "" ? total : paymentLines.reduce((sum, line) => sum + Math.max(0, numeric(line.amount)), 0);
-  const due = Math.max(0, total - paid);
+  const paymentAllocation = useMemo(() => {
+    try { return { ...allocatePayments(total, paymentLines), error: "" }; }
+    catch (cause) { return { payments: [], tendered: 0, paid: 0, due: total, change: 0, error: cause instanceof Error ? cause.message : "Invalid payment." }; }
+  }, [total, paymentLines]);
+  const { paid, due, tendered, change } = paymentAllocation;
   const totalUnits = cart.reduce((sum, line) => sum + line.quantity, 0);
   const activeFilterCount = [categoryId, genericId, manufacturerId, groupId, unitId, formulation.trim(), strength.trim(), inStockOnly ? "stock" : ""].filter(Boolean).length;
 
   function addMedicine(medicine: Medicine) {
-    const available = (medicine.stocks ?? []).filter((stock) => stock.branchId === branchId && stock.quantity > 0);
+    if (cart.some((line) => line.stock.branchId !== branchId)) { setError(t("Hold the previous branch cart before adding items in this branch.")); return; }
+    const available = sellableStocks(medicine.stocks ?? [], branchId);
     if (!available.length) { setNotice(`${medicineName(medicine)} ${t(" has no sellable stock in this branch.")}`); return; }
-    const chosen = [...available].sort((a, b) => a.expiryDate.localeCompare(b.expiryDate))[0];
+    const chosen = chooseAvailableStock(available, cart);
+    if (!chosen) { setNotice(t("All available stock for this medicine is already in the cart.")); return; }
     setCart((current) => {
       const existing = current.find((line) => line.stock.id === chosen.id);
-      if (existing) return current.map((line) => line.stock.id === chosen.id ? { ...line, quantity: Math.min(line.quantity + 1, chosen.quantity) } : line);
+      if (existing) return current.map((line) => line.stock.id === chosen.id ? { ...line, quantity: Math.min(line.quantity + 1, Math.floor(chosen.quantity)) } : line);
       return [...current, { medicine, stock: chosen, quantity: 1, price: numeric(medicine.salePrice) || numeric(chosen.mrp) || numeric(medicine.mrp), discountPercent: 0 }];
     });
     setNotice(available.length > 1 ? `${medicineName(medicine)}: ${t("Earliest-expiry batch selected. Change it in the cart if needed.")}` : "");
@@ -293,7 +299,7 @@ export function PosWorkspace() {
     if (!value || !branchId) return;
     try {
       const params = new URLSearchParams({ barcode: value, branchId, hasStock: "true", isActive: "true", page: "1", limit: "10" });
-      const matches = rows<Medicine>(await api.get<unknown>(`/pharmacy/medicines?${params.toString()}`));
+      const matches = rows<Medicine>(await api.getWithMeta<unknown>(`/pharmacy/medicines?${params.toString()}`));
       const exactMatch = matches.find((item) => item.barcode?.trim().toLowerCase() === value.toLowerCase());
       if (!exactMatch) {
         setNotice(`${t("No in-stock medicine found for barcode")} ${value}.`);
@@ -426,19 +432,20 @@ export function PosWorkspace() {
   }
 
   async function submitSale(status: "pending" | "completed") {
+    if (submissionLock.current) return;
     if (!canCreateSales) { setError(t("Your role cannot create sales.")); return; }
     setError(""); setNotice("");
     if (!branchId || cart.length === 0) { setError(t("Select a branch and add at least one medicine.")); return; }
     if (status === "completed" && !session) { setOpening(true); setError(t("Open the cash register before completing a sale.")); return; }
-    if (paid > total) { setError(t("Collected amount cannot exceed the sale total. Change is not supported by this backend flow.")); return; }
+    if (paymentAllocation.error) { setError(t(paymentAllocation.error)); return; }
     if (paymentLines.some((line) => !line.accountId && (numeric(line.amount) > 0 || (paymentLines.length === 1 && line.amount === "" && paid > 0)))) { setError(t("Choose an account for each payment method with an amount.")); return; }
+    if (new Set(cart.map((line) => line.stock.id)).size !== cart.length || cart.some((line) => !sellableStocks([line.stock], branchId).length)) { setError(t("A selected batch is expired, unavailable or duplicated. Review the cart before checkout.")); return; }
     if (cart.some((line) => !Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > line.stock.quantity)) { setError(t("Each quantity must be a whole number within the selected batch stock.")); return; }
+    submissionLock.current = true;
     setSaving(true);
     const saleCustomer = customer ?? await resolveOpdCustomer();
     const saleDiscountPercent = saleEligible > 0 ? actualSaleDiscount / saleEligible * 100 : 0;
-    const paymentPayload = paymentLines.length === 1 && paymentLines[0].amount === ""
-      ? [{ accountId: paymentLines[0].accountId, amount: paid, paymentMethod: paymentLines[0].paymentMethod }]
-      : paymentLines.filter((line) => numeric(line.amount) > 0).map((line) => ({ accountId: line.accountId, amount: numeric(line.amount), paymentMethod: line.paymentMethod }));
+    const paymentPayload = paymentAllocation.payments;
     const payload = {
       ...(saleCustomer ? { customerId: saleCustomer.id } : {}), branchId, type: "pos", status,
       paymentMethod: paymentLines[0]?.paymentMethod ?? "cash", discountPercentage: saleDiscountPercent, discountAmount: actualSaleDiscount,
@@ -456,35 +463,82 @@ export function PosWorkspace() {
       })),
     };
     try {
-      const result = await api.post<Row>("/sales", payload);
+      const saved = await api.post<unknown>("/sales", payload);
+      const result = unwrapSavedSale(saved) ?? {};
       const invoice = String(result.invoiceNumber ?? result.id ?? "");
+      const savedItems = rows<Row>(result.saleItems);
+      const receiptItems = savedItems.length ? savedItems.map((item) => ({
+        name: String(item.itemName ?? "Medicine"), description: String(item.itemDescription ?? ""),
+        quantity: numeric(item.quantity), unit: String(item.unit ?? "Pcs"), price: numeric(item.price),
+        discount: numeric(item.discountAmount), total: savedAmount(item.totalPrice, numeric(item.price) * numeric(item.quantity) - numeric(item.discountAmount)),
+        batch: String(item.batchNumber ?? ""),
+      })) : cart.map((line) => {
+        const discount = Math.round(line.price * line.quantity * line.discountPercent) / 100;
+        return { name: line.medicine.name, description: [line.medicine.strength, line.medicine.genericName].filter(Boolean).join(" · "), quantity: line.quantity, unit: line.stock.unit || line.medicine.unit || "Pcs", price: line.price, discount, total: line.price * line.quantity - discount, batch: line.stock.batchNumber };
+      });
       setReceipt({
-        invoice: invoice || "Pending assignment",
+        invoice: invoice || t("Saved sale — verify invoice in sales history"),
         date: String(result.createdAt ?? new Date().toISOString()),
-        status,
+        status: result.status === "pending" || result.status === "completed" ? result.status : status,
         branch: activeBranch?.name ?? "Pharmacy branch",
         cashier: user?.fullName ?? "Pharmacy cashier",
-        customer: saleCustomer ?? { id: "opd-customer", name: t("OPD patient"), phone: "" },
-        items: cart.map((line) => {
-          const discount = Math.round(line.price * line.quantity * line.discountPercent) / 100;
-          return { name: line.medicine.name, description: [line.medicine.strength, line.medicine.genericName].filter(Boolean).join(" · "), quantity: line.quantity, unit: line.stock.unit || line.medicine.unit || "Pcs", price: line.price, discount, total: line.price * line.quantity - discount, batch: line.stock.batchNumber };
-        }),
-        subtotal,
-        itemDiscount,
-        saleDiscount: actualSaleDiscount,
-        taxPercent,
-        taxAmount,
-        total,
-        paid,
-        due,
+        customer: result.customer && typeof result.customer === "object" ? result.customer as Customer : saleCustomer ?? { id: "opd-customer", name: t("OPD patient"), phone: "" },
+        items: receiptItems,
+        subtotal: savedAmount(result.totalPrice, subtotal),
+        itemDiscount: receiptItems.reduce((sum, item) => sum + item.discount, 0),
+        saleDiscount: savedAmount(result.discountAmount, actualSaleDiscount),
+        taxPercent: savedAmount(result.taxPercentage, taxPercent),
+        taxAmount: savedAmount(result.taxAmount, taxAmount),
+        total: savedAmount(result.netPrice, total),
+        paid: savedAmount(result.paidAmount, paid),
+        due: savedAmount(result.dueAmount, due),
+        tendered,
+        change,
         payments: paymentPayload.map((payment) => ({ method: payment.paymentMethod, account: accounts.find((account) => account.id === payment.accountId)?.name ?? "Account", amount: payment.amount })),
       });
       setCart([]); setCustomer(null); setCustomerQuery(""); setSaleDiscount(0); setPaymentLines([{ id: nextPaymentId(), amount: "", accountId: accounts.find((item) => item.type === "cash")?.id ?? accounts[0]?.id ?? "", paymentMethod: "cash" }]); setCartOpen(false); setCheckoutOpen(false);
       await loadProducts(); await loadSession(branchId);
-      setNotice(`${t(status === "completed" ? "Sale completed" : "Sale saved as pending")}${invoice ? ` · ${t("Invoice")} ${invoice}` : ""}.`);
+      setNotice(invoice ? `${t(status === "completed" ? "Sale completed" : "Sale saved as pending")} · ${t("Invoice")} ${invoice}.` : t("Sale was accepted. Verify its invoice in sales history before taking another payment."));
     } catch (cause) { setError(getError(cause)); }
-    finally { setSaving(false); }
+    finally { submissionLock.current = false; setSaving(false); }
   }
+
+  function holdCart() {
+    if (!cart.length || saving || !branchId) return;
+    setHeldCarts((current) => [...current, { id: crypto.randomUUID(), branchId: cart[0].stock.branchId, cart, customer,
+      discount: saleDiscount, discountMode, payments: paymentLines, createdAt: new Date().toISOString() }]);
+    setCart([]); setCustomer(null); setCustomerQuery(""); setSaleDiscount(0);
+    setPaymentLines([{ id: nextPaymentId(), amount: "", accountId: accounts.find((item) => item.type === "cash")?.id ?? accounts[0]?.id ?? "", paymentMethod: "cash" }]);
+    setCheckoutOpen(false); setConfirmStatus(null);
+    setNotice(t("Cart held in this tab. Resume it before leaving or refreshing this page."));
+    searchInput.current?.focus();
+  }
+  function resumeCart(id: string) {
+    if (cart.length || saving) return;
+    const held = heldCarts.find((entry) => entry.id === id && entry.branchId === branchId);
+    if (!held) return;
+    setCart(held.cart); setCustomer(held.customer); setSaleDiscount(held.discount);
+    setDiscountMode(held.discountMode); setPaymentLines(held.payments);
+    setHeldCarts((current) => current.filter((entry) => entry.id !== id)); setHeldOpen(false);
+    setNotice(t("Cart resumed. Review stock and payment before completing the sale."));
+  }
+  useEffect(() => {
+    function shortcuts(event: KeyboardEvent) {
+      if (saving || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key === "F2") { event.preventDefault(); if (!checkoutOpen && !heldOpen && !receipt) searchInput.current?.focus(); }
+      if (event.key === "F4" && !confirmStatus && !receipt && !heldOpen && canCreateSales && cart.length) {
+        event.preventDefault(); setError(""); setCheckoutOpen(true); setCartOpen(false);
+      }
+      if (event.key === "Escape") {
+        if (confirmStatus) setConfirmStatus(null);
+        else if (heldOpen) setHeldOpen(false);
+        else if (checkoutOpen) setCheckoutOpen(false);
+        else setCartOpen(false);
+      }
+    }
+    window.addEventListener("keydown", shortcuts);
+    return () => window.removeEventListener("keydown", shortcuts);
+  }, [saving, checkoutOpen, heldOpen, receipt, confirmStatus, canCreateSales, cart.length]);
 
   const customerPicker = <div className="pos-customer-wrap">
         {customer ? <div className="pos-selected-customer"><span className="pos-customer-icon"><UserRound size={16} /></span><span><strong>{language === "bn" ? customer.nameBangla || customer.name : customer.name}</strong><small>{customer.phone} · {t("Due")} {money(numeric(customer.balance))}</small></span><button className="pos-icon-action" onClick={() => { setCustomer(null); setCustomerQuery(""); setCustomerOpen(true); }} aria-label={t("Change customer")} title={t("Change customer")}><X size={15} /></button></div> : <><label className="pos-field-caption" htmlFor="customer-search">{t("Customer")} <span>{t("optional")}</span></label><div className="pos-input-with-icon"><UserRound size={16} /><input id="customer-search" value={customerQuery} onChange={(event) => { setCustomerQuery(event.target.value); setCustomerOpen(true); }} onFocus={() => setCustomerOpen(true)} placeholder={t("Search name or phone")} autoComplete="off" onKeyDown={(event) => { if (event.key === "Escape") setCustomerOpen(false); if (event.key === "Enter" && customers[0]) { event.preventDefault(); setCustomer(customers[0]); setCustomerQuery(""); setCustomerOpen(false); } }} /></div><small className="pos-opd-hint">{t("If you leave this blank, the sale will use the default OPD patient.")}</small>{customerOpen && customerQuery.trim() && <div className="pos-customer-options">{customerSearchLoading ? <div className="pos-customer-search-state">{t("Searching customers…")}</div> : customerSearchError ? <div className="pos-customer-search-state is-error">{t(customerSearchError)}</div> : customers.length > 0 ? customers.map((item) => <button key={item.id} type="button" onClick={() => { setCustomer(item); setCustomerQuery(""); setCustomerOpen(false); }}><strong>{language === "bn" ? item.nameBangla || item.name : item.name}</strong><small>{item.phone} · {t("Balance")} {money(numeric(item.balance))}</small></button>) : <div className="pos-customer-search-state">{t("No matching customer found.")}</div>}</div>}</>}
@@ -494,7 +548,7 @@ export function PosWorkspace() {
     <div className="pos-cart-heading"><div><h2>{t("Current sale")}</h2><p>{totalUnits} {t(totalUnits === 1 ? "item" : "items")}</p></div><button className="pos-icon-action pos-cart-close" onClick={() => setCartOpen(false)} aria-label={t("Close cart")}><X size={18} /></button></div>
     <div className="pos-cart-lines">
       {cart.length === 0 ? <div className="pos-empty-cart"><span><ShoppingBag size={21} /></span><strong>{t("Your cart is empty")}</strong><small>{t("Search or scan a medicine to begin.")}</small></div> : cart.map((line) => <div className="pos-cart-line" key={line.stock.id}>
-        <div className="pos-line-main"><div><strong>{medicineName(line.medicine)}</strong><small>{line.medicine.strength || line.medicine.genericName || t("Medicine")}</small><select className="pos-batch-select" aria-label={`${t("Batch for")} ${medicineName(line.medicine)}`} value={line.stock.id} onChange={(event) => { const nextStock = (line.medicine.stocks ?? []).find((stock) => stock.id === event.target.value); if (nextStock) setCart((current) => current.map((entry) => entry.stock.id === line.stock.id ? { ...entry, stock: nextStock, quantity: Math.min(entry.quantity, nextStock.quantity), price: numeric(entry.medicine.salePrice) || numeric(nextStock.mrp) || entry.price } : entry)); }}>{(line.medicine.stocks ?? []).filter((stock) => stock.branchId === branchId && stock.quantity > 0).map((stock) => <option key={stock.id} value={stock.id}>{t("Batch")} {stock.batchNumber} · {t("exp")} {new Date(stock.expiryDate).toLocaleDateString(locale)} · {stock.quantity} {t("available")}</option>)}</select></div><button className="pos-icon-action pos-remove" onClick={() => setCart((current) => current.filter((item) => item.stock.id !== line.stock.id))} aria-label={`${t("Remove")} ${medicineName(line.medicine)}`}><Trash2 size={15} /></button></div>
+        <div className="pos-line-main"><div><strong>{medicineName(line.medicine)}</strong><small>{line.medicine.strength || line.medicine.genericName || t("Medicine")}</small><select className="pos-batch-select" aria-label={`${t("Batch for")} ${medicineName(line.medicine)}`} value={line.stock.id} onChange={(event) => { const nextStock = (line.medicine.stocks ?? []).find((stock) => stock.id === event.target.value); if (nextStock) setCart((current) => current.some((entry) => entry.stock.id === nextStock.id && entry.stock.id !== line.stock.id) ? current : current.map((entry) => entry.stock.id === line.stock.id ? { ...entry, stock: nextStock, quantity: Math.min(entry.quantity, Math.floor(nextStock.quantity)), price: numeric(entry.medicine.salePrice) || numeric(nextStock.mrp) || entry.price } : entry)); }}>{sellableStocks(line.medicine.stocks ?? [], branchId).map((stock) => <option key={stock.id} value={stock.id} disabled={stock.id !== line.stock.id && cart.some((entry) => entry.stock.id === stock.id)}>{t("Batch")} {stock.batchNumber} · {t("exp")} {new Date(stock.expiryDate).toLocaleDateString(locale)} · {stock.quantity} {t("available")}</option>)}</select></div><button className="pos-icon-action pos-remove" onClick={() => setCart((current) => current.filter((item) => item.stock.id !== line.stock.id))} aria-label={`${t("Remove")} ${medicineName(line.medicine)}`}><Trash2 size={15} /></button></div>
         <div className="pos-line-controls"><div className="pos-quantity-stepper"><button onClick={() => changeLine(line.stock.id, { quantity: line.quantity - 1 })} aria-label={t("Decrease quantity")}><Minus size={13} /></button><input aria-label={t("Quantity")} inputMode="numeric" value={line.quantity} onChange={(event) => { const next = Math.floor(numeric(event.target.value)) || 1; changeLine(line.stock.id, { quantity: Math.max(1, Math.min(line.stock.quantity, next)) }); }} /><button onClick={() => changeLine(line.stock.id, { quantity: Math.min(line.stock.quantity, line.quantity + 1) })} aria-label={t("Increase quantity")} disabled={line.quantity >= line.stock.quantity}><Plus size={13} /></button></div><span className="pos-stock-hint">{line.stock.quantity} {line.stock.unit} {t("available")}</span><strong className="pos-line-total">{money(line.price * line.quantity * (1 - line.discountPercent / 100))}</strong></div>
       </div>)}
     </div>
@@ -522,7 +576,9 @@ export function PosWorkspace() {
       <div className="pos-grand-total"><span>{t("Total due")}</span><strong>{money(total)}</strong></div>
       <div className="pos-checkout-section-top pos-checkout-payment-heading"><div><h3>{t("Payment details")}</h3><small>{t("Choose payment methods and accounts.")}</small></div>{canCreateAccounts && <button type="button" className="pos-checkout-add-button" aria-expanded={accountQuickOpen} onClick={() => { setError(""); setAccountQuickOpen((open) => !open); }}><Plus size={15}/>{t("Add account")}</button>}</div>
       {accountQuickOpen && canCreateAccounts && <div className="pos-checkout-quick-form"><div className="pos-checkout-quick-grid"><label>{t("Account name")}<input value={accountQuickForm.name} onChange={(event) => setAccountQuickForm((form) => ({ ...form, name: event.target.value }))}/></label><label>{t("Account type")}<select value={accountQuickForm.type} onChange={(event) => setAccountQuickForm((form) => ({ ...form, type: event.target.value }))}><option value="cash">{t("Cash")}</option><option value="bank">{t("Bank")}</option><option value="mfs">{t("Mobile financial service")}</option></select></label></div><p>{t("New pharmacy accounts start with zero opening balance.")}</p><div className="pos-checkout-quick-actions"><button type="button" disabled={accountQuickSaving} onClick={() => setAccountQuickOpen(false)}>{t("Cancel")}</button><button type="button" disabled={accountQuickSaving} className="pos-checkout-save" onClick={() => void createCheckoutAccount()}>{accountQuickSaving ? t("Saving…") : t("Save account")}</button></div></div>}
-      <div className="pos-tender-heading"><span>{t("Collected now")}</span><strong>{money(paid)}</strong></div>
+      <div className="pos-tender-heading"><span>{t("Tendered")}</span><strong>{money(tendered)}</strong></div>
+      {change > 0 && <div className="pos-total-row"><span>{t("Change to return")}</span><strong>{money(change)}</strong></div>}
+      {paymentAllocation.error && <div className="pos-dialog-error" role="alert">{t(paymentAllocation.error)}</div>}
       <div className="pos-tender-lines">{paymentLines.map((line, index) => <div className="pos-tender-line" key={line.id}><label><span>{t("Method")}</span><select value={line.paymentMethod} onChange={(event) => updatePaymentLine(line.id, { paymentMethod: event.target.value as (typeof methods)[number] })}>{methods.map((method) => <option key={method} value={method}>{method}</option>)}</select></label><label><span>{t("Account")}</span><select value={line.accountId} onChange={(event) => updatePaymentLine(line.id, { accountId: event.target.value })}><option value="">{t("Select account")}</option>{accounts.map((account) => <option key={account.id} value={account.id}>{account.name} · {account.type}</option>)}</select></label><label><span>{t("Amount")}</span><span className="pos-currency-input"><b>৳</b><input type="number" min="0" step="0.01" inputMode="decimal" placeholder={paymentLines.length === 1 && index === 0 ? total.toFixed(2) : "0.00"} value={line.amount} onChange={(event) => updatePaymentLine(line.id, { amount: event.target.value })} /></span></label>{paymentLines.length > 1 && <button type="button" className="pos-icon-action pos-tender-remove" aria-label={`${t("Remove payment")} ${index + 1}`} onClick={() => removePaymentLine(line.id)}><X size={14}/></button>}</div>)}</div>
       <button type="button" className="pos-add-tender" onClick={addPaymentLine} disabled={saving || paymentLines.length >= 8}><Plus size={14}/> {t("Add payment method")}</button>
       <div className="pos-due-row"><span>{t("Remaining due")}</span><strong>{money(due)}</strong></div>
@@ -532,17 +588,39 @@ export function PosWorkspace() {
 
   return <section className="pos-page">
     {(error || notice) && <div className={`pos-alert ${error ? "pos-alert-error" : "pos-alert-success"}`} role={error ? "alert" : "status"}>{error ? <CircleAlert size={17} /> : <Check size={17} />}<span>{t(error || notice)}</span><button onClick={() => { setError(""); setNotice(""); }} aria-label={t("Dismiss message")}><X size={15}/></button></div>}
+    <div className="pos-draft-toolbar" aria-label={t("Cart tools")}>
+      <span>{t("F2: Search · F4: Checkout")}</span>
+      {canCreateSales && <button type="button" className="pos-pending-button" disabled={!cart.length || saving} onClick={holdCart}>{t("Hold cart")}</button>}
+      <button type="button" className="pos-pending-button" disabled={saving} onClick={() => setHeldOpen(true)}>{t("Held carts")} ({heldCarts.filter((entry) => entry.branchId === branchId).length})</button>
+    </div>
+    {heldOpen && <div className="pos-dialog-backdrop" role="presentation" onClick={() => setHeldOpen(false)}><section className="pos-register-dialog" role="dialog" aria-modal="true" aria-labelledby="held-carts-title" onClick={(event) => event.stopPropagation()}>
+      <h2 id="held-carts-title">{t("Held carts")}</h2><p>{t("Held carts stay in this tab until you leave or refresh. They do not reserve stock.")}</p>
+      {cart.length > 0 && <p role="status">{t("Hold or finish the current cart before resuming another.")}</p>}
+      {heldCarts.filter((entry) => entry.branchId === branchId).map((entry) => <div className="pos-held-cart" key={entry.id}><span><strong>{entry.customer?.name ?? t("OPD patient (default)")}</strong><small>{entry.cart.reduce((sum, line) => sum + line.quantity, 0)} {t("units")} · {new Date(entry.createdAt).toLocaleTimeString(locale)}</small></span><button type="button" disabled={cart.length > 0 || saving} className="pos-pending-button" onClick={() => resumeCart(entry.id)}>{t("Resume cart")}</button></div>)}
+      {!heldCarts.some((entry) => entry.branchId === branchId) && <p>{t("No held carts in this branch.")}</p>}
+      <button type="button" className="pos-dialog-cancel" onClick={() => setHeldOpen(false)}>{t("Close")}</button>
+    </section></div>}
     <div className="pos-workspace">
       <div className="pos-catalog panel">
         <div className="pos-catalog-top"><div><h2>{t("Medicine catalog")}</h2><p>{t("Search by name, generic or barcode")}</p></div><span className="pos-catalog-branch">{activeBranch?.name ?? t("Select a branch")}</span><details className="pos-utility-menu"><summary><span>{session ? t("Register open") : t("Register closed")}</span><ChevronDown size={14}/></summary><div className="pos-utility-popover"><p>{activeBranch?.name ?? t("No branch selected")}{session && <small>{t("Session")} {String(session.sessionNumber ?? session.id ?? "active").slice(0, 12)}</small>}</p>{canCreateSales&&(session ? <button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setError(""); setActualBalance(String(numeric(session.closingBalance))); setClosing(true); }}>{t("Close register")}</button> : <button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setOpening(true); }}>{t("Open register")}</button>)}{canReadSales&&<button type="button" disabled={!branchId} onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setHistoryOpen(true); setSelectedHistory(null); setHistoryPage(1); setHistoryStatus(""); void loadRegisterHistory(1, ""); }}><Clock3 size={14}/>{t("Register history")}</button>}</div></details></div>
-        <div className="pos-search-row"><div className="pos-search-box"><Search size={18}/><input autoFocus placeholder={t("Search medicine or scan barcode…")} value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && query.trim()) { event.preventDefault(); void scanBarcode(query); } }} /><kbd>Enter</kbd>{query && <button type="button" aria-label={t("Clear search")} onClick={() => setQuery("")}><X size={16}/></button>}</div><button type="button" className="pos-scan-button" onClick={() => document.querySelector<HTMLInputElement>(".pos-search-box input")?.focus()}><Barcode size={17}/><span>{t("Barcode")}</span></button></div>
+        <div className="pos-search-row"><div className="pos-search-box"><Search size={18}/><input ref={searchInput} autoFocus aria-label={t("Search medicine or scan barcode…")} placeholder={t("Search medicine or scan barcode…")} value={query} onChange={(event) => { setQuery(event.target.value); setKeyboardProduct(0); }} onKeyDown={(event) => {
+          if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault(); setKeyboardProduct((index) => Math.max(0, Math.min(visibleMedicines.length - 1, index + (event.key === "ArrowDown" ? 1 : -1))));
+          }
+          if (event.key === "Enter" && query.trim()) {
+            event.preventDefault();
+            const exact = visibleMedicines.find((item) => item.barcode?.trim().toLowerCase() === query.trim().toLowerCase());
+            const selected = exact ?? (!/^\d+$/.test(query.trim()) ? visibleMedicines[Math.min(keyboardProduct, visibleMedicines.length - 1)] : undefined);
+            if (selected) { addMedicine(selected); setQuery(""); setKeyboardProduct(0); } else void scanBarcode(query);
+          }
+        }} /><kbd>Enter</kbd>{query && <button type="button" aria-label={t("Clear search")} onClick={() => setQuery("")}><X size={16}/></button>}</div><button type="button" className="pos-scan-button" onClick={() => document.querySelector<HTMLInputElement>(".pos-search-box input")?.focus()}><Barcode size={17}/><span>{t("Barcode")}</span></button></div>
         <div className="pos-filter-popover-wrap"><div className="pos-filter-toolbar"><button aria-expanded={filtersOpen} aria-controls="pos-filter-popover" className={`pos-filter-button ${filtersOpen ? "active" : ""}`} onClick={() => setFiltersOpen(!filtersOpen)}><Filter size={15}/> {t("Filters")}{activeFilterCount > 0 && <span className="pos-filter-count">{activeFilterCount}</span>}<ChevronDown size={14}/></button>{activeFilterCount > 0 && <button className="pos-clear-filters" onClick={() => { setCategoryId(""); setGenericId(""); setManufacturerId(""); setGroupId(""); setUnitId(""); setFormulation(""); setStrength(""); setInStockOnly(false); }}>{t("Clear filters")}</button>}</div>
         {filtersOpen && <div id="pos-filter-popover" className="pos-filter-drawer"><label><span>{t("Category")}</span><select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}><option value="">{t("All categories")}</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label><span>{t("Generic")}</span><select value={genericId} onChange={(event) => setGenericId(event.target.value)}><option value="">{t("All generics")}</option>{generics.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label><span>{t("Manufacturer")}</span><select value={manufacturerId} onChange={(event) => setManufacturerId(event.target.value)}><option value="">{t("All manufacturers")}</option>{manufacturers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label><span>{t("Group")}</span><select value={groupId} onChange={(event) => setGroupId(event.target.value)}><option value="">{t("All groups")}</option>{groups.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label><span>{t("Unit")}</span><select value={unitId} onChange={(event) => setUnitId(event.target.value)}><option value="">{t("All units")}</option>{units.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label><span>{t("Dosage form")}</span><input placeholder={t("e.g. Tablet")} value={formulation} onChange={(event) => setFormulation(event.target.value)}/></label><label><span>{t("Strength")}</span><input placeholder={t("e.g. 500 mg")} value={strength} onChange={(event) => setStrength(event.target.value)}/></label><label className="pos-stock-toggle"><input type="checkbox" checked={inStockOnly} onChange={(event) => setInStockOnly(event.target.checked)}/> {t("In stock only")}</label></div>}</div>
         <div className="pos-results-meta"><span>{loading ? t("Loading catalog…") : catalogRefreshing ? t("Updating results…") : `${visibleMedicines.length} ${t(unitId ? "matching" : "shown")}${!unitId && totalProducts > medicines.length ? ` ${t("of")} ${totalProducts - medicines.length}` : ""} ${t("medicines")}`}</span><span><span className="pos-dot-green"/> {t("Batch stock · selected branch")}</span></div>
-        <div className="pos-product-grid">{visibleMedicines.map((medicine) => {
-          const available = (medicine.stocks ?? []).filter((stock) => stock.branchId === branchId && stock.quantity > 0).reduce((sum, stock) => sum + stock.quantity, 0);
-          const earliest = (medicine.stocks ?? []).filter((stock) => stock.branchId === branchId && stock.quantity > 0).sort((a,b) => a.expiryDate.localeCompare(b.expiryDate))[0];
-          return <button type="button" key={medicine.id} className={`pos-product-card ${available === 0 ? "out-of-stock" : ""}`} onClick={() => addMedicine(medicine)} disabled={available === 0 || !canCreateSales}>
+        <div className="pos-product-grid">{visibleMedicines.map((medicine, index) => {
+          const available = sellableStocks(medicine.stocks ?? [], branchId).reduce((sum, stock) => sum + stock.quantity, 0);
+          const earliest = sellableStocks(medicine.stocks ?? [], branchId).sort((a,b) => a.expiryDate.localeCompare(b.expiryDate))[0];
+          return <button type="button" key={medicine.id} data-keyboard-active={query.trim() && index === keyboardProduct ? "true" : undefined} className={`pos-product-card ${available === 0 ? "out-of-stock" : ""}`} onClick={() => addMedicine(medicine)} disabled={available === 0 || !canCreateSales}>
             <span className="pos-product-icon"><Package size={19}/></span><span className="pos-product-copy"><strong>{medicineName(medicine)}</strong><small>{[medicine.strength, medicine.dosageForm || medicine.genericName].filter(Boolean).join(" · ") || t("Pharmacy medicine")}</small><small className="pos-product-brand">{medicine.medicineManufacturer?.name || medicine.category?.name || t("Catalog item")}</small></span><span className={`pos-stock-badge ${available > 0 ? "" : "empty"}`}>{available > 0 ? `${available} ${medicine.unit || t("pcs")}` : t("Out of stock")}</span><span className="pos-product-bottom"><span><strong>{money(numeric(medicine.salePrice) || numeric(earliest?.mrp) || numeric(medicine.mrp))}</strong><small>{earliest ? `${t("Batch")} ${earliest.batchNumber}` : medicine.barcode || t("No batch")}</small></span><span className="pos-add-icon"><Plus size={17}/></span></span>
           </button>;
         })}{!loading && visibleMedicines.length === 0 && <div className="pos-no-products"><Package size={22}/><strong>{t("No matching medicines")}</strong><span>{unitId && hasMoreProducts ? t("Load more results to find medicines in this unit.") : t("Try another name or clear some filters.")}</span></div>}</div>
@@ -555,7 +633,7 @@ export function PosWorkspace() {
     {cartOpen && <div className="pos-cart-modal-backdrop" role="presentation" onClick={() => setCartOpen(false)}><div className="pos-cart-modal" role="dialog" aria-modal="true" aria-label={t("Current sale")} onClick={(event) => event.stopPropagation()}>{cartContent}</div></div>}
     {checkoutOpen && <div className="pos-checkout-backdrop" role="presentation" onClick={(event) => { if (event.target === event.currentTarget) setCheckoutOpen(false); }}><section className="pos-checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="pos-checkout-title" onClick={(event) => event.stopPropagation()}>{checkoutContent}</section></div>}
     {confirmStatus && <div className="pos-confirm-backdrop" role="presentation" onClick={() => { if (!saving) setConfirmStatus(null); }}><section className="pos-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="pos-confirm-title" onClick={(event) => event.stopPropagation()}><div className="pos-confirm-icon"><ShoppingBag size={21}/></div><h2 id="pos-confirm-title">{t(confirmStatus === "completed" ? "Confirm completed sale" : "Confirm pending sale")}</h2><p>{t("Review customer, discount, VAT and payment before saving.")}</p><div className="pos-confirm-items">{cart.map((line) => <div key={line.stock.id}><span><strong>{medicineName(line.medicine)}</strong><small>{t("Batch")} {line.stock.batchNumber} · {line.quantity} {line.stock.unit}</small></span><strong>{money(line.price * line.quantity * (1 - line.discountPercent / 100))}</strong></div>)}</div><dl><div><dt>{t("Branch")}</dt><dd>{activeBranch?.name ?? "—"}</dd></div><div><dt>{t("Customer")}</dt><dd>{customer?.name ?? t("OPD patient (default)")}</dd></div><div><dt>{t("Items")}</dt><dd>{totalUnits}</dd></div><div><dt>{t("Subtotal")}</dt><dd>{money(subtotal)}</dd></div><div><dt>{t("Item discount")}</dt><dd>−{money(itemDiscount)}</dd></div><div><dt>{t("Sale discount")}</dt><dd>−{money(actualSaleDiscount)}</dd></div><div><dt>{t("VAT / Tax")} ({taxPercent}%)</dt><dd>{money(taxAmount)}</dd></div><div className="pos-confirm-total"><dt>{t("Grand total")}</dt><dd>{money(total)}</dd></div><div><dt>{t("Collected now")}</dt><dd>{money(paid)}</dd></div><div><dt>{t("Remaining due")}</dt><dd>{money(due)}</dd></div></dl><div className="pos-confirm-payments">{paymentLines.filter((line) => numeric(line.amount) > 0).map((line) => <div key={line.id}><span>{line.paymentMethod} · {accounts.find((account) => account.id === line.accountId)?.name ?? t("Select account")}</span><strong>{money(numeric(line.amount))}</strong></div>)}</div><small>{t(confirmStatus === "completed" ? "Completed sales deduct stock from selected batches." : "Pending sales do not deduct stock.")}</small><div className="pos-confirm-actions"><button type="button" onClick={() => setConfirmStatus(null)} disabled={saving}>{t("Back to checkout")}</button><button type="button" className="pos-complete-button" disabled={saving} onClick={() => { if (confirmStatus) { const status = confirmStatus; setConfirmStatus(null); void submitSale(status); } }}><Check size={17}/>{t(confirmStatus === "completed" ? "Confirm & complete sale" : "Save pending sale")}</button></div></section></div>}
-    {receipt && <div className="pos-receipt-backdrop" role="presentation"><section className="pos-receipt-dialog" role="dialog" aria-modal="true" aria-labelledby="pos-receipt-title"><div className="pos-receipt-actions"><button type="button" className="pos-dialog-cancel" onClick={() => setReceipt(null)}>{t("Close")}</button><button type="button" className="pos-complete-button" onClick={() => window.print()}><Check size={15}/> {t("Print receipt")}</button></div><div className="pos-receipt-paper"><header><span className="pos-receipt-mark"><Pill size={17}/></span><h2 id="pos-receipt-title">{t(receipt.status === "pending" ? "Sale slip" : "Sales receipt")}</h2><strong>{receipt.branch}</strong><small>{t("Pharmacy POS")}</small></header><div className="pos-receipt-meta"><span>{t("Invoice")} <strong>{receipt.invoice}</strong></span><span>{t("Status")} <strong>{t(receipt.status)}</strong></span><span>{t("Date")} <strong>{new Date(receipt.date).toLocaleString(locale, { timeZone: "Asia/Dhaka" })}</strong></span><span>{t("Cashier")} <strong>{receipt.cashier}</strong></span></div><div className="pos-receipt-customer"><small>{t("Customer")}</small><strong>{receipt.customer.name}</strong><span>{receipt.customer.phone}</span></div><div className="pos-receipt-items"><div className="pos-receipt-table-head"><span>{t("Item")}</span><span>{t("Qty")}</span><span>{t("Total")}</span></div>{receipt.items.map((item, index) => <div className="pos-receipt-item" key={`${item.name}-${item.batch}-${index}`}><span><strong>{item.name}</strong><small>{item.description || item.unit} · {t("Batch")} {item.batch}</small><small>{money(item.price)} × {item.quantity}{item.discount ? ` · ${t("Discount")} ${money(item.discount)}` : ""}</small></span><b>{item.quantity}</b><strong>{money(item.total)}</strong></div>)}</div><div className="pos-receipt-totals"><span>{t("Subtotal")}<strong>{money(receipt.subtotal)}</strong></span><span>{t("Item discount")}<strong>−{money(receipt.itemDiscount)}</strong></span><span>{t("Sale discount")}<strong>−{money(receipt.saleDiscount)}</strong></span><span>{t("Tax · exclusive")} {receipt.taxPercent}%<strong>{money(receipt.taxAmount)}</strong></span><span className="pos-receipt-grand">{t("Total")}<strong>{money(receipt.total)}</strong></span><span>{t("Paid")}<strong>{money(receipt.paid)}</strong></span><span>{t("Due")}<strong>{money(receipt.due)}</strong></span></div>{receipt.payments.length > 0 && <div className="pos-receipt-payments"><small>{t("Payment breakdown")}</small>{receipt.payments.map((payment, index) => <span key={`${payment.method}-${index}`}>{payment.method} · {payment.account}<strong>{money(payment.amount)}</strong></span>)}</div>}<footer>{t("Thank you. Please keep this receipt for your records.")}</footer></div></section></div>}
+    {receipt && <div className="pos-receipt-backdrop" role="presentation"><section className="pos-receipt-dialog" role="dialog" aria-modal="true" aria-labelledby="pos-receipt-title"><div className="pos-receipt-actions"><button type="button" className="pos-dialog-cancel" onClick={() => setReceipt(null)}>{t("Close")}</button><button type="button" className="pos-complete-button" onClick={() => window.print()}><Check size={15}/> {t("Print receipt")}</button></div><div className="pos-receipt-paper"><header><span className="pos-receipt-mark"><Pill size={17}/></span><h2 id="pos-receipt-title">{t(receipt.status === "pending" ? "Sale slip" : "Sales receipt")}</h2><strong>{receipt.branch}</strong><small>{t("Pharmacy POS")}</small></header><div className="pos-receipt-meta"><span>{t("Invoice")} <strong>{receipt.invoice}</strong></span><span>{t("Status")} <strong>{t(receipt.status)}</strong></span><span>{t("Date")} <strong>{new Date(receipt.date).toLocaleString(locale, { timeZone: "Asia/Dhaka" })}</strong></span><span>{t("Cashier")} <strong>{receipt.cashier}</strong></span></div><div className="pos-receipt-customer"><small>{t("Customer")}</small><strong>{receipt.customer.name}</strong><span>{receipt.customer.phone}</span></div><div className="pos-receipt-items"><div className="pos-receipt-table-head"><span>{t("Item")}</span><span>{t("Qty")}</span><span>{t("Total")}</span></div>{receipt.items.map((item, index) => <div className="pos-receipt-item" key={`${item.name}-${item.batch}-${index}`}><span><strong>{item.name}</strong><small>{item.description || item.unit} · {t("Batch")} {item.batch}</small><small>{money(item.price)} × {item.quantity}{item.discount ? ` · ${t("Discount")} ${money(item.discount)}` : ""}</small></span><b>{item.quantity}</b><strong>{money(item.total)}</strong></div>)}</div><div className="pos-receipt-totals"><span>{t("Subtotal")}<strong>{money(receipt.subtotal)}</strong></span><span>{t("Item discount")}<strong>−{money(receipt.itemDiscount)}</strong></span><span>{t("Sale discount")}<strong>−{money(receipt.saleDiscount)}</strong></span><span>{t("Tax · exclusive")} {receipt.taxPercent}%<strong>{money(receipt.taxAmount)}</strong></span><span className="pos-receipt-grand">{t("Total")}<strong>{money(receipt.total)}</strong></span><span>{t("Paid")}<strong>{money(receipt.paid)}</strong></span><span>{t("Due")}<strong>{money(receipt.due)}</strong></span>{receipt.change > 0 && <span>{t("Cash change returned")}<strong>{money(receipt.change)}</strong></span>}</div>{receipt.payments.length > 0 && <div className="pos-receipt-payments"><small>{t("Payment breakdown")}</small>{receipt.payments.map((payment, index) => <span key={`${payment.method}-${index}`}>{payment.method} · {payment.account}<strong>{money(payment.amount)}</strong></span>)}</div>}<footer>{t("Thank you. Please keep this receipt for your records.")}</footer></div></section></div>}
     {opening && canCreateSales && <div className="pos-dialog-backdrop" role="presentation" onClick={() => setOpening(false)}><div className="pos-register-dialog" role="dialog" aria-modal="true" aria-labelledby="register-dialog-title" onClick={(event) => event.stopPropagation()}><div className="pos-dialog-icon"><Clock3 size={19}/></div><button className="pos-icon-action pos-dialog-close" onClick={() => setOpening(false)} aria-label={t("Close")}><X size={17}/></button><h2 id="register-dialog-title">{t("Open cash register")}</h2><p>{t("Record the opening float for ")}{activeBranch?.name || t("this branch")}. {t("This starts your cashier session.")}</p><label><span>{t("Opening cash balance")}</span><span className="pos-currency-input"><b>৳</b><input autoFocus inputMode="decimal" value={openingBalance} onChange={(event) => setOpeningBalance(event.target.value)} /></span></label>{accounts.length === 0 && <div className="pos-dialog-warning">{t("No active cash or payment accounts were found. A sale with collected payment needs an active account.")}</div>}{error && <div className="pos-dialog-error">{t(error)}</div>}<button className="pos-complete-button" disabled={saving || !branchId} onClick={() => void openRegister()}>{saving ? t("Opening…") : t("Open register")}</button><button className="pos-dialog-cancel" onClick={() => { setOpening(false); setError(""); }}>{t("Cancel")}</button></div></div>}
     {closing && canCreateSales && <div className="pos-dialog-backdrop" role="presentation" onClick={() => !saving && setClosing(false)}><div className="pos-register-dialog" role="dialog" aria-modal="true" aria-labelledby="register-close-title" onClick={(event) => event.stopPropagation()}><div className="pos-dialog-icon"><Clock3 size={19}/></div><button className="pos-icon-action pos-dialog-close" onClick={() => setClosing(false)} aria-label={t("Close")} disabled={saving}><X size={17}/></button><h2 id="register-close-title">{t("Close cash register")}</h2><p>{t("Count the cash in the drawer and record any difference before ending this cashier session.")}</p><div className="pos-register-expected"><span>{t("Expected cash balance")}</span><strong>{money(numeric(session?.closingBalance))}</strong></div><label><span>{t("Actual cash balance")}</span><span className="pos-currency-input"><b>৳</b><input autoFocus inputMode="decimal" min="0" type="number" value={actualBalance} onChange={(event) => setActualBalance(event.target.value)} /></span></label><div className="pos-register-expected"><span>{t("Difference")}</span><strong>{money(numeric(actualBalance) - numeric(session?.closingBalance))}</strong></div><label className="pos-register-note"><span>{t("Closing note")} <small>{t("Optional")}</small></span><textarea rows={3} maxLength={500} placeholder={t("Explain a cash shortage or overage")} value={closingNote} onChange={(event) => setClosingNote(event.target.value)} /></label>{error && <div className="pos-dialog-error">{t(error)}</div>}<button className="pos-complete-button" disabled={saving || actualBalance.trim() === ""} onClick={() => void closeRegister()}>{saving ? t("Closing…") : t("Close register")}</button><button className="pos-dialog-cancel" disabled={saving} onClick={() => { setClosing(false); setError(""); }}>{t("Cancel")}</button></div></div>}
     {historyOpen && <div className="pos-dialog-backdrop pos-history-backdrop" role="presentation" onClick={() => setHistoryOpen(false)}><div className="pos-history-dialog" role="dialog" aria-modal="true" aria-labelledby="pos-history-title" onClick={(event) => event.stopPropagation()}><div className="pos-history-heading"><div><p className="eyebrow">{t("CASH MANAGEMENT")}</p><h2 id="pos-history-title">{t("Register history")}</h2><p>{t("Sessions for ")}{activeBranch?.name || t("this branch")}</p></div><button className="pos-icon-action" onClick={() => setHistoryOpen(false)} aria-label={t("Close history")}><X size={17}/></button></div>{selectedHistory ? <><button className="pos-history-back" onClick={() => setSelectedHistory(null)}>‹ {t("Back to sessions")}</button><div className="pos-history-detail"><div><span>{t("Session status")}</span><strong className={`pos-history-status ${String(selectedHistory.status ?? "").toLowerCase()}`}>{t(String(selectedHistory.status ?? "unknown"))}</strong></div><div><span>{t("Opened")}</span><strong>{selectedHistory.createdAt ? new Date(String(selectedHistory.createdAt)).toLocaleString(locale) : "—"}</strong></div><div><span>{t("Opening balance")}</span><strong>{money(numeric(selectedHistory.openingBalance))}</strong></div><div><span>{t("Expected balance")}</span><strong>{money(numeric(selectedHistory.closingBalance))}</strong></div><div><span>{t("Counted balance")}</span><strong>{selectedHistory.actualBalance == null ? "—" : money(numeric(selectedHistory.actualBalance))}</strong></div><div><span>{t("Difference")}</span><strong>{selectedHistory.difference == null ? "—" : money(numeric(selectedHistory.difference))}</strong></div>{Boolean(selectedHistory.closedAt) && <div><span>{t("Closed")}</span><strong>{new Date(String(selectedHistory.closedAt)).toLocaleString(locale)}</strong></div>}{Boolean(selectedHistory.closingNote) && <p className="pos-history-note">{String(selectedHistory.closingNote)}</p>}</div><h3 className="pos-history-sales-title">{t("Sales in this session")}</h3><div className="pos-history-sales">{rows<Row>(selectedHistory.sales).map((sale) => <div key={String(sale.id)}><span><strong>{String(sale.invoiceNumber ?? sale.id ?? t("Sale"))}</strong><small>{sale.createdAt ? new Date(String(sale.createdAt)).toLocaleString(locale) : ""}</small></span><strong>{money(numeric(sale.netPrice))}</strong></div>)}{rows<Row>(selectedHistory.sales).length === 0 && <p className="pos-history-empty">{t("No linked sales are recorded for this session.")}</p>}</div></> : <><div className="pos-history-toolbar"><label><span>{t("Status")}</span><select value={historyStatus} onChange={(event) => { setHistoryStatus(event.target.value); void loadRegisterHistory(1, event.target.value); }}><option value="">{t("All sessions")}</option><option value="open">{t("open")}</option><option value="closed">{t("closed")}</option></select></label><span>{t("Page")} {historyPage}</span></div>{historyError && <div className="pos-dialog-error">{t(historyError)}</div>}<div className="pos-history-list">{historySessions.map((item) => <button type="button" key={String(item.id)} onClick={() => void openRegisterSession(String(item.id))}><span className="pos-history-session-main"><strong>{t("Session")} {String(item.sessionNumber ?? item.id ?? "").slice(0, 12)}</strong><small>{item.createdAt ? new Date(String(item.createdAt)).toLocaleString(locale) : t("Date unavailable")}</small></span><span className={`pos-history-status ${String(item.status ?? "").toLowerCase()}`}>{t(String(item.status ?? "unknown"))}</span><strong>{money(numeric(item.actualBalance ?? item.closingBalance))}</strong><ChevronRight size={15}/></button>)}{!historyLoading && historySessions.length === 0 && <p className="pos-history-empty">{t("No register sessions match this branch and filter.")}</p>}</div>{historyLoading && <p className="pos-history-loading">{t("Loading register sessions…")}</p>}<div className="pos-history-pagination"><button type="button" disabled={historyLoading || historyPage <= 1} onClick={() => void loadRegisterHistory(historyPage - 1)}>{t("Previous")}</button><button type="button" disabled={historyLoading || historySessions.length < 10} onClick={() => void loadRegisterHistory(historyPage + 1)}>{t("Next")}</button></div></>}</div></div>}

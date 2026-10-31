@@ -17,7 +17,7 @@ import {
   MapPin,
   Wallet,
 } from "lucide-react";
-import { api, ApiClientError } from "@/lib/api/client";
+import { ApiClientError } from "@/lib/api/client";
 import { getTodayPharmacyStats, getWeeklyPharmacyGraph } from "@/features/reports/report-service";
 import { useAuth } from "@/components/providers/auth-provider";
 import type { PharmacyDashboardStats, PharmacyGraphPoint } from "@/types/api";

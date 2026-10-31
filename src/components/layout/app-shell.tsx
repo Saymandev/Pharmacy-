@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useBrowserPreference } from "@/lib/browser/use-browser-preference";
 import Link from "next/link";
 import {
   Activity,
@@ -14,7 +15,6 @@ import {
   LayoutDashboard,
   KeyRound,
   LogOut,
-  Menu,
   Moon,
   PackageSearch,
   PanelLeftClose,
@@ -102,30 +102,18 @@ export function AppShell() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordNotice, setPasswordNotice] = useState("");
   const [demoMode, setDemoMode] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [themeReady, setThemeReady] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [theme, setTheme] = useBrowserPreference<"light" | "dark">("pharmacy.theme", "light");
+  const [sidebarCollapsed, setSidebarCollapsed] = useBrowserPreference<boolean>("pharmacy.sidebar-collapsed", false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const savedTheme = window.localStorage.getItem("pharmacy.theme");
-    if (savedTheme === "dark" || savedTheme === "light") setTheme(savedTheme);
-    setThemeReady(true);
-    setSidebarCollapsed(window.localStorage.getItem("pharmacy.sidebar-collapsed") === "true");
-  }, []);
-
-  useEffect(() => {
-    if (themeReady) window.localStorage.setItem("pharmacy.theme", theme);
-  }, [theme, themeReady]);
-
-  useEffect(() => {
-    window.localStorage.setItem("pharmacy.sidebar-collapsed", String(sidebarCollapsed));
-  }, [sidebarCollapsed]);
-
-  useEffect(() => { setMobileSidebarOpen(false); }, [pathname]);
-  useEffect(() => { setProfileOpen(false); }, [pathname]);
+  const [menuPath, setMenuPath] = useState(pathname);
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
+    setMobileSidebarOpen(false);
+    setProfileOpen(false);
+  }
 
   useEffect(() => {
     if (!profileOpen) return;

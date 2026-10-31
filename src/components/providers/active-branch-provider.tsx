@@ -56,8 +56,9 @@ export function ActiveBranchProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    setBranchesLoading(true);
-    void refreshBranches();
+    let active = true;
+    queueMicrotask(() => { if (active) void refreshBranches(); });
+    return () => { active = false; };
   }, [refreshBranches, status]);
 
   const setActiveBranchId = useCallback((id: string) => {

@@ -8,7 +8,6 @@ import { useActiveBranch } from "@/components/providers/active-branch-provider";
 
 type Data = Record<string, unknown>;
 type Option = { id: string; name: string; phone?: string; address?: string };
-type Branch = Option;
 type Supplier = Option & { email?: string | null };
 type Medicine = { id: string; name: string; genericName?: string; strength?: string; unit?: string; purchasePrice?: number; salePrice?: number; mrp?: number };
 type Account = { id: string; name: string; type: string };

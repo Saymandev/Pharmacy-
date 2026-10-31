@@ -56,7 +56,11 @@ export async function apiRequest<T>(
 
   if (!response.ok) {
     const message = payload?.message ?? "The request could not be completed.";
-    throw new ApiClientError(message, response.status);
+    const validation = payload && "errors" in payload && Array.isArray(payload.errors)
+      ? payload.errors.filter((error): error is { field?: string; message: string } => !!error && typeof error === "object" && typeof error.message === "string")
+        .map((error) => `${error.field ? `${error.field.replace(/^body\./, "")}: ` : ""}${error.message}`).join("; ")
+      : "";
+    throw new ApiClientError(validation ? `${message} ${validation}` : message, response.status);
   }
 
   if (!payload) {

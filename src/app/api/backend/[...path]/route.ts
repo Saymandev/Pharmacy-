@@ -1,3 +1,4 @@
+import { backendApiBase } from "@/lib/server/backend-url";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { isSameOriginRequest } from "@/lib/server/request-security";
@@ -14,7 +15,7 @@ async function proxy(request: Request, context: RouteContext) {
   const { path } = await context.params;
   const safePath = path.map((segment) => encodeURIComponent(segment)).join("/");
   const url = new URL(request.url);
-  const backendOrigin = (process.env.BACKEND_API_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const backendOrigin = backendApiBase();
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("pharmacy_access")?.value;
   const headers = new Headers({ Accept: request.headers.get("accept") ?? "application/json" });
@@ -25,11 +26,12 @@ async function proxy(request: Request, context: RouteContext) {
 
   let upstream: Response;
   try {
-    upstream = await fetch(`${backendOrigin}/api/v1/${safePath}${url.search}`, {
+    upstream = await fetch(`${backendOrigin}/${safePath}${url.search}`, {
       method: request.method,
       headers,
       body,
       cache: "no-store",
+      signal: AbortSignal.timeout(60000),
       redirect: "manual",
     });
   } catch {

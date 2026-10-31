@@ -1,3 +1,4 @@
+import { backendApiBase } from "@/lib/server/backend-url";
 import { NextResponse } from "next/server";
 import { isSameOriginRequest } from "@/lib/server/request-security";
 
@@ -16,14 +17,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: "A valid JSON body is required." }, { status: 400 });
   }
 
-  const backendOrigin = (process.env.BACKEND_API_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const backendOrigin = backendApiBase();
   let upstream: Response;
   try {
-    upstream = await fetch(`${backendOrigin}/api/v1/auth/login`, {
+    upstream = await fetch(`${backendOrigin}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify(body),
       cache: "no-store",
+      signal: AbortSignal.timeout(60000),
     });
   } catch {
     return NextResponse.json({ success: false, message: "The pharmacy server is unavailable." }, { status: 502 });

@@ -21,18 +21,17 @@ src/
 
 ## Local development
 
-Requirements: Node.js 20+ and npm.
+Requirements: Node.js 24 LTS (for the TypeScript contract tests) and npm.
 
-1. Start the backend from `../pharmacy-pos-backend` on port `3000`.
-2. Copy `.env.example` to `.env.local` and set `BACKEND_API_URL` to the backend origin.
-3. Install and start the frontend:
+```bash
+npm ci
+cp .env.example .env.local
+npm run dev -- --port 3000
+```
 
-   ```bash
-   npm install
-   npm run dev -- --port 3001
-   ```
+`.env.example` targets the supplied development API at `https://hms-srv-dev.genify.live/api/v1`. Set `BACKEND_API_URL` in `.env.local` to your backend origin or API base. The proxy accepts both forms without duplicating `/api/v1`. For a local backend, use a different port from the frontend, such as `http://localhost:3001`.
 
-4. Open `http://localhost:3001` and sign in with a backend account.
+Sign in with a backend account. Do not commit credentials. See [frontend testing](docs/frontend-testing.md) for the full manual checklist and regression commands.
 
 The Next.js route handlers proxy requests to `BACKEND_API_URL/api/v1`. This keeps the browser same-origin with the frontend and avoids exposing the backend origin to client code. Login returns tokens only to the Next.js server; the server sets HttpOnly, SameSite cookies and forwards the access token to protected backend endpoints. Production cookies use `Secure` and require HTTPS.
 
@@ -52,7 +51,7 @@ The Next.js route handlers proxy requests to `BACKEND_API_URL/api/v1`. This keep
 ## Backend integration notes
 
 - The backend exposes the JWT refresh token but currently has no refresh-token route. The frontend stores the refresh token in an HttpOnly cookie for future integration; access tokens are not exposed to JavaScript.
-- Catalog and inventory are currently read-only operational views; management forms are still to be added. Customer/finance, HR, communication, settings, and backup pages remain in the implementation sequence.
+- Existing workspaces cover catalog, inventory, purchases, sales/returns, customers, finance, HR, roles/users, notices/notifications, media, settings and backups. API inventory and verification status are tracked in [the API review](docs/api-coverage.md); screen presence does not prove live integration.
 - Align backend CORS and deployment origins with the Next.js server before production rollout. Browser requests go through the Next server proxy.
 
 ## Design reference
