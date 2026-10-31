@@ -60,3 +60,4 @@ The Next.js route handlers proxy requests to `BACKEND_API_URL/api/v1`. This keep
 - [Responsive design rules and visual boards](docs/responsive-design.md)
 - [Backend integration audit and gaps](docs/backend-audit.md)
 - [POS workflow design details](docs/pos-design-spec.md)
+- [Reporting workflow, date scope and exports](docs/reporting-guide.md)

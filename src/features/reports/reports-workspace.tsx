@@ -1,62 +1,107 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, AlertCircle, ArrowDownToLine, CalendarDays, CircleDollarSign, FileBarChart2, RefreshCw, Search, TrendingDown, TrendingUp } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { AlertCircle, ArrowDownToLine, CalendarDays, FileBarChart2, Printer, RefreshCw } from "lucide-react";
 import { ApiClientError } from "@/lib/api/client";
-import { getReport, type ReportKey } from "@/features/reports/report-service";
+import { getReport, type ReportKey, type ReportParams } from "./report-service";
+import { buildReportModel, formatReportValue, isMoneyColumn, reportCsv, reportDateError, reportDateRange, reportLabel, type DatePreset, type ReportModel, type ReportTable } from "./report-model";
 import { useActiveBranch } from "@/components/providers/active-branch-provider";
+import { useAuth } from "@/components/providers/auth-provider";
+import { useLanguage } from "@/lib/i18n/language-provider";
 
-type Obj = Record<string, unknown>;
-type Tab = { key: ReportKey; label: string; group: string };
-const tabs: Tab[] = [
-  { key: "overall", label: "Overview", group: "Summary" }, { key: "pharmacy-summary", label: "Pharmacy summary", group: "Summary" },
-  { key: "sales", label: "Sales detail", group: "Pharmacy" }, { key: "purchases", label: "Purchase detail", group: "Pharmacy" }, { key: "dues", label: "Due collection", group: "Pharmacy" },
-  { key: "income", label: "Income", group: "Finance" }, { key: "expense", label: "Expenses", group: "Finance" }, { key: "pharmacy-collection", label: "Pharmacy collection", group: "Finance" }, { key: "hospital-collection", label: "Hospital collection", group: "Finance" },
-  { key: "doctors", label: "Doctors", group: "Clinical" },
+const tabs: { key: ReportKey; label: string; group: string; note: string }[] = [
+ {key:"pharmacy-summary",label:"Pharmacy summary",group:"Summary",note:"Completed/returned POS sales, purchases, expenses and cost of goods for this selection."},
+ {key:"overall",label:"All operations overview",group:"Summary",note:"All backend sale types, including hospital/service activity. Its totals can differ from the pharmacy-only summary."},
+ {key:"sales",label:"Sales detail",group:"Pharmacy",note:"Indoor/outdoor POS sales and returns, filtered by sale/return creation date."},
+ {key:"purchases",label:"Purchase detail",group:"Pharmacy",note:"Pharmacy, hospital and clinic purchases with their return and payment totals."},
+ {key:"dues",label:"Due collection",group:"Pharmacy",note:"Payments collected on a later Dhaka calendar day than the original sale. Filter dates refer to the collection, not the sale."},
+ {key:"income",label:"Income",group:"Finance",note:"Income grouped by sale type, including pending and completed sales."},
+ {key:"expense",label:"Expenses",group:"Finance",note:"Expenses grouped by category and filtered by expense date."},
+ {key:"pharmacy-collection",label:"Pharmacy collection",group:"Finance",note:"POS receipts and refunds grouped by invoice. Dates refer to payment transactions."},
+ {key:"hospital-collection",label:"Hospital collection",group:"Finance",note:"Non-POS receipts and refunds grouped by invoice. Dates refer to payment transactions."},
+ {key:"doctors",label:"Doctors",group:"Clinical",note:"Visits, appointment sales and consultation commissions."},
 ];
-const labels: Record<string, string> = { totalSales: "Total sales", totalPaid: "Collected", totalDues: "Outstanding dues", totalDiscount: "Discounts", totalReturned: "Returns", totalExpenses: "Expenses", totalPurchases: "Purchases", totalPurchasesPaid: "Purchase payments", grossProfit: "Gross profit", netProfit: "Net profit", totalCollection: "Net collection", totalPurchase: "Total purchases", purchaseDiscount: "Purchase discounts", netAmount: "Net amount", paid: "Paid", due: "Due", totalPatientVisited: "Visits", totalAppointmentSale: "Appointment sales", totalConsultationCharge: "Consultation charges", totalAmountDue: "Due", totalIncome: "Total income", totalExpense: "Total expenses" };
-const currencyKeys = /amount|sales|paid|due|discount|profit|purchase|collection|expense|income|charge|return|commission|net/i;
-const searchableReports = new Set<ReportKey>(["dues", "pharmacy-collection", "hospital-collection"]);
-const reportSearchLabel = "Search invoices";
-function record(v: unknown): v is Obj { return !!v && typeof v === "object" && !Array.isArray(v); }
-function formatValue(key: string, value: unknown) { if (typeof value === "number" && currencyKeys.test(key)) return new Intl.NumberFormat("en-BD", { style: "currency", currency: "BDT", maximumFractionDigits: 2 }).format(value); if (typeof value === "string" && /^\d{4}-\d\d-\d\dT/.test(value)) return new Date(value).toLocaleDateString("en-GB"); return String(value ?? "—"); }
-function title(key: string) { return labels[key] || key.replace(/([A-Z])/g, " $1").replace(/[_-]/g, " ").replace(/^./, (s) => s.toUpperCase()); }
-function metricRows(summary: unknown): [string, unknown][] { if (!record(summary)) return []; const rows: [string, unknown][] = []; for (const [key, value] of Object.entries(summary)) { if (typeof value === "number" && Number.isFinite(value)) rows.push([key, value]); else if (record(value)) for (const [child, amount] of Object.entries(value)) if (typeof amount === "number" && Number.isFinite(amount)) rows.push([child, amount]); } return rows.slice(0, 8); }
-function collectTables(value: unknown, path = "", depth = 0, out: { name: string; rows: Obj[] }[] = []): typeof out { if (depth > 5 || value == null) return out; if (Array.isArray(value)) { const rows = value.filter(record); if (rows.length) out.push({ name: path || "Records", rows }); return out; } if (record(value)) for (const [key, child] of Object.entries(value)) collectTables(child, path ? `${path} · ${title(key)}` : title(key), depth + 1, out); return out; }
-function flatten(row: Obj): Obj { return Object.fromEntries(Object.entries(row).map(([k,v]) => [k, record(v) ? Object.values(v).filter(x=>typeof x!=="object").join(" · ") || JSON.stringify(v) : Array.isArray(v) ? `${v.length} items` : v])); }
-function fail(e: unknown) { return e instanceof ApiClientError ? e.message : "Unable to load this report. Check your access and try again."; }
+const searchable=new Set<ReportKey>(["dues","pharmacy-collection","hospital-collection"]);
+type Filters={startDate:string;endDate:string;scope:string;search:string;type:string};
+const initialFilters=():Filters=>({...reportDateRange("today"),scope:"active",search:"",type:""});
 
-export function ReportsWorkspace() {
- const { activeBranchId: branchId, activeBranch } = useActiveBranch();
- const [tab,setTab]=useState<ReportKey>("overall"); const [data,setData]=useState<unknown>(null); const [startDate,setStartDate]=useState(""); const [endDate,setEndDate]=useState(""); const [search,setSearch]=useState(""); const [loading,setLoading]=useState(true); const [error,setError]=useState("");
- const load=useCallback(async()=>{setLoading(true);try{setError("");if(tab==="overall"&&Boolean(startDate)!==Boolean(endDate)){setError("Choose both a start and end date for the overall summary report.");return;}setData(await getReport(tab,{branchId,startDate,endDate,searchTerm:searchableReports.has(tab)?search.trim()||undefined:undefined}));}catch(e){setError(fail(e));}finally{setLoading(false);}},[branchId,endDate,search,startDate,tab]);
- useEffect(()=>{const timer=window.setTimeout(()=>{void load();},100);return()=>window.clearTimeout(timer);},[load]);
- const payload=record(data)&&"data" in data?data.data:data; const summary=record(payload)&&"summary" in payload?payload.summary:payload; const metrics=useMemo(()=>metricRows(summary),[summary]); const tables=useMemo(()=>collectTables(payload).filter((t)=>t.rows.length>0),[payload]);
- function exportCsv(){
-  const summaryRows:Obj[]=metrics.map(([key,value])=>({Report:"Summary",Metric:title(key),Value:formatValue(key,value)}));
-  const rows:Obj[]=[...summaryRows,...tables.flatMap((table)=>table.rows.map((row)=>({Report:table.name,...flatten(row)})))];
-  if(!rows.length)return;
-  const cols=Array.from(new Set(rows.flatMap((row)=>Object.keys(row))));
-  const quote=(value:unknown)=>{
-   const text=String(value??"");
-   const safeText=/^[\s]*[=+@\-\t\r]/.test(text)?`'${text}`:text;
-   return `"${safeText.replaceAll('"','""')}"`;
-  };
-  const csv="\uFEFF"+[cols.map(quote).join(","),...rows.map((row)=>cols.map((column)=>quote(row[column])).join(","))].join("\r\n");
-  const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
-  const link=document.createElement("a");link.href=url;link.download=`pharmacy-${tab}-${startDate||"all"}.csv`;link.click();
-  window.setTimeout(()=>URL.revokeObjectURL(url),1000);
- }
- const active=tabs.find((x)=>x.key===tab)!;
- return <section className="reports-page"><div className="page-heading-row"><div><p className="eyebrow">ANALYTICS · OPERATIONS</p><h1>Reports</h1><p className="page-subtitle">Explore pharmacy performance, collections, expenses and doctor activity.</p></div><div className="reports-heading-actions"><button className="purchase-save-pending" onClick={()=>void load()} disabled={loading}><RefreshCw size={14}/> Refresh</button><button className="purchase-primary-action" onClick={exportCsv} disabled={!tables[0]?.rows.length}><ArrowDownToLine size={15}/> Export CSV</button></div></div>
- <div className="reports-filterbar panel"><label><CalendarDays size={15}/><span>From</span><input type="date" value={startDate} onChange={e=>setStartDate(e.target.value)} max={endDate||undefined}/></label><label><CalendarDays size={15}/><span>To</span><input type="date" value={endDate} onChange={e=>setEndDate(e.target.value)} min={startDate||undefined}/></label>{searchableReports.has(tab)&&<label className="reports-search"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder={reportSearchLabel}/></label>}<button className="reports-clear" onClick={()=>{setStartDate("");setEndDate("");setSearch("");}}>Clear</button></div>
- <div className="reports-layout"><aside className="reports-nav panel">{["Summary","Pharmacy","Finance","Clinical"].map(group=><div className="reports-nav-group" key={group}><span>{group}</span>{tabs.filter(t=>t.group===group).map(t=><button key={t.key} className={tab===t.key?"selected":""} onClick={()=>setTab(t.key)}>{t.key==="overall"?<Activity size={15}/>:t.group==="Finance"?<CircleDollarSign size={15}/>:t.group==="Clinical"?<TrendingUp size={15}/>:<FileBarChart2 size={15}/>}<span>{t.label}</span></button>)}</div>)}</aside>
- <div className="reports-content"><div className="reports-report-title"><div><span className="eyebrow">{active.group.toUpperCase()} REPORT</span><h2>{active.label}</h2><p>{startDate||endDate?`${startDate||"Beginning"} — ${endDate||"Today"}`:"All available dates"}{branchId ? ` · ${activeBranch?.name||"Selected branch"}` : " · No branch selected"}</p></div><div className="reports-period-badge"><TrendingUp size={15}/><span>Live report</span></div></div>
- {error&&<div className="sales-alert error"><AlertCircle size={15}/><span>{error}</span><button onClick={()=>void load()}>Retry</button></div>}
- {metrics.length>0&&<div className="reports-metrics">{metrics.map(([key,value],i)=><article className="panel" key={`${key}-${i}`}><span className={`reports-metric-icon tone-${i%4}`}>{i===2?<TrendingDown size={16}/>:<CircleDollarSign size={16}/>}</span><small>{title(key)}</small><strong>{formatValue(key,value)}</strong></article>)}</div>}
- {loading&&<div className="data-loading reports-loading">Loading {active.label.toLowerCase()}…</div>}
- {data!==null&&tables.map((table,i)=>{const rows=table.rows.map(flatten);const columns=Array.from(new Set(rows.flatMap(r=>Object.keys(r)))).slice(0,8);return <section className="reports-table-card panel" key={`${table.name}-${i}`}><div className="reports-table-heading"><div><h3>{table.name}</h3><span>{rows.length} records</span></div>{i===0&&<button onClick={exportCsv}><ArrowDownToLine size={13}/> CSV</button>}</div><div className="reports-table-scroll"><table><thead><tr>{columns.map(c=><th key={c}>{title(c)}</th>)}</tr></thead><tbody>{rows.slice(0,100).map((row,ri)=><tr key={ri}>{columns.map(col=><td key={col}>{formatValue(col,row[col])}</td>)}</tr>)}</tbody></table></div>{rows.length>100&&<p className="reports-truncated">Showing first 100 of {rows.length} records. Narrow the date range to export a smaller report.</p>}</section>;})}
- {!loading&&!error&&metrics.length===0&&tables.length===0&&<div className="data-empty reports-empty"><FileBarChart2 size={23}/><strong>No report data for this selection</strong><span>Try a wider date range or another branch.</span></div>}{loading&&data!==null&&<p className="reports-refreshing" role="status">Updating report…</p>}
- </div></div></section>;
+function downloadCsv(model:ReportModel,context:Record<string,unknown>,filename:string){
+ const csv=reportCsv(model,context);if(!csv)return;
+ const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+ const link=document.createElement("a");link.href=url;link.download=filename;document.body.append(link);link.click();link.remove();
+ window.setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
+function ReportTableView({table,locale,onExport,canExport}:{table:ReportTable;locale:string;onExport:()=>void;canExport:boolean}){
+ const [page,setPage]=useState(1);const [pageSize,setPageSize]=useState(50);
+ const pages=Math.max(1,Math.ceil(table.rows.length/pageSize));const current=Math.min(page,pages);
+ const renderRows=(rows:typeof table.rows)=>rows.map((row,index)=><tr key={index}>{table.columns.map(column=><td key={column} className={isMoneyColumn(column)?"report-number":undefined}>{formatReportValue(column,row[column],locale)}</td>)}</tr>);
+ const heading=<thead><tr>{table.columns.map(column=><th key={column} scope="col" className={isMoneyColumn(column)?"report-number":undefined}>{reportLabel(column)}</th>)}</tr></thead>;
+ return <section className="reports-table-card panel" aria-label={table.name}><div className="reports-table-heading"><div><h3>{table.name}</h3><span>{table.rows.length} records</span></div><button onClick={onExport} disabled={!canExport} type="button"><ArrowDownToLine size={13}/> Export this table</button></div>
+  <div className="reports-table-scroll reports-screen-table"><table>{heading}<tbody>{renderRows(table.rows.slice((current-1)*pageSize,current*pageSize))}</tbody></table></div>
+  <div className="reports-print-table"><table>{heading}<tbody>{renderRows(table.rows)}</tbody></table></div>
+  {table.totals.length>0&&<dl className="reports-subtotals" aria-label="Group totals">{table.totals.map(metric=><div key={metric.key}><dt>{metric.label}</dt><dd>{formatReportValue(metric.key,metric.value,locale)}</dd></div>)}</dl>}
+  <nav className="reports-table-pagination" aria-label={`${table.name} pagination`}><span>{(current-1)*pageSize+1}–{Math.min(current*pageSize,table.rows.length)} of {table.rows.length}</span><label>Rows per page<select aria-label="Rows per page" value={pageSize} onChange={event=>{setPageSize(Number(event.target.value));setPage(1);}}><option value={25}>25</option><option value={50}>50</option><option value={100}>100</option></select></label><div><button type="button" disabled={current===1} onClick={()=>setPage(current-1)}>Previous</button><span>Page {current} / {pages}</span><button type="button" disabled={current===pages} onClick={()=>setPage(current+1)}>Next</button></div></nav>
+ </section>;
+}
+
+export function ReportsWorkspace(){
+ const {hasPermission}=useAuth();const canRead=hasPermission("report:read");
+ const {activeBranchId,activeBranch,branches,branchesLoading}=useActiveBranch();
+ const {language}=useLanguage();const locale=language==="bn"?"bn-BD":"en-BD";
+ const [tab,setTab]=useState<ReportKey>("pharmacy-summary");
+ const [draft,setDraft]=useState<Filters>(initialFilters);const [applied,setApplied]=useState<Filters>(initialFilters);
+ const [preset,setPreset]=useState("today");const [filterError,setFilterError]=useState("");const [refresh,setRefresh]=useState(0);
+ const [result,setResult]=useState<{key:string;data:unknown;at:string}|null>(null);
+ const [failure,setFailure]=useState<{key:string;message:string}|null>(null);
+ const branchId=applied.scope==="active"?activeBranchId:applied.scope==="all"?"":applied.scope;
+ const branchName=applied.scope==="all"?"All available branches":applied.scope==="active"?activeBranch?.name??"Active branch":branches.find(branch=>branch.id===branchId)?.name??"Selected branch";
+ const params:ReportParams=useMemo(()=>({branchId:branchId||undefined,startDate:applied.startDate||undefined,endDate:applied.endDate||undefined,searchTerm:searchable.has(tab)?applied.search.trim()||undefined:undefined,type:tab==="income"?applied.type||undefined:undefined}),[applied,branchId,tab]);
+ const requestKey=JSON.stringify({tab,params,refresh});
+ const ready=canRead&&!branchesLoading&&(applied.scope==="all"||!!branchId);
+ useEffect(()=>{
+  if(!ready)return;
+  const controller=new AbortController();
+  const timer=window.setTimeout(()=>{
+   void getReport(tab,params,controller.signal).then(data=>{
+    if(!controller.signal.aborted)setResult({key:requestKey,data,at:new Date().toISOString()});
+   }).catch(cause=>{
+    if(!controller.signal.aborted)setFailure({key:requestKey,message:cause instanceof ApiClientError?cause.message:"Unable to load this report. Please retry."});
+   });
+  },120);
+  return ()=>{window.clearTimeout(timer);controller.abort();};
+ },[params,ready,requestKey,tab]);
+ const current=result?.key===requestKey?result:null;
+ const error=failure?.key===requestKey?failure.message:"";
+ const loading=ready&&!current&&!error;
+ const model=useMemo(()=>buildReportModel(current?.data),[current]);
+ const comparable=(value:Filters)=>({...value,search:searchable.has(tab)?value.search:"",type:tab==="income"?value.type:""});
+ const dirty=JSON.stringify(comparable(draft))!==JSON.stringify(comparable(applied));
+ const canExport=ready&&!!current&&!error&&!dirty&&(model.metrics.length>0||model.tables.length>0);
+ const active=tabs.find(item=>item.key===tab)!;
+ const context={Report:active.label,Branch:branchName,From:applied.startDate||"All dates",To:applied.endDate||"All dates",Search:searchable.has(tab)?applied.search:"",Type:tab==="income"?applied.type:"",Generated:current?.at??""};
+ const filename=`pharmacy-${tab}-${applied.startDate||"all"}-${applied.endDate||"all"}.csv`;
+ function apply(event:React.FormEvent){event.preventDefault();const message=reportDateError(draft.startDate,draft.endDate);setFilterError(message);if(!message){setApplied({...draft});setRefresh(value=>value+1);}}
+ function choosePreset(value:string){setPreset(value);if(value!=="custom"){setDraft(current=>({...current,...reportDateRange(value as DatePreset)}));setFilterError("");}}
+ if(!canRead)return <section className="reports-page"><h1>Reports</h1><div className="data-empty"><AlertCircle/><strong>Your role cannot view reports.</strong><span>Ask an administrator for report access.</span></div></section>;
+ return <section className="reports-page"><div className="page-heading-row"><div><p className="eyebrow">ANALYTICS · OPERATIONS</p><h1>Reports</h1><p className="page-subtitle">Review saved sales, collections, costs and operational totals.</p></div><div className="reports-heading-actions"><button type="button" className="purchase-save-pending" onClick={()=>setRefresh(value=>value+1)} disabled={loading||!ready||dirty}><RefreshCw size={14}/> Refresh</button><button type="button" className="purchase-save-pending" onClick={()=>window.print()} disabled={!canExport}><Printer size={14}/> Print report</button><button type="button" className="purchase-primary-action" onClick={()=>downloadCsv(model,context,filename)} disabled={!canExport}><ArrowDownToLine size={15}/> Export CSV</button></div></div>
+ <form className="reports-filterbar panel" onSubmit={apply} aria-label="Report filters">
+  <label><CalendarDays size={15}/>Period<select aria-label="Period" value={preset} onChange={event=>choosePreset(event.target.value)}><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="last7">Last 7 days</option><option value="thisMonth">This month</option><option value="lastMonth">Last month</option><option value="all">All dates</option><option value="custom">Custom dates</option></select></label>
+  <label>From<input type="date" value={draft.startDate} max={draft.endDate||undefined} onChange={event=>{setPreset("custom");setDraft({...draft,startDate:event.target.value});}}/></label>
+  <label>To<input type="date" value={draft.endDate} min={draft.startDate||undefined} onChange={event=>{setPreset("custom");setDraft({...draft,endDate:event.target.value});}}/></label>
+  <label>Branch<select aria-label="Branch" value={draft.scope} onChange={event=>setDraft({...draft,scope:event.target.value})}><option value="active">Active: {activeBranch?.name??"Select branch"}</option><option value="all">All available branches</option>{branches.map(branch=><option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label>
+  {searchable.has(tab)&&<label className="reports-search">Invoice search<input value={draft.search} onChange={event=>setDraft({...draft,search:event.target.value})} placeholder="Invoice number"/></label>}
+  {tab==="income"&&<label>Sale type<select aria-label="Sale type" value={draft.type} onChange={event=>setDraft({...draft,type:event.target.value})}><option value="">All non-POS sales</option>{["pos","hospital","admission","appointment","emergency"].map(type=><option value={type} key={type}>{type}</option>)}</select></label>}
+  <button className="purchase-primary-action" type="submit">Apply filters</button><button className="reports-clear" type="button" onClick={()=>{const next=initialFilters();setDraft(next);setApplied(next);setPreset("today");setFilterError("");setRefresh(value=>value+1);}}>Reset to today</button>
+  {filterError&&<p className="reports-filter-message" role="alert">{filterError}</p>}{dirty&&!filterError&&<p className="reports-filter-message" role="status">Filters changed. Apply them to update the report and export.</p>}
+ </form>
+ <div className="reports-layout"><aside className="reports-nav panel" aria-label="Report types">{["Summary","Pharmacy","Finance","Clinical"].map(group=><div className="reports-nav-group" key={group}><span>{group}</span>{tabs.filter(item=>item.group===group).map(item=><button type="button" key={item.key} className={tab===item.key?"selected":""} aria-pressed={tab===item.key} onClick={()=>{setTab(item.key);setFilterError("");}}><FileBarChart2 size={15}/><span>{item.label}</span></button>)}</div>)}</aside>
+ <div className="reports-content reports-print-view" aria-busy={loading}><div className="reports-report-title"><div><span className="eyebrow">{active.group.toUpperCase()} REPORT</span><h2>{active.label}</h2><p>{applied.startDate?`${applied.startDate} — ${applied.endDate}`:"All available dates"} · {branchName}</p>{searchable.has(tab)&&applied.search&&<p>Invoice search: {applied.search}</p>}{tab==="income"&&applied.type&&<p>Sale type: {applied.type}</p>}{current&&<small>Loaded {new Date(current.at).toLocaleString(locale,{timeZone:"Asia/Dhaka"})} · Asia/Dhaka</small>}</div></div><p className="reports-definition">{active.note}</p>
+ {error&&<div className="sales-alert error" role="alert"><AlertCircle size={15}/><span>{error}</span><button type="button" onClick={()=>setRefresh(value=>value+1)}>Retry</button></div>}
+ {!ready&&<div className="data-empty"><span>{branchesLoading?"Loading branches…":"Select an available branch, or apply All available branches."}</span></div>}
+ {loading&&<div className="data-loading reports-loading" role="status">Loading {active.label.toLowerCase()}…</div>}
+ {current&&!error&&<><div className="reports-metrics">{model.metrics.map(metric=><article className="panel" key={metric.key}><small>{metric.label}</small><strong>{formatReportValue(metric.key,metric.value,locale)}</strong></article>)}</div>
+ {model.tables.map(table=><ReportTableView key={`${requestKey}:${table.id}`} table={table} locale={locale} canExport={canExport} onExport={()=>downloadCsv({metrics:[],tables:[table]},context,filename.replace('.csv',`-${table.id.replace(/[^a-z0-9]/gi,'-')}.csv`))}/>)}
+ {model.metrics.length===0&&model.tables.length===0&&<div className="data-empty reports-empty"><FileBarChart2 size={23}/><strong>No report data for this selection</strong><span>Try another period or branch.</span></div>}</>}
+ </div></div></section>;
+}

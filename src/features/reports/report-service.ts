@@ -17,10 +17,10 @@ const endpoints: Record<ReportKey, string> = {
   doctors: "/reports/doctor-summary",
 };
 
-export function getReport(key: ReportKey, params: ReportParams) {
+export function getReport(key: ReportKey, params: ReportParams, signal?: AbortSignal) {
   const query = new URLSearchParams();
   for (const [name, value] of Object.entries(params)) if (value) query.set(name, value);
-  return api.get<unknown>(`${endpoints[key]}?${query.toString()}`);
+  return api.get<unknown>(`${endpoints[key]}?${query.toString()}`, { signal });
 }
 
 function dhakaDate(date: Date): string { return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dhaka", year: "numeric", month: "2-digit", day: "2-digit" }).format(date); }
