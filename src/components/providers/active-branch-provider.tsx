@@ -25,10 +25,13 @@ function unwrapBranches(value: unknown): PharmacyBranch[] {
   return [];
 }
 
+function readSavedBranch(){try{return typeof window==="undefined"?"":window.localStorage.getItem("pharmacy.active-branch")??"";}catch{return "";}}
+function persistBranch(id:string){try{if(id)window.localStorage.setItem("pharmacy.active-branch",id);else window.localStorage.removeItem("pharmacy.active-branch");}catch{/* Branch selection remains usable for the current session. */}}
+
 export function ActiveBranchProvider({ children }: { children: ReactNode }) {
   const { status } = useAuth();
   const [branches, setBranches] = useState<PharmacyBranch[]>([]);
-  const [activeBranchId, setActiveBranchIdState] = useState(() => typeof window === "undefined" ? "" : window.localStorage.getItem("pharmacy.active-branch") ?? "");
+  const [activeBranchId, setActiveBranchIdState] = useState(readSavedBranch);
   const [branchesLoading, setBranchesLoading] = useState(true);
 
   const refreshBranches = useCallback(async () => {
@@ -36,14 +39,13 @@ export function ActiveBranchProvider({ children }: { children: ReactNode }) {
       const nextBranches = unwrapBranches(await api.get<unknown>("/branches?page=1&limit=100"));
       setBranches(nextBranches);
       setActiveBranchIdState((current) => {
-        const saved = window.localStorage.getItem("pharmacy.active-branch");
+        const saved = readSavedBranch();
         const next = nextBranches.some((branch) => branch.id === current)
           ? current
           : nextBranches.some((branch) => branch.id === saved)
             ? saved!
             : nextBranches[0]?.id ?? "";
-        if (next) window.localStorage.setItem("pharmacy.active-branch", next);
-        else window.localStorage.removeItem("pharmacy.active-branch");
+        persistBranch(next);
         return next;
       });
     } catch {
@@ -63,8 +65,7 @@ export function ActiveBranchProvider({ children }: { children: ReactNode }) {
 
   const setActiveBranchId = useCallback((id: string) => {
     setActiveBranchIdState(id);
-    if (id) window.localStorage.setItem("pharmacy.active-branch", id);
-    else window.localStorage.removeItem("pharmacy.active-branch");
+    persistBranch(id);
   }, []);
 
   const value = useMemo(() => ({

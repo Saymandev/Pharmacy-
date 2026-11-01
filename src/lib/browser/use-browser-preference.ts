@@ -4,17 +4,19 @@ const volatile = new Map<string, string>();
 const eventName = "pharmacy:preference";
 
 /** Server-safe preference snapshots with same-tab and cross-tab updates. */
-export function useBrowserPreference<T extends string | boolean>(key: string, fallback: T) {
+export function useBrowserPreference<T extends string | boolean>(key: string, fallback: T, allowed?: readonly T[]) {
   const read = useCallback((): T => {
     let value = volatile.get(key);
-    try { value = window.localStorage.getItem(key) ?? value; } catch { /* memory fallback */ }
+    if(value===undefined)try { value = window.localStorage.getItem(key) ?? undefined; } catch { /* memory fallback */ }
     if (value === undefined) return fallback;
-    return (typeof fallback === "boolean" ? value === "true" : value) as T;
-  }, [key, fallback]);
+    if(typeof fallback==="boolean")return (value==="true"?true:value==="false"?false:fallback) as T;
+    return allowed&&!allowed.includes(value as T)?fallback:value as T;
+  }, [key, fallback, allowed]);
   const subscribe = useCallback((notify: () => void) => {
-    window.addEventListener("storage", notify); window.addEventListener(eventName, notify);
-    return () => { window.removeEventListener("storage", notify); window.removeEventListener(eventName, notify); };
-  }, []);
+    const onStorage=(event:StorageEvent)=>{if(event.key===key||event.key===null){volatile.delete(key);notify();}};
+    window.addEventListener("storage", onStorage); window.addEventListener(eventName, notify);
+    return () => { window.removeEventListener("storage", onStorage); window.removeEventListener(eventName, notify); };
+  }, [key]);
   const getServerSnapshot = useCallback(() => fallback, [fallback]);
   const value = useSyncExternalStore(subscribe, read, getServerSnapshot);
   const update = useCallback((next: SetStateAction<T>) => {

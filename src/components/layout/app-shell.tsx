@@ -46,6 +46,8 @@ import { CatalogSetupWorkspace } from "@/features/catalog/catalog-setup-workspac
 import { api, ApiClientError } from "@/lib/api/client";
 import { SupplierWorkspace } from "@/features/suppliers/supplier-workspace";
 import { ConsultationWorkspace } from "@/features/finance/consultation-workspace";
+import { useTheme } from "@/components/providers/theme-provider";
+import { DisplayPreferences } from "@/components/preferences/display-preferences";
 import { useLanguage } from "@/lib/i18n/language-provider";
 import { ActiveBranchProvider } from "@/components/providers/active-branch-provider";
 
@@ -102,7 +104,8 @@ export function AppShell() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordNotice, setPasswordNotice] = useState("");
   const [demoMode, setDemoMode] = useState(false);
-  const [theme, setTheme] = useBrowserPreference<"light" | "dark">("pharmacy.theme", "light");
+  const {resolvedTheme:theme,setTheme}=useTheme();
+  const [preferencesOpen,setPreferencesOpen]=useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useBrowserPreference<boolean>("pharmacy.sidebar-collapsed", false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -174,6 +177,7 @@ export function AppShell() {
 
   return (
     <ActiveBranchProvider><div className={`app-frame${sidebarCollapsed ? " sidebar-collapsed" : ""}`} data-theme={theme}>
+      {preferencesOpen&&<DisplayPreferences onClose={()=>setPreferencesOpen(false)}/>}
       {mobileSidebarOpen && <button type="button" className="sidebar-mobile-backdrop" aria-label={t("Close navigation")} onClick={() => setMobileSidebarOpen(false)} />}
       <aside className={`sidebar${mobileSidebarOpen ? " sidebar-mobile-open" : ""}`}>
         <Link className="brand" href={demoMode ? "/dashboard?demo=1" : "/dashboard"} aria-label="Pharmacy home">
@@ -199,7 +203,7 @@ export function AppShell() {
         </nav>
 
         <div className="sidebar-bottom">
-          <button className="nav-link" type="button" disabled><Settings2 size={17} /><span>{t("Settings")}</span><span className="nav-soon">{t("Soon")}</span></button>
+          <button className="nav-link" type="button" onClick={()=>setPreferencesOpen(true)}><Settings2 size={17} /><span>{t("Display preferences")}</span></button>
           <button className="nav-link" type="button" disabled><CircleHelp size={17} /><span>{t("Help & support")}</span></button>
           <div className="sidebar-footer"><span className="online-dot" />{t("All systems operational")}</div>
         </div>
@@ -210,7 +214,8 @@ export function AppShell() {
           <div className="topbar-leading"><button className="topbar-menu-button" type="button" aria-label={mobileSidebarOpen ? t("Close navigation") : t("Toggle sidebar")} aria-expanded={mobileSidebarOpen} onClick={() => { if (window.matchMedia("(max-width: 800px)").matches) setMobileSidebarOpen((open) => !open); else setSidebarCollapsed((collapsed) => !collapsed); }}>{mobileSidebarOpen ? <X size={19}/> : sidebarCollapsed ? <PanelLeftOpen size={19}/> : <PanelLeftClose size={19}/>}</button><div className="breadcrumb"><span>{t("Workspace")}</span><span className="breadcrumb-slash">/</span><strong>{t(currentPageName)}</strong></div></div>
           <div className="topbar-actions">
             <label className="language-switcher"><span className="sr-only">{t("Language")}</span><select aria-label={t("Language")} value={language} onChange={(event) => setLanguage(event.target.value as "en" | "bn")}><option value="en">English</option><option value="bn">বাংলা</option></select></label>
-            <button className="icon-button theme-toggle" type="button" aria-label={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} title={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}>{theme === "dark" ? <Sun size={18}/> : <Moon size={18}/>}</button>
+            <button className="icon-button theme-toggle" type="button" aria-label={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} title={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>{theme === "dark" ? <Sun size={18}/> : <Moon size={18}/>}</button>
+            <button className="icon-button display-preferences-trigger" type="button" aria-label={t("Display preferences")} title={t("Display preferences")} onClick={()=>setPreferencesOpen(true)}><Settings2 size={18}/></button>
             {demoMode && <span className="demo-mode-badge"><span className="demo-badge-full">{t("DEMO DATA · Local only")}</span><span className="demo-badge-compact">{language === "bn" ? "ডেমো" : "DEMO"}</span></span>}<span className="shortcut-hint"><Command size={12} /> K</span>
             <button className="icon-button notification-button" type="button" aria-label={t("Notifications")}><Bell size={18} /><i /></button>
             <div className="topbar-divider" />

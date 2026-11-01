@@ -80,3 +80,5 @@ Purchase and supplier workflow: [guide](purchase-supplier-guide.md). Regression 
 `tests/register.browser.cjs` checks explicit cash counts, money precision, refreshed expected balances, refresh failure, duplicate opening/closing, notes, history metadata pagination, late detail responses and mobile layout using mocked APIs. See [register guide](register-guide.md) for live ledger limits.
 
 `tests/customers.browser.cjs` covers full customer-invoice pagination, refreshed selected/auto payment validation, amount precision, duplicate submission, notes, transaction/refund deduplication, statement dates, all-row printing, CSV, mobile, stale detail responses and return-read permissions/errors. [Workflow guide](customer-ledger-guide.md).
+
+`tests/appearance.browser.cjs`: Light/Dark/System preferences, OS color changes, Bangla purchase/report UI, persistence, cross-tab synchronization, modal/mobile behavior and storage fallback. API responses are mocked.
