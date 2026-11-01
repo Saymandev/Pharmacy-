@@ -65,3 +65,9 @@ The Next.js route handlers proxy requests to `BACKEND_API_URL/api/v1`. This keep
 - [Inventory operations and history requirements](docs/inventory-guide.md)
 
 Purchase and supplier workflow: [guide](docs/purchase-supplier-guide.md). Regression checks cover fresh due/status validation, payment deduplication, supplier PUT updates and linked-record deletion errors using mocked API responses.
+
+Cash register reconciliation: [guide](docs/register-guide.md). Purchase Return API dependency: [backend handoff](docs/purchase-return-api-handoff.md).
+
+Customer ledger and due collection: [guide](docs/customer-ledger-guide.md).
+
+Backend developer handoff (missing APIs, proposed contracts and accounting fixes): [full requirements](docs/backend-developer-handoff.md).

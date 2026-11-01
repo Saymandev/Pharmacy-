@@ -503,3 +503,41 @@ body { line-height: 1.55; }
 .inventory-table :is(td,strong) { font-size: 13px; }
 .inventory-table :is(th,small) { font-size: 12px; }
 @media(max-width:600px) { .inventory-operation .inventory-action-fields :is(input,select) { font-size: 16px; } }
+
+.customer-ledger { margin: 20px 0; min-width: 0; }
+.customer-ledger > p { color: var(--text-muted, #62746e); font-size: 13px; line-height: 1.6; }
+.customer-ledger-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 15px 0; }
+.customer-ledger-filters label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; }
+.customer-ledger-filters input, .customer-ledger-filters select { min-width: 0; width: 100%; padding: 9px; border: 1px solid var(--border, #dce5df); border-radius: 7px; background: var(--panel, white); color: inherit; }
+.customer-ledger-totals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.customer-ledger-totals > div { padding: 12px; border: 1px solid var(--border, #dce5df); border-radius: 8px; display: grid; gap: 6px; }
+.customer-ledger-totals small { color: var(--text-muted, #62746e); }
+.customer-ledger-scroll { overflow-x: auto; max-width: 100%; }
+.customer-ledger-table { width: 100%; min-width: 700px; border-collapse: collapse; font-size: 12px; }
+.customer-ledger-table th, .customer-ledger-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #dce5df; vertical-align: top; overflow-wrap: anywhere; }
+.customer-ledger-table th { font-weight: 600; }
+.customer-statement-print { display: none; }
+.customer-detail-drawer [role="tab"][aria-selected="true"] { background: #e2f3ea; color: #17694d; }
+.customer-detail-drawer button:disabled { opacity: .55; cursor: not-allowed; }
+@media (max-width: 540px) { .customer-ledger-filters { grid-template-columns: minmax(0, 1fr); } }
+@media print {
+ body:has(> .customer-statement-print) > *:not(.customer-statement-print) { display: none !important; }
+ body:has(> .customer-statement-print) { background: white !important; color: black !important; overflow: visible !important; }
+ .customer-statement-print { display: block !important; padding: 10mm; font-size: 11px; color: black; }
+ .customer-statement-print .customer-ledger-table { min-width: 0; table-layout: fixed; }
+ .customer-statement-print thead { display: table-header-group; }
+ .customer-statement-print tr { break-inside: avoid; }
+}
+@media print { .customer-statement-print, .customer-statement-print * { visibility: visible !important; } }
+.customer-ledger { padding: 0 20px; }
+.customer-detail-drawer > p, .customer-detail-drawer > [role="alert"], .customer-detail-drawer > [role="status"] { margin: 14px 20px; font-size: 13px; line-height: 1.6; }
+.customer-detail-drawer .customer-detail-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 20px; }
+.customer-ledger .customer-detail-actions, .customer-dues-panel .customer-detail-actions { margin-inline: 0; }
+.customer-detail-actions button, .customer-ledger button, .customer-dues-panel > label + button { border: 1px solid var(--border, #dce5df); border-radius: 7px; padding: 9px 12px; font-size: 12px; font-weight: 600; background: var(--panel, #fff); color: inherit; }
+.customer-detail-actions button { display: inline-flex; align-items: center; gap: 6px; }
+.customer-dues-panel { padding: 0 20px 20px; }
+.customer-dues-panel > label { display: grid; gap: 6px; margin: 12px 0; font-size: 13px; }
+.customer-dues-panel > label select { width: 100%; padding: 10px; border: 1px solid var(--border, #dce5df); border-radius: 7px; background: var(--panel, #fff); color: inherit; }
+.customer-branch-due { margin: 10px 0; font-size: 13px; }
+.customer-auto-collection > button:not(.purchase-primary-action) { border: 1px solid var(--border, #dce5df); border-radius: 7px; padding: 8px 12px; font-size: 12px; }
+.customer-dues-panel .customer-collection textarea { width: 100%; padding: 9px; min-height: 60px; border: 1px solid var(--border, #dce5df); border-radius: 7px; background: var(--panel, #fff); color: inherit; }
