@@ -79,3 +79,5 @@ POS barcode and keyboard flow: [guide](docs/pos-barcode-guide.md).
 58/80 mm receipts and reprints: [printer setup and behavior](docs/receipt-printing-guide.md).
 
 Before live rollout: [development acceptance checklist](docs/live-pos-acceptance.md) and [workspace access behavior](docs/workspace-access-guide.md).
+
+Finance roles, pagination and account movements: [guide](docs/finance-workflow-guide.md).

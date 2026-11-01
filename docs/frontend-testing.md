@@ -88,3 +88,5 @@ Purchase and supplier workflow: [guide](purchase-supplier-guide.md). Regression 
 `tests/receipts.browser.cjs` checks shared reprints with 35 bilingual/long-name items, saved payments/refunds, 58/80 mm preview/print geometry, multi-page PDF, mobile, paper preference, Escape/print action and dark-theme paper. Actual thermal-printer setup requires [manual verification](receipt-printing-guide.md).
 
 `tests/workspace-access.browser.cjs` checks direct-route denial without feature API requests, units-only/read-only catalog settings, allowed-page recovery links and mobile. [Live acceptance checklist](live-pos-acceptance.md) records the remaining real-backend/hardware checks separately.
+
+`tests/finance.browser.cjs` checks independent finance read tabs/options, envelope pagination, fresh transfer/withdraw validation, precision, duplicate requests and mobile with mocked APIs. [Finance workflow guide](finance-workflow-guide.md).
