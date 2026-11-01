@@ -493,3 +493,13 @@ body { line-height: 1.55; }
  .sales-page .return-line > div { grid-column: 1 / -1; }
  .sales-page .sales-action-fields :is(input,select,textarea) { font-size: 16px; }
 }
+
+.inventory-action-fields { min-width: 0; border: 0; padding: 0; margin: 0; display: grid; gap: .8rem; }
+.inventory-operation .inventory-action-fields label { display: grid; gap: .4rem; font-size: 13px; }
+.inventory-operation .inventory-action-fields :is(input,select) { width: 100%; min-width: 0; min-height: 42px; padding: .6rem; border: 1px solid var(--border, #dce5df); border-radius: 7px; color: inherit; background: var(--surface, #fff); font-size: 14px; }
+.stock-operation-scope { font-size: 13px; line-height: 1.5; padding: .65rem; border-radius: 7px; background: var(--surface-soft, #eef6f2); }
+.stock-row-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.stock-row-actions button { min-height: 40px; padding: .4rem .6rem; border: 1px solid var(--border, #dce5df); border-radius: 7px; font-size: 12px; }
+.inventory-table :is(td,strong) { font-size: 13px; }
+.inventory-table :is(th,small) { font-size: 12px; }
+@media(max-width:600px) { .inventory-operation .inventory-action-fields :is(input,select) { font-size: 16px; } }

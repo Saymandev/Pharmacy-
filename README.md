@@ -62,3 +62,6 @@ The Next.js route handlers proxy requests to `BACKEND_API_URL/api/v1`. This keep
 - [POS workflow design details](docs/pos-design-spec.md)
 - [Reporting workflow, date scope and exports](docs/reporting-guide.md)
 - [Sales, due collection and return workflow](docs/sales-returns-guide.md)
+- [Inventory operations and history requirements](docs/inventory-guide.md)
+
+Purchase and supplier workflow: [guide](docs/purchase-supplier-guide.md). Regression checks cover fresh due/status validation, payment deduplication, supplier PUT updates and linked-record deletion errors using mocked API responses.
