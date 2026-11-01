@@ -84,3 +84,5 @@ Purchase and supplier workflow: [guide](purchase-supplier-guide.md). Regression 
 `tests/appearance.browser.cjs`: Light/Dark/System preferences, OS color changes, Bangla purchase/report UI, persistence, cross-tab synchronization, modal/mobile behavior and storage fallback. API responses are mocked.
 
 `tests/pos-scanning.browser.cjs` covers fresh Enter selection, exact barcode identifiers, queued scans, FEFO/stock caps, pending-checkout guards, failure retry, cancelled lookup and mobile shortcuts. Uses mocked APIs; physical scanner acceptance remains a manual check.
+
+`tests/receipts.browser.cjs` checks shared reprints with 35 bilingual/long-name items, saved payments/refunds, 58/80 mm preview/print geometry, multi-page PDF, mobile, paper preference, Escape/print action and dark-theme paper. Actual thermal-printer setup requires [manual verification](receipt-printing-guide.md).

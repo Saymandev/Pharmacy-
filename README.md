@@ -75,3 +75,5 @@ Backend developer handoff (missing APIs, proposed contracts and accounting fixes
 Theme and language controls: [appearance guide](docs/appearance-language-guide.md).
 
 POS barcode and keyboard flow: [guide](docs/pos-barcode-guide.md).
+
+58/80 mm receipts and reprints: [printer setup and behavior](docs/receipt-printing-guide.md).

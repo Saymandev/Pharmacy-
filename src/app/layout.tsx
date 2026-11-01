@@ -6,6 +6,7 @@ import "./globals.css";
 import "./workspace-overrides.css";
 import "./modern-pharmacy.css";
 import "./appearance.css";
+import "./receipts.css";
 
 export const metadata: Metadata = {
   title: "Pharmacy POS | Pharmacy operations",
