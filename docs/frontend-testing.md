@@ -67,6 +67,8 @@ Check desktop, narrow mobile and Bengali UI where relevant. Record the API respo
 - Refresh-token rotation, backup restore, automatic retry idempotency and pack/strip/piece conversion are not established by this backend contract. Do not silently invent endpoints or conversion factors.
 - The route inventory lists every discovered active route. Candidate-file references in the report do not prove every field/action is complete; use this checklist and the inventory to record live acceptance or gaps.
 
+Sales/due/return workflows and API limitations: [sales guide](sales-returns-guide.md).
+
 Reporting controls, export/print behavior and date semantics: [reporting guide](reporting-guide.md).
 
 Full route inventory: [API coverage review](api-coverage.md). Current POS detail: [POS tracker](pos-implementation-status.md).

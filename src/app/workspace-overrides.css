@@ -453,3 +453,43 @@ body { line-height: 1.55; }
  .reports-print-view tr { break-inside: avoid; }
  .reports-print-view .reports-metrics article { break-inside: avoid; box-shadow: none; }
 }
+
+.sales-action-fields { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: .8rem; }
+.sales-action-fields:disabled { opacity: .75; }
+.sales-action-fields label { display: grid; gap: .4rem; }
+.sales-action-summary { padding: .7rem; background: var(--surface-soft, #eef6f2); border-radius: 8px; font-size: .8rem; line-height: 1.5; }
+.sales-action-fields textarea { width: 100%; border: 1px solid var(--border, #dce5df); border-radius: 7px; padding: .6rem; font: inherit; }
+
+.sales-page .sales-invoice strong { font-size: 14px; }
+.sales-page :is(.sales-invoice small,.sales-date small,.sales-total small) { font-size: 12px; }
+.sales-page .sales-date strong { font-size: 12px; }
+.sales-page .sales-total strong { font-size: 14px; }
+.sales-page .sales-row > .data-status { font-size: 11px; }
+.sales-page .sales-detail-head h2 { font-size: 20px; }
+.sales-page .sales-detail-head p:not(.eyebrow) { font-size: 13px; line-height: 1.5; }
+.sales-page .sales-detail-title { font-size: 14px; }
+.sales-page .sales-detail-metrics small { font-size: 12px; }
+.sales-page .sales-detail-metrics strong { font-size: 18px; }
+.sales-page :is(.sales-detail-line,.sales-detail-line strong,.sales-detail-line > b) { font-size: 14px; }
+.sales-page .sales-detail-line small { font-size: 12px; line-height: 1.6; }
+.sales-page .sales-detail-line > span { min-width: 0; overflow-wrap: anywhere; }
+.sales-page :is(.sales-detail-totals,.sales-detail-totals b) { font-size: 14px; }
+.sales-page .sales-detail-totals > strong, .sales-page .sales-detail-totals > strong b { font-size: 17px; }
+.sales-page .sales-detail-actions { flex-wrap: wrap; }
+.sales-page .sales-detail-actions > button { min-height: 44px; }
+.sales-page .sales-action-fields label { font-size: 13px; }
+.sales-page .sales-action-fields :is(input,select,textarea) { width: 100%; min-width: 0; min-height: 42px; padding: .65rem; border: 1px solid var(--border, #dce5df); border-radius: 7px; font-size: 14px; color: inherit; background: var(--surface, #fff); }
+.sales-page .return-drawer > .sales-action-fields { padding: 0 16px 16px; }
+.sales-page .return-drawer .sales-action-fields > label { margin: 0; }
+.sales-page .return-drawer .return-lines { padding: 0; }
+.sales-page .return-warning { font-size: 12px; }
+.sales-page :is(.return-line strong,.return-line > b) { font-size: 14px; }
+.sales-page .return-line strong { white-space: normal; overflow-wrap: anywhere; }
+.sales-page .return-line small, .sales-page .return-line label { font-size: 12px; line-height: 1.5; }
+.sales-page .return-estimate { margin: 0; font-size: 13px; gap: 12px; }
+.sales-page .sales-detail-drawer .purchase-register-note { margin: 0 20px 18px; font-size: 12px; line-height: 1.6; }
+@media(max-width:600px) {
+ .sales-page .return-line { grid-template-columns: 1fr 1fr; }
+ .sales-page .return-line > div { grid-column: 1 / -1; }
+ .sales-page .sales-action-fields :is(input,select,textarea) { font-size: 16px; }
+}
