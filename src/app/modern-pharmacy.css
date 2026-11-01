@@ -542,3 +542,27 @@
   .pos-page .pos-confirm-dialog { width: 100%; padding: 18px; border-radius: 15px; }
   .pos-page .pos-confirm-actions { grid-template-columns: 1fr; }
 }
+
+/* Keyboard-wedge scanner: explicit capture, queued exact barcode lookups. */
+.pos-barcode-panel { padding:16px; border:1px solid var(--ux-line); border-radius:14px; background:var(--ux-soft); color:var(--ux-text); }
+.pos-barcode-heading,.pos-barcode-heading>span { display:flex; align-items:center; gap:8px; }
+.pos-barcode-heading { justify-content:space-between; }
+.pos-barcode-heading strong { font-size:14px; }
+.pos-barcode-heading button { display:grid; place-items:center; width:32px; height:32px; border:1px solid var(--ux-line); border-radius:8px; background:var(--ux-surface); color:var(--ux-text); }
+.pos-barcode-panel>p { margin:8px 0 12px; font-size:12px; line-height:1.7; color:var(--ux-muted); }
+.pos-barcode-entry { display:flex; gap:8px; }
+.pos-barcode-entry input { flex:1; width:0; min-width:0; min-height:44px; padding:10px 12px; border:1px solid var(--ux-line); border-radius:9px; background:var(--ux-surface); color:var(--ux-text); font-family:ui-monospace,monospace; font-size:14px; }
+.pos-barcode-entry button { min-height:44px; padding:9px 14px; border:0; border-radius:9px; background:#147956; color:white; font-size:12px; font-weight:700; }
+.pos-barcode-entry button:disabled { opacity:.5; }
+.pos-barcode-feedback { margin-top:10px; font-size:12px; line-height:1.6; }
+.pos-barcode-feedback [role="alert"] { color:#b13c27; margin:6px 0; }
+.app-frame[data-theme="dark"] .pos-barcode-feedback [role="alert"] { color:#ffc0b4; }
+.pos-barcode-panel>small { display:block; margin-top:8px; font-size:11px; color:var(--ux-muted); }
+.pos-scan-button[aria-expanded="true"] { background:var(--ux-soft); border-color:var(--ux-accent); color:var(--ux-accent); }
+@media(max-width:540px) { .pos-barcode-panel { padding:12px; } .pos-barcode-entry button { padding-inline:11px; } }
+.pos-scan-failures { margin-top:12px; padding:10px; border:1px solid #d4a38f; border-radius:9px; font-size:12px; }
+.pos-scan-failures>div { display:flex; align-items:center; gap:8px; padding-top:9px; }
+.pos-scan-failures>div>span { flex:1; min-width:0; }
+.pos-scan-failures code { overflow-wrap:anywhere; }
+.pos-scan-failures small { display:block; color:var(--ux-muted); line-height:1.6; }
+.pos-scan-failures button { flex-shrink:0; padding:7px; border:1px solid var(--ux-line); border-radius:7px; background:var(--ux-surface); color:var(--ux-text); }

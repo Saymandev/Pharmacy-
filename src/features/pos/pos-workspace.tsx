@@ -11,11 +11,12 @@ import { sellableStocks, chooseAvailableStock } from "./stock-selection";
 import { allocatePayments } from "./payment-allocation";
 import { unwrapSavedSale, savedAmount } from "./sale-response";
 import { registerAmount, registerExpected, registerDifference, registerCloseError } from "./register-policy";
+import { BarcodeScanner } from "./barcode-scanner";
+import { exactBarcodeMatch } from "./barcode-policy";
 import { readPagination } from "@/lib/api/pagination";
 
 type Row = Record<string, unknown>;
-type Stock = { id: string; branchId: string; batchNumber: string; expiryDate: string; quantity: number; mrp: number; unit: string };
-type Medicine = { id: string; name: string; nameBangla?: string; genericName?: string; dosageForm?: string; strength?: string; unit?: string; salePrice?: number; mrp?: number; barcode?: string; category?: { id: string; name: string }; group?: { id: string; name: string }; medicineUnit?: { id: string; name: string }; medicineManufacturer?: { name: string }; stocks?: Stock[] };
+import type {Stock,Medicine} from "./pos-types";
 type Customer = { id: string; name: string; nameBangla?: string; phone: string; balance?: number; customerNumber?: string };
 type Account = { id: string; name: string; type: string; currentBalance?: number };
 type CartLine = { medicine: Medicine; stock: Stock; quantity: number; price: number; discountPercent: number };
@@ -69,6 +70,11 @@ export function PosWorkspace() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [query, setQuery] = useState("");
+  const [scannerOpen,setScannerOpen]=useState(false);
+  const [scanPending,setScanPending]=useState(0);
+  const [searchCommitting,setSearchCommitting]=useState(false);
+  const searchCommitLock=useRef(false),querySnapshot=useRef("");
+  const [catalogKey,setCatalogKey]=useState("");
   const [keyboardProduct, setKeyboardProduct] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [categoryId, setCategoryId] = useState("");
@@ -135,8 +141,11 @@ export function PosWorkspace() {
   const [historyError, setHistoryError] = useState("");
   const [selectedHistory, setSelectedHistory] = useState<Row | null>(null);
 
-  useEffect(()=>{currentBranch.current=branchId;historyRequest.current++;sessionRequestId.current++;const timer=window.setTimeout(()=>{setHistoryOpen(false);setSelectedHistory(null);setClosing(false);setOpening(false);setSession(null);},0);return ()=>window.clearTimeout(timer);},[branchId]);
+  useEffect(()=>{currentBranch.current=branchId;historyRequest.current++;sessionRequestId.current++;const timer=window.setTimeout(()=>{setHistoryOpen(false);setSelectedHistory(null);setClosing(false);setOpening(false);setSession(null);setScannerOpen(false);setScanPending(0);},0);return ()=>window.clearTimeout(timer);},[branchId]);
 
+  const selectionKey=JSON.stringify([branchId,query.trim(),categoryId,genericId,manufacturerId,groupId,unitId,formulation.trim(),strength.trim(),inStockOnly]);
+  const selectionKeyRef=useRef(selectionKey);
+  useEffect(()=>{selectionKeyRef.current=selectionKey;},[selectionKey]);
   const loadProducts = useCallback(async (page = 1, append = false) => {
     if (!branchId) return;
     const requestId = ++productRequestId.current;
@@ -157,6 +166,7 @@ export function PosWorkspace() {
       const result = await api.getWithMeta<unknown>(`/pharmacy/medicines?${params.toString()}`);
       if (requestId !== productRequestId.current) return;
       const items = rows<Medicine>(result);
+      setCatalogKey(selectionKey);
       productsLoaded.current = true;
       setMedicines((current) => append ? [...current, ...items.filter((item) => !current.some((existing) => existing.id === item.id))] : items);
       const summary = readPagination(result, items.length, page, limit);
@@ -170,7 +180,7 @@ export function PosWorkspace() {
         setError(getError(cause));
       }
     } finally { if (requestId === productRequestId.current) { setLoading(false); setCatalogRefreshing(false); } }
-  }, [branchId, categoryId, genericId, manufacturerId, groupId, unitId, formulation, strength, inStockOnly, query]);
+  }, [branchId, categoryId, genericId, manufacturerId, groupId, unitId, formulation, strength, inStockOnly, query,selectionKey]);
 
   const loadSession = useCallback(async (id: string) => {
     if (!id) return;
@@ -290,33 +300,44 @@ export function PosWorkspace() {
   const activeFilterCount = [categoryId, genericId, manufacturerId, groupId, unitId, formulation.trim(), strength.trim(), inStockOnly ? "stock" : ""].filter(Boolean).length;
 
   function addMedicine(medicine: Medicine) {
-    if (cart.some((line) => line.stock.branchId !== branchId)) { setError(t("Hold the previous branch cart before adding items in this branch.")); return; }
+    if(!canCreateSales||saving||submissionLock.current)return false;
+    if (cart.some((line) => line.stock.branchId !== branchId)) { setError(t("Hold the previous branch cart before adding items in this branch.")); return false; }
     const available = sellableStocks(medicine.stocks ?? [], branchId);
-    if (!available.length) { setNotice(`${medicineName(medicine)} ${t(" has no sellable stock in this branch.")}`); return; }
+    if (!available.length) { setNotice(`${medicineName(medicine)} ${t(" has no sellable stock in this branch.")}`); return false; }
     const chosen = chooseAvailableStock(available, cart);
-    if (!chosen) { setNotice(t("All available stock for this medicine is already in the cart.")); return; }
+    if (!chosen) { setNotice(t("All available stock for this medicine is already in the cart.")); return false; }
     setCart((current) => {
+      if(current.some(line=>line.stock.branchId!==branchId))return current;
+      const chosen=chooseAvailableStock(available,current);if(!chosen)return current;
       const existing = current.find((line) => line.stock.id === chosen.id);
       if (existing) return current.map((line) => line.stock.id === chosen.id ? { ...line, quantity: Math.min(line.quantity + 1, Math.floor(chosen.quantity)) } : line);
       return [...current, { medicine, stock: chosen, quantity: 1, price: numeric(medicine.salePrice) || numeric(chosen.mrp) || numeric(medicine.mrp), discountPercent: 0 }];
     });
     setNotice(available.length > 1 ? `${medicineName(medicine)}: ${t("Earliest-expiry batch selected. Change it in the cart if needed.")}` : "");
+    return true;
   }
-  async function scanBarcode(barcode: string) {
-    const value = barcode.trim();
-    if (!value || !branchId) return;
-    try {
-      const params = new URLSearchParams({ barcode: value, branchId, hasStock: "true", isActive: "true", page: "1", limit: "10" });
-      const matches = rows<Medicine>(await api.getWithMeta<unknown>(`/pharmacy/medicines?${params.toString()}`));
-      const exactMatch = matches.find((item) => item.barcode?.trim().toLowerCase() === value.toLowerCase());
-      if (!exactMatch) {
-        setNotice(`${t("No in-stock medicine found for barcode")} ${value}.`);
-        return;
-      }
-      addMedicine(exactMatch);
-      setQuery("");
-    } catch (cause) { setError(getError(cause)); }
+  async function commitSearch(){
+    const value=query.trim();if(!value||searchCommitLock.current||!canCreateSales||saving)return;
+    const capturedBranch=branchId,capturedKey=selectionKey;
+    if(!capturedBranch)return;
+    if(selectionKey===catalogKey&&!catalogRefreshing&&!/^\d+$/.test(value)){
+      const match=exactBarcodeMatch(visibleMedicines,value)??visibleMedicines[Math.min(keyboardProduct,visibleMedicines.length-1)];
+      if(match&&addMedicine(match)){setQuery("");querySnapshot.current="";setKeyboardProduct(0);}return;
+    }
+    searchCommitLock.current=true;setSearchCommitting(true);setError("");
+    try{
+      const params=new URLSearchParams({branchId:capturedBranch,isActive:"true",page:"1",limit:"60"});
+      if(/^\d+$/.test(value))params.set("barcode",value);else params.set("search",value);
+      if(inStockOnly)params.set("hasStock","true");if(categoryId)params.set("categoryId",categoryId);if(genericId)params.set("genericId",genericId);if(manufacturerId)params.set("medicineManufacturerId",manufacturerId);if(groupId)params.set("groupId",groupId);if(formulation.trim())params.set("dosageForm",formulation.trim());if(strength.trim())params.set("strength",strength.trim());
+      let found=rows<Medicine>(await api.getWithMeta<unknown>(`/pharmacy/medicines?${params}`));
+      if(currentBranch.current!==capturedBranch||selectionKeyRef.current!==capturedKey||querySnapshot.current.trim()!==value)return;
+      if(unitId)found=found.filter(m=>m.medicineUnit?.id===unitId||units.find(u=>u.id===unitId)?.name===m.medicineUnit?.name||units.find(u=>u.id===unitId)?.name===m.unit);
+      const match=exactBarcodeMatch(found,value)??(!/^\d+$/.test(value)?found[Math.min(keyboardProduct,found.length-1)]:undefined);
+      if(!match){setNotice(t("No matching medicine. Check the search or use Barcode mode."));return;}
+      if(addMedicine(match)){setQuery("");querySnapshot.current="";setKeyboardProduct(0);}
+    }catch(cause){if(currentBranch.current===capturedBranch&&querySnapshot.current.trim()===value)setError(getError(cause));}finally{searchCommitLock.current=false;setSearchCommitting(false);}
   }
+  const openCheckout=useCallback(()=>{if(scanPending||searchCommitting){setNotice(t("Wait for pending scans or search before checkout."));return;}setError("");setCheckoutOpen(true);setCartOpen(false);},[scanPending,searchCommitting,t]);
   function updatePaymentLine(id: string, patch: Partial<PaymentLine>) {
     setPaymentLines((current) => current.map((line) => line.id === id ? { ...line, ...patch } : line));
   }
@@ -535,21 +556,23 @@ export function PosWorkspace() {
   }
   useEffect(() => {
     function shortcuts(event: KeyboardEvent) {
-      if (saving || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (saving || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || document.querySelector("dialog[open]") || opening || closing || historyOpen || customerQuickOpen || accountQuickOpen) return;
       if (event.key === "F2") { event.preventDefault(); if (!checkoutOpen && !heldOpen && !receipt) searchInput.current?.focus(); }
+      if(event.key==="F3"&&!checkoutOpen&&!heldOpen&&!receipt&&canCreateSales){event.preventDefault();setScannerOpen(true);window.setTimeout(()=>document.querySelector<HTMLInputElement>(".pos-barcode-input")?.focus(),0);}
       if (event.key === "F4" && !confirmStatus && !receipt && !heldOpen && canCreateSales && cart.length) {
-        event.preventDefault(); setError(""); setCheckoutOpen(true); setCartOpen(false);
+        event.preventDefault(); openCheckout();
       }
       if (event.key === "Escape") {
         if (confirmStatus) setConfirmStatus(null);
         else if (heldOpen) setHeldOpen(false);
         else if (checkoutOpen) setCheckoutOpen(false);
+        else if(scannerOpen){setScannerOpen(false);setScanPending(0);searchInput.current?.focus();}
         else setCartOpen(false);
       }
     }
     window.addEventListener("keydown", shortcuts);
     return () => window.removeEventListener("keydown", shortcuts);
-  }, [saving, checkoutOpen, heldOpen, receipt, confirmStatus, canCreateSales, cart.length]);
+  }, [saving, checkoutOpen, heldOpen, receipt, confirmStatus, canCreateSales, cart.length,scannerOpen,scanPending,searchCommitting,opening,closing,historyOpen,customerQuickOpen,accountQuickOpen,openCheckout]);
 
   const customerPicker = <div className="pos-customer-wrap">
         {customer ? <div className="pos-selected-customer"><span className="pos-customer-icon"><UserRound size={16} /></span><span><strong>{language === "bn" ? customer.nameBangla || customer.name : customer.name}</strong><small>{customer.phone} · {t("Due")} {money(numeric(customer.balance))}</small></span><button className="pos-icon-action" onClick={() => { setCustomer(null); setCustomerQuery(""); setCustomerOpen(true); }} aria-label={t("Change customer")} title={t("Change customer")}><X size={15} /></button></div> : <><label className="pos-field-caption" htmlFor="customer-search">{t("Customer")} <span>{t("optional")}</span></label><div className="pos-input-with-icon"><UserRound size={16} /><input id="customer-search" value={customerQuery} onChange={(event) => { setCustomerQuery(event.target.value); setCustomerOpen(true); }} onFocus={() => setCustomerOpen(true)} placeholder={t("Search name or phone")} autoComplete="off" onKeyDown={(event) => { if (event.key === "Escape") setCustomerOpen(false); if (event.key === "Enter" && customers[0]) { event.preventDefault(); setCustomer(customers[0]); setCustomerQuery(""); setCustomerOpen(false); } }} /></div><small className="pos-opd-hint">{t("If you leave this blank, the sale will use the default OPD patient.")}</small>{customerOpen && customerQuery.trim() && <div className="pos-customer-options">{customerSearchLoading ? <div className="pos-customer-search-state">{t("Searching customers…")}</div> : customerSearchError ? <div className="pos-customer-search-state is-error">{t(customerSearchError)}</div> : customers.length > 0 ? customers.map((item) => <button key={item.id} type="button" onClick={() => { setCustomer(item); setCustomerQuery(""); setCustomerOpen(false); }}><strong>{language === "bn" ? item.nameBangla || item.name : item.name}</strong><small>{item.phone} · {t("Balance")} {money(numeric(item.balance))}</small></button>) : <div className="pos-customer-search-state">{t("No matching customer found.")}</div>}</div>}</>}
@@ -564,7 +587,7 @@ export function PosWorkspace() {
       </div>)}
     </div>
     <div className="pos-cart-summary"><span>{t("Cart subtotal")}<small>{totalUnits} {t(totalUnits === 1 ? "unit" : "units")} · {t("discounts at checkout")}</small></span><strong>{money(subtotal)}</strong></div>
-    <div className="pos-cart-footer">{canCreateSales ? <><button className="pos-proceed-button" type="button" disabled={cart.length === 0} onClick={() => { setError(""); setCheckoutOpen(true); setCartOpen(false); }}><span>{t("Proceed to checkout")}</span><span>{money(subtotal)} <ChevronRight size={16}/></span></button></> : <small>{t("Your role can view this cart but cannot create sales.")}</small>}</div>
+    <div className="pos-cart-footer">{canCreateSales ? <><button className="pos-proceed-button" type="button" disabled={cart.length === 0} onClick={openCheckout}><span>{t("Proceed to checkout")}</span><span>{money(subtotal)} <ChevronRight size={16}/></span></button></> : <small>{t("Your role can view this cart but cannot create sales.")}</small>}</div>
   </>;
 
   const checkoutContent = <>
@@ -600,7 +623,7 @@ export function PosWorkspace() {
   return <section className="pos-page">
     {(error || notice) && <div className={`pos-alert ${error ? "pos-alert-error" : "pos-alert-success"}`} role={error ? "alert" : "status"}>{error ? <CircleAlert size={17} /> : <Check size={17} />}<span>{t(error || notice)}</span><button onClick={() => { setError(""); setNotice(""); }} aria-label={t("Dismiss message")}><X size={15}/></button></div>}
     <div className="pos-draft-toolbar" aria-label={t("Cart tools")}>
-      <span>{t("F2: Search · F4: Checkout")}</span>
+      <span>{t("F2: Search · F3: Barcode · F4: Checkout")}</span>
       {canCreateSales && <button type="button" className="pos-pending-button" disabled={!cart.length || saving} onClick={holdCart}>{t("Hold cart")}</button>}
       <button type="button" className="pos-pending-button" disabled={saving} onClick={() => setHeldOpen(true)}>{t("Held carts")} ({heldCarts.filter((entry) => entry.branchId === branchId).length})</button>
     </div>
@@ -614,20 +637,16 @@ export function PosWorkspace() {
     <div className="pos-workspace">
       <div className="pos-catalog panel">
         <div className="pos-catalog-top"><div><h2>{t("Medicine catalog")}</h2><p>{t("Search by name, generic or barcode")}</p></div><span className="pos-catalog-branch">{activeBranch?.name ?? t("Select a branch")}</span><details className="pos-utility-menu"><summary><span>{session ? t("Register open") : t("Register closed")}</span><ChevronDown size={14}/></summary><div className="pos-utility-popover"><p>{activeBranch?.name ?? t("No branch selected")}{session && <small>{t("Session")} {String(session.sessionNumber ?? session.id ?? "active").slice(0, 12)}</small>}</p>{canCreateSales&&(session ? <button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setError(""); setRegisterBranch(branchId);setActualBalance("");setClosingNote(""); setClosing(true); }}>{t("Close register")}</button> : <button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setRegisterBranch(branchId);setOpening(true); }}>{t("Open register")}</button>)}{canReadSales&&<button type="button" disabled={!branchId} onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setHistoryOpen(true); setSelectedHistory(null); setHistoryPage(1); setHistoryStatus(""); void loadRegisterHistory(1, ""); }}><Clock3 size={14}/>{t("Register history")}</button>}</div></details></div>
-        <div className="pos-search-row"><div className="pos-search-box"><Search size={18}/><input ref={searchInput} autoFocus aria-label={t("Search medicine or scan barcode…")} placeholder={t("Search medicine or scan barcode…")} value={query} onChange={(event) => { setQuery(event.target.value); setKeyboardProduct(0); }} onKeyDown={(event) => {
+        <div className="pos-search-row"><div className="pos-search-box"><Search size={18}/><input ref={searchInput} autoFocus aria-label={t("Search medicine or scan barcode…")} placeholder={t("Search medicine or scan barcode…")} value={query} onChange={(event) => { setQuery(event.target.value);querySnapshot.current=event.target.value; setKeyboardProduct(0); }} onKeyDown={(event) => {
           if (event.key === "ArrowDown" || event.key === "ArrowUp") {
             event.preventDefault(); setKeyboardProduct((index) => Math.max(0, Math.min(visibleMedicines.length - 1, index + (event.key === "ArrowDown" ? 1 : -1))));
           }
-          if (event.key === "Enter" && query.trim()) {
-            event.preventDefault();
-            const exact = visibleMedicines.find((item) => item.barcode?.trim().toLowerCase() === query.trim().toLowerCase());
-            const selected = exact ?? (!/^\d+$/.test(query.trim()) ? visibleMedicines[Math.min(keyboardProduct, visibleMedicines.length - 1)] : undefined);
-            if (selected) { addMedicine(selected); setQuery(""); setKeyboardProduct(0); } else void scanBarcode(query);
-          }
-        }} /><kbd>Enter</kbd>{query && <button type="button" aria-label={t("Clear search")} onClick={() => setQuery("")}><X size={16}/></button>}</div><button type="button" className="pos-scan-button" onClick={() => document.querySelector<HTMLInputElement>(".pos-search-box input")?.focus()}><Barcode size={17}/><span>{t("Barcode")}</span></button></div>
+          if(event.key==="Enter"&&query.trim()&&!event.nativeEvent.isComposing&&!event.repeat){event.preventDefault();void commitSearch();}
+        }} /><kbd>Enter</kbd>{query && <button type="button" aria-label={t("Clear search")} onClick={() => {setQuery("");querySnapshot.current="";}}><X size={16}/></button>}</div><button type="button" className="pos-scan-button" aria-expanded={scannerOpen} aria-controls="pos-barcode-panel" disabled={!canCreateSales||!branchId} onClick={() => setScannerOpen(open=>!open)}><Barcode size={17}/><span>{t("Barcode")}</span></button></div>
+        {scannerOpen&&canCreateSales&&branchId&&!checkoutOpen&&!heldOpen&&!receipt&&!opening&&!closing&&!historyOpen&&<BarcodeScanner key={branchId} branchId={branchId} onMedicine={addMedicine} onPendingChange={setScanPending} onClose={()=>{setScannerOpen(false);setScanPending(0);searchInput.current?.focus();}}/>}
         <div className="pos-filter-popover-wrap"><div className="pos-filter-toolbar"><button aria-expanded={filtersOpen} aria-controls="pos-filter-popover" className={`pos-filter-button ${filtersOpen ? "active" : ""}`} onClick={() => setFiltersOpen(!filtersOpen)}><Filter size={15}/> {t("Filters")}{activeFilterCount > 0 && <span className="pos-filter-count">{activeFilterCount}</span>}<ChevronDown size={14}/></button>{activeFilterCount > 0 && <button className="pos-clear-filters" onClick={() => { setCategoryId(""); setGenericId(""); setManufacturerId(""); setGroupId(""); setUnitId(""); setFormulation(""); setStrength(""); setInStockOnly(false); }}>{t("Clear filters")}</button>}</div>
         {filtersOpen && <div id="pos-filter-popover" className="pos-filter-drawer"><label><span>{t("Category")}</span><select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}><option value="">{t("All categories")}</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label><span>{t("Generic")}</span><select value={genericId} onChange={(event) => setGenericId(event.target.value)}><option value="">{t("All generics")}</option>{generics.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label><span>{t("Manufacturer")}</span><select value={manufacturerId} onChange={(event) => setManufacturerId(event.target.value)}><option value="">{t("All manufacturers")}</option>{manufacturers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label><span>{t("Group")}</span><select value={groupId} onChange={(event) => setGroupId(event.target.value)}><option value="">{t("All groups")}</option>{groups.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label><span>{t("Unit")}</span><select value={unitId} onChange={(event) => setUnitId(event.target.value)}><option value="">{t("All units")}</option>{units.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label><span>{t("Dosage form")}</span><input placeholder={t("e.g. Tablet")} value={formulation} onChange={(event) => setFormulation(event.target.value)}/></label><label><span>{t("Strength")}</span><input placeholder={t("e.g. 500 mg")} value={strength} onChange={(event) => setStrength(event.target.value)}/></label><label className="pos-stock-toggle"><input type="checkbox" checked={inStockOnly} onChange={(event) => setInStockOnly(event.target.checked)}/> {t("In stock only")}</label></div>}</div>
-        <div className="pos-results-meta"><span>{loading ? t("Loading catalog…") : catalogRefreshing ? t("Updating results…") : `${visibleMedicines.length} ${t(unitId ? "matching" : "shown")}${!unitId && totalProducts > medicines.length ? ` ${t("of")} ${totalProducts - medicines.length}` : ""} ${t("medicines")}`}</span><span><span className="pos-dot-green"/> {t("Batch stock · selected branch")}</span></div>
+        <div className="pos-results-meta"><span>{loading ? t("Loading catalog…") : searchCommitting ? t("Finding your selection…") : catalogRefreshing ? t("Updating results…") : `${visibleMedicines.length} ${t(unitId ? "matching" : "shown")}${!unitId && totalProducts > medicines.length ? ` ${t("of")} ${totalProducts - medicines.length}` : ""} ${t("medicines")}`}</span><span><span className="pos-dot-green"/> {t("Batch stock · selected branch")}</span></div>
         <div className="pos-product-grid">{visibleMedicines.map((medicine, index) => {
           const available = sellableStocks(medicine.stocks ?? [], branchId).reduce((sum, stock) => sum + stock.quantity, 0);
           const earliest = sellableStocks(medicine.stocks ?? [], branchId).sort((a,b) => a.expiryDate.localeCompare(b.expiryDate))[0];

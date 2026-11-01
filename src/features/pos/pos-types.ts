@@ -1,0 +1,2 @@
+export type Stock = { id: string; branchId: string; batchNumber: string; expiryDate: string; quantity: number; mrp: number; unit: string };
+export type Medicine = { id: string; name: string; nameBangla?: string; genericName?: string; dosageForm?: string; strength?: string; unit?: string; salePrice?: number; mrp?: number; barcode?: string; category?: { id: string; name: string }; group?: { id: string; name: string }; medicineUnit?: { id: string; name: string }; medicineManufacturer?: { name: string }; stocks?: Stock[] };

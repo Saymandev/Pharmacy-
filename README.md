@@ -73,3 +73,5 @@ Customer ledger and due collection: [guide](docs/customer-ledger-guide.md).
 Backend developer handoff (missing APIs, proposed contracts and accounting fixes): [full requirements](docs/backend-developer-handoff.md).
 
 Theme and language controls: [appearance guide](docs/appearance-language-guide.md).
+
+POS barcode and keyboard flow: [guide](docs/pos-barcode-guide.md).

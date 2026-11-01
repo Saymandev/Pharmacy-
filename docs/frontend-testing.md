@@ -82,3 +82,5 @@ Purchase and supplier workflow: [guide](purchase-supplier-guide.md). Regression 
 `tests/customers.browser.cjs` covers full customer-invoice pagination, refreshed selected/auto payment validation, amount precision, duplicate submission, notes, transaction/refund deduplication, statement dates, all-row printing, CSV, mobile, stale detail responses and return-read permissions/errors. [Workflow guide](customer-ledger-guide.md).
 
 `tests/appearance.browser.cjs`: Light/Dark/System preferences, OS color changes, Bangla purchase/report UI, persistence, cross-tab synchronization, modal/mobile behavior and storage fallback. API responses are mocked.
+
+`tests/pos-scanning.browser.cjs` covers fresh Enter selection, exact barcode identifiers, queued scans, FEFO/stock caps, pending-checkout guards, failure retry, cancelled lookup and mobile shortcuts. Uses mocked APIs; physical scanner acceptance remains a manual check.
