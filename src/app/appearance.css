@@ -59,3 +59,11 @@ html[data-theme="dark"] .login-form :is(input,.password-field) { background:var(
 .app-frame[data-theme="dark"] :is(.data-search,.purchase-card,.purchase-toolbar,.reports-search,.sidebar-bottom) { background-color:var(--ux-surface); border-color:var(--ux-line); }
 .app-frame[data-theme="dark"] .sidebar-bottom .nav-link { background:transparent; color:var(--ux-muted); }
 .app-frame[data-theme="dark"] .sidebar-bottom .nav-link:not(:disabled):hover { background:var(--ux-soft); color:var(--ux-text); }
+.workspace-access-notice { max-width:650px; margin:30px auto; padding:clamp(22px,4vw,40px); border-radius:18px; color:var(--ink); background:var(--surface); }
+.workspace-access-icon { display:inline-flex; padding:14px; margin-bottom:16px; border-radius:15px; background:var(--brand-wash); color:var(--brand); }
+.workspace-access-notice h1 { margin:8px 0 12px; font-size:26px; }
+.workspace-access-notice>p:not(.eyebrow) { color:var(--ink-soft); line-height:1.7; font-size:14px; }
+.workspace-access-notice>.purchase-primary-action { display:inline-flex; align-items:center; gap:8px; margin-top:18px; }
+.workspace-access-links { display:grid; gap:8px; margin-top:28px; border-top:1px solid var(--line); padding-top:20px; }
+.workspace-access-links h2 { font-size:13px; margin:0 0 7px; }
+.workspace-access-links a { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius:9px; font-size:13px; }

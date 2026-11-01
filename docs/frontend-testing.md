@@ -86,3 +86,5 @@ Purchase and supplier workflow: [guide](purchase-supplier-guide.md). Regression 
 `tests/pos-scanning.browser.cjs` covers fresh Enter selection, exact barcode identifiers, queued scans, FEFO/stock caps, pending-checkout guards, failure retry, cancelled lookup and mobile shortcuts. Uses mocked APIs; physical scanner acceptance remains a manual check.
 
 `tests/receipts.browser.cjs` checks shared reprints with 35 bilingual/long-name items, saved payments/refunds, 58/80 mm preview/print geometry, multi-page PDF, mobile, paper preference, Escape/print action and dark-theme paper. Actual thermal-printer setup requires [manual verification](receipt-printing-guide.md).
+
+`tests/workspace-access.browser.cjs` checks direct-route denial without feature API requests, units-only/read-only catalog settings, allowed-page recovery links and mobile. [Live acceptance checklist](live-pos-acceptance.md) records the remaining real-backend/hardware checks separately.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, Check, Edit3, Plus, Search, Trash2, X } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api/client";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -43,30 +43,39 @@ export function CatalogSetupWorkspace() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [dialog, setDialog] = useState(false);
+  const [formEntity,setFormEntity]=useState<Entity>("categories");
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", nameBangla: "" });
-  const activeTab = tabs.find((tab) => tab.id === entity)!;
+  const readableTabs=useMemo(()=>tabs.filter(tab=>hasPermission(`${tab.permission}:read`)),[hasPermission]);
+  const activeTab=useMemo(()=>readableTabs.find(tab=>tab.id===entity)??readableTabs[0]??tabs[0],[readableTabs,entity]);
+  const activeEntity=activeTab.id;
+  const canRead=readableTabs.length>0;
+  const mutationLock=useRef(false),requestId=useRef(0);
 
   const load = useCallback(async (targetPage = page) => {
+    if(!canRead){setLoading(false);return;}
+    const request=++requestId.current;
     setLoading(true);
     setError("");
     const query = new URLSearchParams({ page: String(targetPage), limit: "20" });
     if (search.trim()) query.set("search", search.trim());
     try {
-      const response = await api.getWithMeta<unknown>(`/pharmacy/${entity}?${query.toString()}`);
+      const response = await api.getWithMeta<unknown>(`/pharmacy/${activeEntity}?${query.toString()}`);
+      if(request!==requestId.current)return;
       const nextItems = asItems(response);
       setItems(nextItems);
       const meta = response && typeof response === "object" ? (response as ApiEnvelope).meta : undefined;
       const totalItems = Math.max(Number(meta?.totalItems) || 0, nextItems.length);
       setPagination({ totalItems, totalPages: Math.max(1, Number(meta?.totalPages) || Math.ceil(totalItems / 20) || 1) });
     } catch (cause) {
+      if(request!==requestId.current)return;
       setItems([]);
       setPagination({ totalItems: 0, totalPages: 1 });
       setError(errorMessage(cause));
     } finally {
-      setLoading(false);
+      if(request===requestId.current)setLoading(false);
     }
-  }, [entity, page, search]);
+  }, [activeEntity,canRead, page, search]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 180);
@@ -75,23 +84,26 @@ export function CatalogSetupWorkspace() {
 
   function open(item?: Item) {
     setError("");
+    setFormEntity(activeEntity);
     setEditing(item?.id ?? null);
     setForm({ name: item?.name ?? "", nameBangla: item?.nameBangla ?? "" });
     setDialog(true);
   }
 
   async function save() {
+    if(mutationLock.current||!canRead||!hasPermission(`${activeTab.permission}:${editing?"update":"create"}`))return;
+    if(formEntity!==activeEntity){setError(t("The settings tab changed. Close and reopen this form."));return;}
     const name = form.name.trim();
     const nameBangla = form.nameBangla.trim();
     if (!name) { setError(t("Name is required.")); return; }
     if (name.length > 100 || nameBangla.length > 150) { setError(t("Name must be at most 100 characters; Bangla name can be at most 150.")); return; }
 
-    setSaving(true);
+    mutationLock.current=true;setSaving(true);
     setError("");
     try {
       const body = { name, nameBangla: nameBangla || undefined };
-      if (editing) await api.patch(`/pharmacy/${entity}/${editing}`, body);
-      else await api.post(`/pharmacy/${entity}`, body);
+      if (editing) await api.patch(`/pharmacy/${activeEntity}/${editing}`, body);
+      else await api.post(`/pharmacy/${activeEntity}`, body);
       setDialog(false);
       setNotice(`${t(activeTab.singular)} ${t(editing ? "updated" : "created")}.`);
       if (page === 1) await load(1);
@@ -99,16 +111,17 @@ export function CatalogSetupWorkspace() {
     } catch (cause) {
       setError(errorMessage(cause));
     } finally {
-      setSaving(false);
+      mutationLock.current=false;setSaving(false);
     }
   }
 
   async function remove(item: Item) {
+    if(mutationLock.current||!canRead||!hasPermission(`${activeTab.permission}:delete`))return;
     if (!window.confirm(`${t("Delete")} “${item.name}”? ${t("The server may block removal if medicines reference it.")}`)) return;
-    setSaving(true);
+    mutationLock.current=true;setSaving(true);
     setError("");
     try {
-      await api.delete(`/pharmacy/${entity}/${item.id}`);
+      await api.delete(`/pharmacy/${activeEntity}/${item.id}`);
       const targetPage = items.length === 1 && page > 1 ? page - 1 : page;
       setNotice(`${item.name} ${t("deleted")}.`);
       if (targetPage === page) await load(targetPage);
@@ -116,10 +129,11 @@ export function CatalogSetupWorkspace() {
     } catch (cause) {
       setError(errorMessage(cause));
     } finally {
-      setSaving(false);
+      mutationLock.current=false;setSaving(false);
     }
   }
 
+  if(!canRead)return <section className="data-empty"><p>{t("Your role cannot view this page.")}</p></section>;
   return (
     <section className="data-page catalog-setup-page">
       <div className="page-heading-row">
@@ -140,7 +154,7 @@ export function CatalogSetupWorkspace() {
 
       <div className="hr-card panel">
         <nav className="data-tabs hr-tabs catalog-setup-tabs" aria-label={t("Catalog configuration sections")}>
-          {tabs.map((tab) => <button type="button" key={tab.id} className={entity === tab.id ? "selected" : ""} aria-current={entity === tab.id ? "page" : undefined} onClick={() => { setPage(1); setEntity(tab.id); setSearch(""); }}>
+          {readableTabs.map((tab) => <button type="button" key={tab.id} className={activeEntity === tab.id ? "selected" : ""} aria-current={activeEntity === tab.id ? "page" : undefined} disabled={saving} onClick={() => { if(tab.id===activeEntity)return;requestId.current++;setItems([]);setLoading(true);setDialog(false);setError("");setNotice("");setPage(1); setEntity(tab.id); setSearch(""); }}>
             {t(tab.label)}
           </button>)}
         </nav>

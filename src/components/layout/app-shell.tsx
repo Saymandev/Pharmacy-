@@ -48,6 +48,8 @@ import { SupplierWorkspace } from "@/features/suppliers/supplier-workspace";
 import { ConsultationWorkspace } from "@/features/finance/consultation-workspace";
 import { useTheme } from "@/components/providers/theme-provider";
 import { DisplayPreferences } from "@/components/preferences/display-preferences";
+import { workspacePermissions as modulePermissions, canVisitWorkspace, workspaceDeniedMessage } from "@/lib/access/workspace-policy";
+import { WorkspaceAccessNotice } from "./workspace-access-notice";
 import { useLanguage } from "@/lib/i18n/language-provider";
 import { ActiveBranchProvider } from "@/components/providers/active-branch-provider";
 
@@ -71,25 +73,7 @@ const plannedModules = [
   { label: "Team access", icon: UsersRound, href: "/access" },
 ];
 
-const modulePermissions: Record<string, string[]> = {
-  "/pos": ["sale:read", "sale:create"],
-  "/catalog": ["medicine:read"],
-  "/catalog/setup": ["medicine-category:read", "medicine-generic:read", "medicine-manufacturer:read", "medicine-group:read", "medicine-unit:read"],
-  "/inventory": ["stock:read"],
-  "/purchases": ["purchase:read"],
-  "/suppliers": ["supplier:read"],
-  "/sales": ["sale:read"],
-  "/returns": ["sale-return:read"],
-  "/customers": ["customer:read"],
-  "/finance": ["account:read", "transaction:read", "income:read", "expense:read"],
-  "/finance/consultations": ["consultation-charge:read"],
-  "/reports": ["report:read"],
-  "/hr": ["employee:read", "attendance:read", "leave:read"],
-  "/hr/rosters": ["shift:read", "roster:read", "assigned-roster:read"],
-  "/hr/setup": ["department:read", "designation:read", "leave-type:read", "annual-calendar:read"],
-  "/admin": ["settings:read", "branch:read", "media:read", "notice:read", "notice:create", "notification:update"],
-  "/access": ["user:read", "role:read"],
-};
+
 
 export function AppShell() {
   const { status, user, logout, hasPermission } = useAuth();
@@ -234,7 +218,7 @@ export function AppShell() {
           </div>
         </header>
         <main className={`workspace-content ${["/pos", "/catalog", "/inventory", "/purchases", "/sales", "/returns", "/customers", "/finance"].includes(pathname) ? "workspace-content-pos" : ""}`}>
-          {pathname === "/pos" ? <PosWorkspace /> : pathname === "/catalog" || pathname === "/inventory" ? <CatalogInventoryWorkspace mode={pathname === "/catalog" ? "catalog" : "inventory"} /> : pathname === "/purchases" ? <PurchaseWorkspace /> : pathname === "/suppliers" ? <SupplierWorkspace /> : pathname === "/sales" || pathname === "/returns" ? <SalesWorkspace mode={pathname === "/sales" ? "sales" : "returns"} /> : pathname === "/customers" ? <CustomerWorkspace /> : pathname === "/finance" ? <FinanceWorkspace /> : pathname === "/finance/consultations" ? <ConsultationWorkspace /> : pathname === "/reports" ? <ReportsWorkspace /> : pathname === "/hr" ? <HrWorkspace /> : pathname === "/hr/rosters" ? <DutyRostersWorkspace /> : pathname === "/admin" ? <AdminWorkspace /> : pathname === "/hr/setup" ? <HrSetupWorkspace /> : pathname === "/access" ? <AccessWorkspace /> : pathname === "/catalog/setup" ? <CatalogSetupWorkspace /> : <Overview />}
+          {!canVisitWorkspace(pathname,hasPermission)?<WorkspaceAccessNotice message={workspaceDeniedMessage(pathname)} available={plannedModules.filter(item=>item.href&&canVisitWorkspace(item.href,hasPermission)).map(item=>({href:item.href!,label:item.label}))}/>:pathname === "/pos" ? <PosWorkspace /> : pathname === "/catalog" || pathname === "/inventory" ? <CatalogInventoryWorkspace mode={pathname === "/catalog" ? "catalog" : "inventory"} /> : pathname === "/purchases" ? <PurchaseWorkspace /> : pathname === "/suppliers" ? <SupplierWorkspace /> : pathname === "/sales" || pathname === "/returns" ? <SalesWorkspace mode={pathname === "/sales" ? "sales" : "returns"} /> : pathname === "/customers" ? <CustomerWorkspace /> : pathname === "/finance" ? <FinanceWorkspace /> : pathname === "/finance/consultations" ? <ConsultationWorkspace /> : pathname === "/reports" ? <ReportsWorkspace /> : pathname === "/hr" ? <HrWorkspace /> : pathname === "/hr/rosters" ? <DutyRostersWorkspace /> : pathname === "/admin" ? <AdminWorkspace /> : pathname === "/hr/setup" ? <HrSetupWorkspace /> : pathname === "/access" ? <AccessWorkspace /> : pathname === "/catalog/setup" ? <CatalogSetupWorkspace /> : <Overview />}
         </main>
         <footer className="workspace-footer"><span>{t("Pharmacy POS")}</span><span>{t("Secure workspace · Asia/Dhaka")}</span></footer>
       </div>

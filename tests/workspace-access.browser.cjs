@@ -1,0 +1,16 @@
+/* eslint @typescript-eslint/no-require-imports: "off" -- Browser regression runner. */
+const {chromium}=require('playwright'),assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||(require('node:fs').existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}});page.setDefaultTimeout(12000);let grants=[];const reads=[],writes=[],errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/api/backend/**',async route=>{const req=route.request(),url=new URL(req.url()),path=url.pathname.replace('/api/backend','');if(req.method()==='GET')reads.push(path);else writes.push({path,body:req.postDataJSON()});let data=[],meta;
+ if(path==='/auth/me')data={id:'user',fullName:'Restricted user',role:{permissions:grants.map(key=>({key}))}};
+ else if(path==='/branches')data=[{id:'b1',name:'Main Branch'}];
+ else if(path==='/pharmacy/units'){data=[{id:'unit1',name:'Tablet'}];meta={totalItems:1,page:1,limit:20,totalPages:1};}
+ await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({success:true,data,...(meta?{meta}:{})})});});
+ const base=process.env.POS_TEST_BASE_URL||'http://127.0.0.1:3000';
+ for(const path of ['/pos','/finance','/catalog/setup','/admin','/access','/hr']){const before=reads.length;await page.goto(base+path);await page.getByRole('heading',{name:'Access required',exact:true}).waitFor();assert.equal(reads.slice(before).filter(p=>!['/auth/me','/branches'].includes(p)).length,0);}
+ grants=['medicine-unit:read'];reads.length=0;await page.goto(base+'/catalog/setup');await page.getByRole('heading',{name:'Catalog settings',exact:true}).waitFor();await page.getByText('Tablet',{exact:true}).waitFor();assert.ok(reads.includes('/pharmacy/units'));assert.equal(reads.includes('/pharmacy/categories'),false);assert.equal(await page.getByRole('button',{name:/Add Unit/}).count(),0);assert.equal(await page.getByRole('button',{name:/Edit Tablet|Delete Tablet/}).count(),0);assert.equal(await page.locator('.catalog-setup-tabs button').count(),1);await page.locator('.catalog-setup-tabs button').click();await page.getByText('Tablet',{exact:true}).waitFor();
+ await page.goto(base+'/finance');await page.getByRole('heading',{name:'Access required',exact:true}).waitFor();await page.getByRole('link',{name:'Catalog settings',exact:true}).last().click();await page.getByText('Tablet',{exact:true}).waitFor();
+ await page.setViewportSize({width:390,height:844});await page.goto(base+'/access');await page.getByRole('heading',{name:'Access required',exact:true}).waitFor();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);await page.screenshot({path:'/tmp/workspace-access-mobile.png'});assert.equal(writes.length,0);assert.deepEqual(errors,[]);
+ console.log('PASS workspace access browser: denied direct URLs do not mount feature APIs, allowed units-only setup opens correct tab, read-only actions hidden, recovery links, mobile and no mutations. Mock API only.');
+ }finally{await browser.close();}})().catch(e=>{console.error(e.stack);process.exit(1)});
