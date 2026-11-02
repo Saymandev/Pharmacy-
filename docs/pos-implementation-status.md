@@ -35,3 +35,7 @@ Pack/strip/piece conversion factors, refresh-token rotation, backup restore and 
 The [API inventory](api-coverage.md) enumerates 200 active backend routes and candidate frontend files. Text references are not proof that all workflows have passed acceptance.
 
 Workspace permission checks and read-only catalog setup are described in [workspace access](workspace-access-guide.md). The [live development checklist](live-pos-acceptance.md) records expected cash/stock scenarios separately from completed mock tests.
+
+## Finance/HR/Admin frontend follow-up
+
+Read-scoped HR/setup/roster/Admin/access tabs and form options, action checks, validation and duplicate-submit locks are covered in [the audit guide](hr-admin-guide.md). Finance/HR/Admin Bengali coverage is extended without changing backend enum values. This work does not implement the missing Stock History, Purchase Return/Supplier Refund or full Customer Advance Ledger APIs. Live verification remains deferred; older counts above belong to their original snapshot.

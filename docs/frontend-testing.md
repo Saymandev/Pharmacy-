@@ -90,3 +90,5 @@ Purchase and supplier workflow: [guide](purchase-supplier-guide.md). Regression 
 `tests/workspace-access.browser.cjs` checks direct-route denial without feature API requests, units-only/read-only catalog settings, allowed-page recovery links and mobile. [Live acceptance checklist](live-pos-acceptance.md) records the remaining real-backend/hardware checks separately.
 
 `tests/finance.browser.cjs` checks independent finance read tabs/options, envelope pagination, fresh transfer/withdraw validation, precision, duplicate requests and mobile with mocked APIs. [Finance workflow guide](finance-workflow-guide.md).
+
+`tests/hr-admin.browser.cjs` covers independent HR/Admin/access permissions, employee/leave-type/branch validation, duplicate-submit locks, read-only settings/backups, failed-list recovery and Bengali/mobile states. `tests/consultations.browser.cjs` covers selected-doctor settlement grouping, related account reads, duplicate payments, failures and Bengali/mobile. Both mock all backend responses. See [the audit guide](hr-admin-guide.md).

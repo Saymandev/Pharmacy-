@@ -253,3 +253,9 @@ Implemented: POS, sales/due/customer returns, reports, inventory operations, pur
 Current statements distinguish invoice value, payment, return face value and actual refund. Full print/CSV exports include all filtered rows. Dedicated account advances and supplier purchase returns need the new contracts above.
 
 Validation already completed for the pending frontend code: lint, production build, 50 unit tests and 8 mocked browser suites. Mock tests do not verify the deployed database, account balances or cash-drawer posting. Backend work needs live development acceptance tests before those accounting effects can be claimed verified.
+
+## Additional frontend audit finding: backup authorization
+
+The supplied `src/modules/backup/backup.routes.ts` mounts history, trigger, configuration and download handlers without authentication or permission middleware; `src/routes/index.ts` mounts that router directly. The inspected controller has no equivalent authorization checks. Backend code remains unchanged. Confirm and enforce the intended read/write/download permissions and audit sensitive backup access before live acceptance. The frontend conservatively uses existing settings-read/settings-update permissions for those controls; hiding controls does not secure the API. No new permission key or endpoint has been invented.
+
+The frontend Finance/HR/Admin follow-up is documented in [the audit guide](hr-admin-guide.md). Earlier test counts above describe earlier snapshots; use the current test runner results for the current revision. Live accounting/persistence verification remains pending.

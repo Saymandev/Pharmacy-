@@ -81,3 +81,5 @@ POS barcode and keyboard flow: [guide](docs/pos-barcode-guide.md).
 Before live rollout: [development acceptance checklist](docs/live-pos-acceptance.md) and [workspace access behavior](docs/workspace-access-guide.md).
 
 Finance roles, pagination and account movements: [guide](docs/finance-workflow-guide.md).
+
+Finance/HR/Admin permissions, Bengali controls, validation and submission behavior: [audit guide](docs/hr-admin-guide.md).

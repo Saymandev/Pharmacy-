@@ -1,0 +1,2 @@
+export const hrPermissions = { employees: "employee", attendance: "attendance", leaves: "leave", departments: "department", designations: "designation", "leave-types": "leave-type", "annual-calendars": "annual-calendar", shifts: "shift", rosters: "roster", assignments: "assigned-roster" } as const;
+export function hrPermission(view: keyof typeof hrPermissions, action: string) { return `${hrPermissions[view]}:${action}`; }

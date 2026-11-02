@@ -11,3 +11,5 @@ Existing translated workflows remain in place. This phase extends Bangla coverag
 Recent customer statement surfaces also use the shared dark palette. Printed statements and receipts retain their separate paper styling.
 
 `tests/appearance.browser.cjs` uses mocked API responses to check theme choices, device changes, localization, persistence, multiple tabs, mobile layout and storage failure. Existing business-flow regressions must continue to pass.
+
+Finance, consultation settlements, HR operations/setup/rosters and Admin/Team access now use Bengali controls, messages and enum labels. API option values stay unchanged; dates display in Asia/Dhaka and finance currency follows the selected language. Arbitrary backend data, permission keys and backend error messages retain their original text. See [the audit guide](hr-admin-guide.md).

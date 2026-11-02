@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import { validDate, dateRangeError, validEmail, wholeNumber, validHttpUrl, validCron, validPassword } from '../src/lib/forms/validation.ts';
+import { hrPermission } from '../src/features/hr/hr-policy.ts';
+assert.equal(validDate('2026-02-30'),false);
+assert.equal(validDate('2028-02-29'),true);
+assert.ok(dateRangeError('2026-11-03','2026-11-02'));
+assert.ok(dateRangeError('','2026-11-02'));
+assert.equal(dateRangeError('2026-11-02','2026-11-02'),'');
+assert.equal(wholeNumber('18.5',18),false);
+assert.equal(wholeNumber('NaN',18),false);
+assert.equal(wholeNumber('18',18),true);
+assert.equal(wholeNumber('-1'),false);
+assert.equal(validEmail('invalid'),false);
+assert.equal(validEmail('branch@example.com'),true);
+assert.equal(validHttpUrl('javascript:alert(1)'),false);
+assert.equal(validHttpUrl('https://example.com/attachment'),true);
+for(const value of ['61 * * * *','0 24 * * *','*/0 * * * *','0 0 * 13 *','0 0 * * garbage','0 0 * sun *','0 0 * * jan','bad bad bad bad bad'])assert.equal(validCron(value),false,value);
+for(const value of ['0 0 * * *','*/5 * * * *','0 0 * jan mon-fri','0 0 0 * * *'])assert.equal(validCron(value),true,value);
+assert.equal(hrPermission('assignments','read'),'assigned-roster:read');
+assert.equal(hrPermission('annual-calendars','create'),'annual-calendar:create');
+
+assert.equal(validPassword("abcdefgh"),false);
+assert.equal(validPassword("StrongPass1"),true);

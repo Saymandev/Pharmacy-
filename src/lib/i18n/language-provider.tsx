@@ -1,4 +1,5 @@
 "use client";
+import { workspaceBangla } from "./workspace-bn";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from "react";
 
@@ -972,7 +973,7 @@ const messages: Record<Language, Record<string, string>> = {
 interface LanguageContextValue {
   language: Language;
   setLanguage: (language: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -996,7 +997,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     languageListeners.forEach((listener) => listener());
   }, []);
 
-  const t = useCallback((key: string) => messages[language][key] ?? key, [language]);
+  const t = useCallback((key: string, values?: Record<string, string | number>) => {
+    const message = messages[language][key] ?? (language === "bn" ? workspaceBangla[key] : undefined) ?? key;
+    return values ? message.replace(/\{(\w+)\}/g, (token, name: string) => values[name] == null ? token : String(values[name])) : message;
+  }, [language]);
   const value = useMemo(() => ({ language, setLanguage, t }), [language, setLanguage, t]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
