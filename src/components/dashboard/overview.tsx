@@ -99,25 +99,31 @@ export function Overview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasLoaded = useRef(false);
+  const dashboardRequest=useRef(0);
   const canReadReports = hasPermission("report:read");
 
   const loadDashboard = useCallback(async () => {
+    const request=++dashboardRequest.current;
+    if(!branchId){setStats(null);setGraph(null);setLoading(false);return;}
     if (!canReadReports) {
-      setLoading(false);
+      setStats(null);setGraph(null);setLoading(false);
       return;
     }
-    if (!hasLoaded.current) setLoading(true);
+    setStats(null);setGraph(null);setLoading(true);
     setError(null);
     try {
       const [todayStats, weeklyGraph] = await Promise.all([
         getTodayPharmacyStats(branchId || undefined),
         getWeeklyPharmacyGraph(branchId || undefined),
       ]);
+      if(request!==dashboardRequest.current)return;
       setStats(todayStats);
       setGraph(weeklyGraph);
     } catch (caught) {
+      if(request!==dashboardRequest.current)return;setStats(null);setGraph(null);
       setError(caught instanceof ApiClientError ? caught.message : "Dashboard data could not be loaded.");
     } finally {
+      if(request!==dashboardRequest.current)return;
       hasLoaded.current = true;
       setLoading(false);
     }
