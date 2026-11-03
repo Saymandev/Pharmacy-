@@ -11,19 +11,17 @@ import { useLanguage } from "@/lib/i18n/language-provider";
 
 const tabs: { key: ReportKey; label: string; group: string; note: string }[] = [
  {key:"pharmacy-summary",label:"Pharmacy summary",group:"Summary",note:"Completed/returned POS sales, purchases, expenses and cost of goods for this selection."},
- {key:"overall",label:"All operations overview",group:"Summary",note:"All backend sale types, including hospital/service activity. Its totals can differ from the pharmacy-only summary."},
- {key:"sales",label:"Sales detail",group:"Pharmacy",note:"Indoor/outdoor POS sales and returns, filtered by sale/return creation date."},
- {key:"purchases",label:"Purchase detail",group:"Pharmacy",note:"Pharmacy, hospital and clinic purchases with their return and payment totals."},
+ {key:"overall",label:"All operations overview",group:"Summary",note:"Pharmacy POS sales, purchases, collections and expenses."},
+ {key:"sales",label:"Sales detail",group:"Pharmacy",note:"POS sales and returns, filtered by sale/return creation date."},
+ {key:"purchases",label:"Purchase detail",group:"Pharmacy",note:"Pharmacy purchases with their return and payment totals."},
  {key:"dues",label:"Due collection",group:"Pharmacy",note:"Payments collected on a later Dhaka calendar day than the original sale. Filter dates refer to the collection, not the sale."},
  {key:"income",label:"Income",group:"Finance",note:"Income grouped by sale type, including pending and completed sales."},
  {key:"expense",label:"Expenses",group:"Finance",note:"Expenses grouped by category and filtered by expense date."},
  {key:"pharmacy-collection",label:"Pharmacy collection",group:"Finance",note:"POS receipts and refunds grouped by invoice. Dates refer to payment transactions."},
- {key:"hospital-collection",label:"Hospital collection",group:"Finance",note:"Non-POS receipts and refunds grouped by invoice. Dates refer to payment transactions."},
- {key:"doctors",label:"Doctors",group:"Clinical",note:"Visits, appointment sales and consultation commissions."},
 ];
 const searchable=new Set<ReportKey>(["dues","pharmacy-collection","hospital-collection"]);
 type Filters={startDate:string;endDate:string;scope:string;search:string;type:string};
-const initialFilters=():Filters=>({...reportDateRange("today"),scope:"active",search:"",type:""});
+const initialFilters=():Filters=>({...reportDateRange("today"),scope:"active",search:"",type:"pos"});
 
 function downloadCsv(model:ReportModel,context:Record<string,unknown>,filename:string){
  const csv=reportCsv(model,context);if(!csv)return;
@@ -76,11 +74,11 @@ export function ReportsWorkspace(){
  const error=failure?.key===requestKey?failure.message:"";
  const loading=ready&&!current&&!error;
  const model=useMemo(()=>buildReportModel(current?.data),[current]);
- const comparable=(value:Filters)=>({...value,search:searchable.has(tab)?value.search:"",type:tab==="income"?value.type:""});
+ const comparable=(value:Filters)=>({...value,search:searchable.has(tab)?value.search:"",type:tab==="income"?value.type:"pos"});
  const dirty=JSON.stringify(comparable(draft))!==JSON.stringify(comparable(applied));
  const canExport=ready&&!!current&&!error&&!dirty&&(model.metrics.length>0||model.tables.length>0);
  const active=tabs.find(item=>item.key===tab)!;
- const context={Report:active.label,Branch:branchName,From:applied.startDate||"All dates",To:applied.endDate||"All dates",Search:searchable.has(tab)?applied.search:"",Type:tab==="income"?applied.type:"",Generated:current?.at??""};
+ const context={Report:active.label,Branch:branchName,From:applied.startDate||"All dates",To:applied.endDate||"All dates",Search:searchable.has(tab)?applied.search:"",Type:tab==="income"?applied.type:"pos",Generated:current?.at??""};
  const filename=`pharmacy-${tab}-${applied.startDate||"all"}-${applied.endDate||"all"}.csv`;
  function apply(event:React.FormEvent){event.preventDefault();const message=reportDateError(draft.startDate,draft.endDate);setFilterError(message);if(!message){setApplied({...draft});setRefresh(value=>value+1);}}
  function choosePreset(value:string){setPreset(value);if(value!=="custom"){setDraft(current=>({...current,...reportDateRange(value as DatePreset)}));setFilterError("");}}
@@ -92,11 +90,11 @@ export function ReportsWorkspace(){
   <label>{t("To")}<input type="date" value={draft.endDate} min={draft.startDate||undefined} onChange={event=>{setPreset("custom");setDraft({...draft,endDate:event.target.value});}}/></label>
   <label>{t("Branch")}<select aria-label={t("Branch")} value={draft.scope} onChange={event=>setDraft({...draft,scope:event.target.value})}><option value="active">{t("Active:")} {activeBranch?.name??"Select branch"}</option><option value="all">{t("All available branches")}</option>{branches.map(branch=><option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label>
   {searchable.has(tab)&&<label className="reports-search">{t("Invoice search")}<input value={draft.search} onChange={event=>setDraft({...draft,search:event.target.value})} placeholder={t("Invoice number")}/></label>}
-  {tab==="income"&&<label>{t("Sale type")}<select aria-label={t("Sale type")} value={draft.type} onChange={event=>setDraft({...draft,type:event.target.value})}><option value="">{t("All non-POS sales")}</option>{["pos","hospital","admission","appointment","emergency"].map(type=><option value={type} key={type}>{type}</option>)}</select></label>}
+  {tab==="income"&&<label>{t("Sale type")}<select aria-label={t("Sale type")} value={draft.type} onChange={event=>setDraft({...draft,type:event.target.value})}>{["pos"].map(type=><option value={type} key={type}>{type}</option>)}</select></label>}
   <button className="purchase-primary-action" type="submit">{t("Apply filters")}</button><button className="reports-clear" type="button" onClick={()=>{const next=initialFilters();setDraft(next);setApplied(next);setPreset("today");setFilterError("");setRefresh(value=>value+1);}}>{t("Reset to today")}</button>
   {filterError&&<p className="reports-filter-message" role="alert">{filterError}</p>}{dirty&&!filterError&&<p className="reports-filter-message" role="status">{t("Filters changed. Apply them to update the report and export.")}</p>}
  </form>
- <div className="reports-layout"><aside className="reports-nav panel" aria-label={t("Report types")}>{["Summary","Pharmacy","Finance","Clinical"].map(group=><div className="reports-nav-group" key={t(group)}><span>{t(group)}</span>{tabs.filter(item=>item.group===group).map(item=><button type="button" key={item.key} className={tab===item.key?"selected":""} aria-pressed={tab===item.key} onClick={()=>{setTab(item.key);setFilterError("");}}><FileBarChart2 size={15}/><span>{t(item.label)}</span></button>)}</div>)}</aside>
+ <div className="reports-layout"><aside className="reports-nav panel" aria-label={t("Report types")}>{["Summary","Pharmacy","Finance"].map(group=><div className="reports-nav-group" key={t(group)}><span>{t(group)}</span>{tabs.filter(item=>item.group===group).map(item=><button type="button" key={item.key} className={tab===item.key?"selected":""} aria-pressed={tab===item.key} onClick={()=>{setTab(item.key);setFilterError("");}}><FileBarChart2 size={15}/><span>{t(item.label)}</span></button>)}</div>)}</aside>
  <div className="reports-content reports-print-view" aria-busy={loading}><div className="reports-report-title"><div><span className="eyebrow">{active.group.toUpperCase()}{t("REPORT")}</span><h2>{t(active.label)}</h2><p>{applied.startDate?`${applied.startDate} — ${applied.endDate}`:"All available dates"} · {branchName}</p>{searchable.has(tab)&&applied.search&&<p>{t("Invoice search:")} {applied.search}</p>}{tab==="income"&&applied.type&&<p>{t("Sale type:")} {applied.type}</p>}{current&&<small>{t("Loaded")} {new Date(current.at).toLocaleString(locale,{timeZone:"Asia/Dhaka"})}{t("· Asia/Dhaka")}</small>}</div></div><p className="reports-definition">{t(active.note)}</p>
  {error&&<div className="sales-alert error" role="alert"><AlertCircle size={15}/><span>{error}</span><button type="button" onClick={()=>setRefresh(value=>value+1)}>{t("Retry")}</button></div>}
  {!ready&&<div className="data-empty"><span>{branchesLoading?"Loading branches…":"Select an available branch, or apply All available branches."}</span></div>}

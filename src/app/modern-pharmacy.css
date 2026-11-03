@@ -1,3 +1,22 @@
+.data-card.stock-history-panel { padding: 20px; }
+.data-card.stock-history-panel .data-filter-drawer {
+  position: static; width: 100%; max-height: none; margin: 16px 0;
+  box-shadow: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.stock-history-panel .data-filter-drawer label { display: grid; gap: 6px; min-width: 0; }
+.stock-history-panel .data-filter-drawer :is(input, select) { width: 100%; min-width: 0; }
+.stock-history-panel .data-table-scroll { max-width: 100%; overflow-x: auto; }
+.stock-history-panel .data-table { min-width: 880px; }
+.stock-history-panel .data-table td { overflow-wrap: anywhere; max-width: 260px; }
+.stock-history-toggle { min-height: 40px; padding: 8px 12px; border: 1px solid var(--ux-line); border-radius: 8px; background: var(--ux-surface); color: var(--ux-text); }
+@media (max-width: 760px) {
+  .stock-history-panel .data-table { min-width: 0; }
+  .stock-history-panel .data-table td { max-width: none; }
+  .stock-history-panel .data-table td:not(:first-child) { display: grid; grid-template-columns: 100px minmax(0, 1fr); }
+  .stock-history-panel .data-table td:last-child { position: static; width: 100%; }
+  .stock-history-panel .data-table td:last-child::before { display: block; }
+}
+
 /*
  * Dashboard + POS refinement. Loaded after workspace-overrides.css.
  * Keeps existing backend data, sale calculations, permissions and theme toggle.

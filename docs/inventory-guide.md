@@ -1,6 +1,6 @@
 # Inventory and stock operations
 
-Inventory implements only the routes in the uploaded backend contract. Backend source is unchanged.
+Inventory uses the supported stock-operation routes and the new locally implemented stock-history API. The backend and frontend are maintained together in this workspace.
 
 ## View batches and alerts
 
@@ -34,11 +34,15 @@ Bulk price editing covers the current stock page. Only changed rows are sent to 
 
 Stock writes share a synchronous mutation lock, disable dismissal during saving and show errors inside the dialog. A timed-out request is not proof of failure; inspect current quantities/account transactions before manually retrying. There is no automatic mutation retry.
 
-## Stock history is a backend dependency
+## Stock history
 
-The uploaded service writes `StockHistory` records but exposes **no stock-history read endpoint**. Its `updateOpeningStock` function also has no mounted route. The frontend does not invent either endpoint or present a local action log as authoritative history.
+Choose **Stock history** on Inventory. The panel reads `GET /pharmacy/stocks/history` with the active branch, pagination, medicine/generic search, exact batch, direction, movement type and inclusive Dhaka date range. Applying filters resets pagination. Errors clear rows; Retry and Refresh fetch again. Branch changes remount the panel and cancel its old request.
 
-Ask the backend developer for a paginated history read contract supporting branch, stock/medicine, date, movement type and transfer source/destination. Server-side aggregate stock-state filters would also allow branch-wide low/out alerts without client page limitations. The stock-list medicine projection could expose reorder level and usable branch total to avoid incomplete metadata coverage.
+Rows show the recorded movement, signed quantity, batch, branch, counterpart transfer branch and note. Before/after balances, actors and document references are unavailable in the original model. The UI does not reconstruct them from current quantities. Batch metadata reflects the current stock record. Older sale returns stored as `sale` keep their original classification; newly recorded returns use `sale-return`. Older transfers may lack the counterpart branch on the incoming leg. The opening-stock correction function still has no mounted route.
+
+The history endpoint requires `stock:read`. Ordinary readers are limited to their current database-assigned branch; wildcard/Super Admin readers can choose other branches. This is additional enforcement for the new endpoint, not a claim that all existing write endpoints have been audited for branch authorization.
+
+Server-side aggregate stock-state filters and complete stock-list reorder metadata remain future improvements.
 
 The backend must enforce concurrent transfer/decrease bounds transactionally. Opening stock can overwrite existing expiry/prices, so review data carefully. Frontend rechecks are useful but cannot replace backend concurrency/idempotency safeguards.
 

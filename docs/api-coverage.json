@@ -1,5 +1,11 @@
 [
   {
+    "method": "GET",
+    "path": "/pharmacy/stocks/history",
+    "backend_file": "modules/pharmacy/pharmacy.routes.ts",
+    "frontend_candidates": ["src/features/catalog/stock-history-panel.tsx"]
+  },
+  {
     "method": "POST",
     "path": "/auth/admin/change-password/:userId",
     "backend_file": "modules/auth/auth.routes.ts",

@@ -45,7 +45,6 @@ import { AccessWorkspace } from "@/features/access/access-workspace";
 import { CatalogSetupWorkspace } from "@/features/catalog/catalog-setup-workspace";
 import { api, ApiClientError } from "@/lib/api/client";
 import { SupplierWorkspace } from "@/features/suppliers/supplier-workspace";
-import { ConsultationWorkspace } from "@/features/finance/consultation-workspace";
 import { useTheme } from "@/components/providers/theme-provider";
 import { DisplayPreferences } from "@/components/preferences/display-preferences";
 import { workspacePermissions as modulePermissions, canVisitWorkspace, workspaceDeniedMessage } from "@/lib/access/workspace-policy";
@@ -64,7 +63,6 @@ const plannedModules = [
   { label: "Sales returns", icon: RotateCcw, href: "/returns" },
   { label: "Customers", icon: UsersRound, href: "/customers" },
   { label: "Finance", icon: Banknote, href: "/finance" },
-  { label: "Doctor settlements", icon: Banknote, href: "/finance/consultations" },
   { label: "Reports", icon: Activity, href: "/reports" },
   { label: "HR & attendance", icon: UsersRound, href: "/hr" },
   { label: "Duty rosters", icon: Activity, href: "/hr/rosters" },
@@ -218,7 +216,7 @@ export function AppShell() {
           </div>
         </header>
         <main className={`workspace-content ${["/pos", "/catalog", "/inventory", "/purchases", "/sales", "/returns", "/customers", "/finance"].includes(pathname) ? "workspace-content-pos" : ""}`}>
-          {!canVisitWorkspace(pathname,hasPermission)?<WorkspaceAccessNotice message={workspaceDeniedMessage(pathname)} available={plannedModules.filter(item=>item.href&&canVisitWorkspace(item.href,hasPermission)).map(item=>({href:item.href!,label:item.label}))}/>:pathname === "/pos" ? <PosWorkspace /> : pathname === "/catalog" || pathname === "/inventory" ? <CatalogInventoryWorkspace mode={pathname === "/catalog" ? "catalog" : "inventory"} /> : pathname === "/purchases" ? <PurchaseWorkspace /> : pathname === "/suppliers" ? <SupplierWorkspace /> : pathname === "/sales" || pathname === "/returns" ? <SalesWorkspace mode={pathname === "/sales" ? "sales" : "returns"} /> : pathname === "/customers" ? <CustomerWorkspace /> : pathname === "/finance" ? <FinanceWorkspace /> : pathname === "/finance/consultations" ? <ConsultationWorkspace /> : pathname === "/reports" ? <ReportsWorkspace /> : pathname === "/hr" ? <HrWorkspace /> : pathname === "/hr/rosters" ? <DutyRostersWorkspace /> : pathname === "/admin" ? <AdminWorkspace /> : pathname === "/hr/setup" ? <HrSetupWorkspace /> : pathname === "/access" ? <AccessWorkspace /> : pathname === "/catalog/setup" ? <CatalogSetupWorkspace /> : <Overview />}
+          {!canVisitWorkspace(pathname,hasPermission)?<WorkspaceAccessNotice message={workspaceDeniedMessage(pathname)} available={plannedModules.filter(item=>item.href&&canVisitWorkspace(item.href,hasPermission)).map(item=>({href:item.href!,label:item.label}))}/>:pathname === "/pos" ? <PosWorkspace /> : pathname === "/catalog" || pathname === "/inventory" ? <CatalogInventoryWorkspace mode={pathname === "/catalog" ? "catalog" : "inventory"} /> : pathname === "/purchases" ? <PurchaseWorkspace /> : pathname === "/suppliers" ? <SupplierWorkspace /> : pathname === "/sales" || pathname === "/returns" ? <SalesWorkspace mode={pathname === "/sales" ? "sales" : "returns"} /> : pathname === "/customers" ? <CustomerWorkspace /> : pathname === "/finance" ? <FinanceWorkspace /> : pathname === "/finance/consultations" ? <section className="data-page"><h1>{t("Doctor settlements")}</h1><p>{t("Hospital and doctor features are currently disabled.")}</p></section> : pathname === "/reports" ? <ReportsWorkspace /> : pathname === "/hr" ? <HrWorkspace /> : pathname === "/hr/rosters" ? <DutyRostersWorkspace /> : pathname === "/admin" ? <AdminWorkspace /> : pathname === "/hr/setup" ? <HrSetupWorkspace /> : pathname === "/access" ? <AccessWorkspace /> : pathname === "/catalog/setup" ? <CatalogSetupWorkspace /> : <Overview />}
         </main>
         <footer className="workspace-footer"><span>{t("Pharmacy POS")}</span><span>{t("Secure workspace · Asia/Dhaka")}</span></footer>
       </div>
