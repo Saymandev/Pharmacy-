@@ -1518,3 +1518,21 @@ fieldset.admin-backup-config{min-inline-size:0;margin:0}
  .record-filter-pages { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
  .record-filter-pages button { min-height: 32px; padding: 4px 8px; font-size: 12px; }
 }
+@media screen {
+ .access-list-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 14px; padding: 18px; border-bottom: 1px solid var(--line); }
+ .access-list-filters label { display: grid; flex: 1; min-width: 140px; gap: 6px; font-size: 12px; }
+ .access-list-filters select { min-height: 42px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+ .access-list-filters button { min-height: 42px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--brand); }
+ :is(.access-page,.admin-page,.hr-page) h2 { font-size: 20px; line-height: 1.4; }
+ :is(.access-page,.admin-page,.hr-page) h3 { font-size: 16px; }
+ .access-permission-groups fieldset { border-radius: 10px; padding: 14px; }
+ .access-permission-groups label { min-height: 44px; gap: 10px; }
+ .access-permission-groups strong, .hr-table td strong { font-size: 13px; }
+ .access-permission-groups small, .hr-table td small { font-size: 12px; line-height: 1.5; }
+ .hr-table td, .hr-table th { padding: 13px 12px; font-size: 13px; }
+ .hr-row-actions { flex-wrap: wrap; gap: 8px; }
+ .hr-row-actions button { min-height: 36px; padding: 7px 10px; }
+ .admin-setting, .admin-notification, .admin-notice { padding: 18px; }
+ .admin-setting-fields label { gap: 7px; font-size: 12px; }
+ .admin-tabs { max-width: 100%; overflow-x: auto; }
+}
