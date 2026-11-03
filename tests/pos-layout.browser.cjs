@@ -23,6 +23,12 @@ const assert=require('node:assert/strict');
  });
  await page.goto(`${process.env.POS_TEST_BASE_URL || 'http://127.0.0.1:3000'}/pos`);
 
+ await page.locator('.pos-focus-mode').waitFor();
+ await page.getByRole('button',{name:'Exit full screen',exact:true}).click();
+ await page.goto('http://127.0.0.1:3000/catalog');
+ await page.getByRole('link',{name:'Point of sale',exact:true}).click();
+ await page.locator('.pos-focus-mode').waitFor();
+ await page.getByRole('button',{name:'Exit full screen',exact:true}).click();
  const product=page.getByRole('button').filter({hasText:'POS Test Medicine'}).first();await product.waitFor();
  for(const width of [1440,1024,390]) {
   await page.setViewportSize({width,height:900});

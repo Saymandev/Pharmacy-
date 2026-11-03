@@ -81,7 +81,7 @@ export function PosWorkspace() {
   const [keyboardProduct, setKeyboardProduct] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filterPanel = useDismissiblePanel(filtersOpen, useCallback(() => setFiltersOpen(false), []));
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const cartDialog = useRef<HTMLDialogElement>(null);
   const [categoryId, setCategoryId] = useState("");
   const [genericId, setGenericId] = useState("");
