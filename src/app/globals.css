@@ -1403,3 +1403,46 @@ fieldset.admin-backup-config{min-inline-size:0;margin:0}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* POS: clear medicine identity, readable cart and comfortable touch controls. */
+@media screen {
+ .pos-catalog-top h2, .pos-cart-heading h2 { font-size: 17px; }
+ .pos-catalog-top p, .pos-cart-heading p { font-size: 12px; color: var(--ink-soft); }
+ .pos-search-box { height: 48px; border-radius: 11px; }
+ .pos-search-box > input { font-size: 15px; }
+ .pos-product-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+ .pos-product-card { min-height: 190px; padding: 16px; background: var(--surface); }
+ .pos-product-copy { padding-right: 0; margin-top: 12px; }
+ .pos-product-copy strong { font-size: 14px; white-space: normal; overflow-wrap: anywhere; line-height: 1.45; }
+ .pos-product-copy small { font-size: 12px; white-space: normal; line-height: 1.4; }
+ .pos-product-copy .pos-product-brand { color: var(--ink-soft); }
+ .pos-product-bottom strong { font-size: 16px; }
+ .pos-product-bottom small, .pos-results-meta, .pos-catalog-footer { font-size: 11px; }
+ .pos-stock-badge { font-size: 11px; padding: 5px 8px; }
+ .pos-line-main strong { font-size: 14px; white-space: normal; line-height: 1.45; }
+ .pos-line-main small, .pos-stock-hint { font-size: 11px; }
+ .pos-line-controls { flex-wrap: wrap; gap: 10px; }
+ .pos-quantity-stepper { min-height: 38px; }
+ .pos-quantity-stepper button { min-width: 34px; min-height: 36px; }
+ .pos-quantity-stepper input { width: 42px; min-height: 36px; font-size: 14px; }
+ .pos-batch-select { height: auto; min-height: 36px; font-size: 12px; }
+ .pos-line-total { margin-left: auto; font-size: 14px; }
+ .pos-cart-summary > strong { font-size: 23px; }
+ .pos-cart-footer > small { font-size: 11px; }
+ .pos-proceed-button { min-height: 48px; font-size: 14px; }
+ .pos-proceed-button > span:last-child { font-size: 13px; }
+ .pos-checkout-body { font-size: 14px; }
+ .pos-checkout-heading p:last-child { font-size: 13px; }
+ .pos-checkout-item > span strong { font-size: 14px; white-space: normal; }
+ .pos-checkout-item > strong { font-size: 14px; }
+}
+@media screen and (max-width: 600px) {
+ .pos-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+ .pos-product-card { min-height: 210px; padding: 12px; }
+ .pos-product-copy strong { font-size: 13px; }
+ .pos-product-copy small { font-size: 11px; }
+ .pos-catalog-top { flex-wrap: wrap; gap: 8px; }
+ .pos-catalog-footer { flex-wrap: wrap; gap: 8px; line-height: 1.5; }
+ .pos-cart-modal { width: 100%; }
+ .pos-cart-modal .pos-cart-controls { flex-shrink: 0; }
+}
