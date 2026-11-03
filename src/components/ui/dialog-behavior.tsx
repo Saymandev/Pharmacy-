@@ -35,7 +35,7 @@ export function DialogBehavior() {
       if (!current || event.target instanceof Element && event.target.closest('[popover]:popover-open')) return;
       if (current instanceof HTMLDialogElement) return;
       if (event.key === "Escape") {
-        const close = current.querySelector<HTMLButtonElement>('button.purchase-close,button.data-dialog-close,button.pos-icon-action,button[aria-label="Close"],button[aria-label="বন্ধ করুন"]');
+        const close = current.querySelector<HTMLButtonElement>('button.purchase-close,button.data-dialog-close,button.pos-cart-close,button[aria-label="Close"],button[aria-label="বন্ধ করুন"]');
         if (close && !close.disabled) { event.preventDefault(); event.stopPropagation(); close.click(); }
       }
       if (event.key === "Tab") {

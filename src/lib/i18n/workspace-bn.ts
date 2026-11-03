@@ -1,5 +1,9 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "No customer selected. This will be a walk-in sale.": "ক্রেতা নির্বাচন করা হয়নি। এটি সাধারণ বিক্রয় হিসেবে সংরক্ষিত হবে।",
+  "Choose a customer or continue as a walk-in sale.": "ক্রেতা বেছে নিন অথবা সাধারণ বিক্রয় হিসেবে চালিয়ে যান।",
+  "Walk-in customer": "সাধারণ ক্রেতা",
+  "Print preview": "প্রিন্ট প্রিভিউ",
   "Complete sale": "বিক্রয় সম্পন্ন করুন",
   "Search options": "অপশন খুঁজুন",
   "Options": "অপশন",

@@ -1,0 +1,112 @@
+/* Checkout and receipt share compact, fixed headers/footers and a scrolling body. */
+@media screen {
+ .pos-page .pos-checkout-backdrop { padding:16px; }
+ .app-frame .pos-page .pos-checkout-dialog { width:min(1100px,100%); max-width:100%; max-height:calc(100dvh - 32px); border-radius:18px; background:var(--ux-surface); color:var(--ux-text); }
+ .app-frame .pos-checkout-heading { flex-shrink:0; padding:18px 22px; gap:16px; background:var(--ux-surface); }
+ .app-frame .pos-checkout-heading .eyebrow { margin:0 0 5px; font-size:10px; letter-spacing:1.2px; }
+ .app-frame .pos-checkout-heading h2 { margin:0; padding:0; font-size:24px; font-weight:750; }
+ .app-frame .pos-checkout-heading p:last-child { margin:5px 0 0; font-size:12px; }
+ .app-frame .pos-checkout-back { min-height:36px; padding:8px 12px; border-radius:9px; font-size:12px; white-space:nowrap; }
+ .app-frame .pos-page .pos-checkout-body { display:grid; grid-template-columns:minmax(0,1.12fr) minmax(0,1fr); gap:20px; min-height:0; padding:20px; overflow-y:auto; overscroll-behavior:contain; align-items:start; background:var(--ux-canvas); }
+ .pos-checkout-main, .pos-checkout-payment { min-width:0; }
+ .app-frame .pos-checkout-customer, .app-frame .pos-checkout-items, .app-frame .pos-checkout-payment, .app-frame .pos-checkout-adjustments { margin:0 0 14px; padding:16px; border:1px solid var(--ux-line); border-radius:12px; background:var(--ux-surface) !important; }
+ .app-frame .pos-checkout-payment { margin:0; }
+ .app-frame .pos-checkout-section-top { gap:10px; margin-bottom:12px; }
+ .app-frame .pos-checkout-section-top h3, .app-frame .pos-checkout-items h3 { margin:0; font-size:15px; }
+ .app-frame .pos-checkout-section-top small { display:none; }
+ .app-frame .pos-checkout-add-button { min-height:32px; padding:7px 9px; font-size:11px; border-radius:8px; }
+ .app-frame .pos-checkout-customer .pos-field-caption { font-size:12px; }
+ .app-frame .pos-checkout-customer .pos-opd-hint { display:block; margin:7px 0 0; font-size:11px; line-height:1.45; }
+ .app-frame .pos-checkout-item { display:grid; grid-template-columns:minmax(0,1fr) 68px auto; align-items:center; gap:10px; padding:12px 0; }
+ .app-frame .pos-checkout-item > span { min-width:0; }
+ .app-frame .pos-checkout-item > span strong { font-size:13px; line-height:1.4; }
+ .app-frame .pos-checkout-item > span small { font-size:11px; }
+ .app-frame .pos-checkout-item > strong { font-size:13px; white-space:nowrap; }
+ .app-frame .pos-checkout-item label > span { font-size:10px; }
+ .app-frame .pos-checkout-item input { min-height:34px; padding:6px; font-size:12px; }
+ .app-frame .pos-checkout-adjustments { margin-bottom:0; }
+ .pos-checkout-adjustments > summary { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:650; cursor:pointer; list-style:none; }
+ .pos-checkout-adjustments > summary::-webkit-details-marker { display:none; }
+ .pos-checkout-adjustments > summary small { margin-left:auto; font-size:11px; color:var(--ink-soft); font-weight:400; }
+ .pos-checkout-adjustments > summary svg { transition:transform .15s; }
+ .pos-checkout-adjustments[open] > summary svg { transform:rotate(180deg); }
+ .pos-checkout-adjustments .form-hint { margin:12px 0; font-size:11px; color:var(--ink-soft); }
+ .app-frame .pos-checkout-payment .pos-grand-total { margin:0 0 16px; padding:14px; border:1px solid var(--ux-line); border-radius:10px; background:var(--ux-soft); font-size:12px; }
+ .app-frame .pos-checkout-payment .pos-grand-total strong { font-size:26px; font-variant-numeric:tabular-nums; }
+ .app-frame .pos-checkout-payment-heading { margin:0 0 12px; }
+ .app-frame .pos-checkout-payment .pos-tender-heading { margin:8px 0; font-size:12px; }
+ .app-frame .pos-checkout-payment .pos-tender-lines { max-height:none; overflow:visible; }
+ .app-frame .pos-checkout-payment .pos-tender-line { position:relative; display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0 0 10px; padding:12px; border:1px solid var(--ux-line); border-radius:10px; background:var(--ux-surface); }
+ .app-frame .pos-checkout-payment .pos-tender-line > label { min-width:0; }
+ .app-frame .pos-checkout-payment .pos-tender-line > label:nth-child(2) { grid-column:2; }
+ .app-frame .pos-checkout-payment .pos-tender-line > label:nth-child(3) { grid-column:1/-1; }
+ .app-frame .pos-checkout-payment .pos-tender-line label > span:first-child { font-size:11px; }
+ .app-frame .pos-checkout-payment .pos-tender-remove { position:absolute; top:-8px; right:-8px; background:var(--ux-surface); border:1px solid var(--ux-line); border-radius:50%; }
+ .app-frame .pos-currency-input { display:flex; align-items:center; gap:8px; padding:0 10px; border:1px solid var(--ux-line); border-radius:10px; background:var(--ux-surface); }
+ .app-frame .pos-currency-input > input { min-width:0; width:100%; min-height:42px; padding:8px 0; border:0 !important; background:transparent !important; box-shadow:none !important; font-size:18px; font-weight:650; }
+ .app-frame .pos-checkout-payment .pos-add-tender { min-height:34px; margin:0; font-size:12px; }
+ .app-frame .pos-checkout-payment .pos-due-row { margin:12px 0 0; padding:12px 0 0; font-size:13px; }
+ .app-frame .pos-page .pos-checkout-actions { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 20px; flex-shrink:0; padding:14px 22px; background:var(--ux-surface); }
+ .pos-checkout-footer-summary { display:grid; grid-template-columns:auto 1fr; align-items:baseline; gap:3px 10px; }
+ .pos-checkout-footer-summary > span { font-size:12px; color:var(--ink-soft); }
+ .pos-checkout-footer-summary > strong { font-size:23px; color:var(--ink); font-variant-numeric:tabular-nums; }
+ .pos-checkout-footer-summary > small { grid-column:1/-1; font-size:11px; color:var(--ink-soft); }
+ .pos-checkout-footer-buttons { display:flex; align-items:center; gap:10px; }
+ .app-frame .pos-checkout-actions .pos-complete-button, .app-frame .pos-checkout-actions .pos-pending-button { display:inline-flex; align-items:center; justify-content:center; gap:8px; width:auto; min-height:44px; margin:0; padding:11px 18px; border-radius:10px; font-size:13px; white-space:nowrap; }
+ .app-frame .pos-checkout-actions .pos-checkout-note { grid-column:1/-1; margin:0; font-size:10px; text-align:left; }
+ .receipt-backdrop { display:flex; align-items:center; justify-content:center; padding:16px; background:#071c2680; backdrop-filter:blur(5px); }
+ .pos-receipt-dialog.receipt-preview { display:flex; flex-direction:column; width:min(760px,100%); height:min(900px,calc(100dvh - 32px)); max-height:calc(100dvh - 32px); overflow:hidden; border-radius:18px; box-shadow:0 24px 90px #071c2640; }
+ .receipt-preview .receipt-controls { position:static; flex-shrink:0; padding:18px 22px; }
+ .receipt-preview .receipt-modal-heading { align-items:flex-start; }
+ .receipt-eyebrow { margin:0 0 4px !important; font-size:10px !important; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+ .receipt-modal-heading h2 { margin:0 0 5px; font-size:22px; line-height:1.2; color:var(--ink); }
+ .receipt-modal-heading small { display:block; font-size:12px; line-height:1.4; color:var(--ink-soft); overflow-wrap:anywhere; }
+ .receipt-preview .receipt-close { display:grid; place-items:center; flex-shrink:0; width:36px; height:36px; }
+ .receipt-preview .receipt-settings { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
+ .receipt-preview .receipt-settings label { min-width:0; font-size:12px; }
+ .receipt-preview .ui-select { position:relative; display:block; width:100%; min-width:0; }
+ .receipt-preview .ui-select-native { position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; min-height:42px !important; margin:0 !important; opacity:0 !important; pointer-events:none; }
+ .receipt-preview .ui-select-display { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:42px; padding:10px 12px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink); font-size:13px; cursor:pointer; }
+ .receipt-preview .ui-select-display > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+ .receipt-preview .ui-select-display > svg { flex-shrink:0; }
+ .receipt-preview .ui-select:focus-within .ui-select-display { outline:2px solid var(--brand); outline-offset:2px; }
+ .receipt-preview .ui-select-search input { width:100%; min-width:0; min-height:36px; padding:6px; border:0; border-radius:6px; background:transparent; color:var(--ink); font-size:14px; outline:none; }
+ .receipt-preview-scroll { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; padding:24px 16px; }
+ .receipt-preview .thermal-receipt { box-shadow:0 5px 24px #071c261a; }
+ .receipt-modal-footer { flex-shrink:0; padding:14px 22px; border-top:1px solid var(--line); background:var(--surface); }
+ .receipt-modal-footer p { margin:0 0 12px; color:var(--ink-soft); font-size:11px; line-height:1.5; }
+ .receipt-modal-footer [role=alert] { color:#c75454; }
+ .receipt-footer-buttons { display:flex; gap:10px; justify-content:flex-end; }
+ .receipt-footer-buttons button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:10px 18px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink); font-size:13px; font-weight:650; }
+ .receipt-footer-buttons .receipt-print { border-color:#147956; background:#147956; color:#fff; }
+ .receipt-footer-buttons button:focus-visible { outline:3px solid var(--brand); outline-offset:2px; }
+}
+@media screen and (max-width:760px) {
+ .pos-page .pos-checkout-backdrop { padding:8px; }
+ .app-frame .pos-page .pos-checkout-dialog { height:calc(100dvh - 16px); max-height:calc(100dvh - 16px); border-radius:14px; }
+ .app-frame .pos-checkout-heading { padding:14px; gap:10px; }
+ .app-frame .pos-checkout-heading h2 { font-size:21px; }
+ .app-frame .pos-checkout-heading .eyebrow { display:none; }
+ .app-frame .pos-checkout-back { font-size:11px; padding:7px 9px; }
+ .app-frame .pos-page .pos-checkout-body { grid-template-columns:1fr; gap:14px; padding:12px; }
+ .app-frame .pos-checkout-customer, .app-frame .pos-checkout-items, .app-frame .pos-checkout-payment, .app-frame .pos-checkout-adjustments { padding:13px; }
+ .app-frame .pos-checkout-item { grid-template-columns:minmax(0,1fr) 60px auto; gap:7px; }
+ .app-frame .pos-page .pos-checkout-actions { grid-template-columns:1fr; padding:12px 14px max(12px,env(safe-area-inset-bottom)); gap:9px; }
+ .pos-checkout-footer-summary { grid-template-columns:1fr auto; }
+ .pos-checkout-footer-summary > strong { justify-self:end; font-size:20px; }
+ .pos-checkout-footer-summary > small { grid-column:1/-1; max-width:none; text-align:left; font-size:10px; }
+ .app-frame .pos-checkout-customer .pos-field-caption { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+ .pos-checkout-footer-buttons { display:grid; grid-template-columns:1fr 1.3fr; gap:8px; }
+ .app-frame .pos-checkout-actions .pos-complete-button, .app-frame .pos-checkout-actions .pos-pending-button { min-height:42px; padding:9px 10px; font-size:12px; white-space:normal; }
+ .app-frame .pos-checkout-actions .pos-checkout-note { display:none; }
+ .receipt-backdrop { padding:8px; }
+ .pos-receipt-dialog.receipt-preview { height:calc(100dvh - 16px); max-height:calc(100dvh - 16px); border-radius:14px; }
+ .receipt-preview .receipt-controls { padding:14px; }
+ .receipt-preview .receipt-settings { gap:10px; margin-top:12px; }
+ .receipt-modal-heading h2 { font-size:20px; }
+ .receipt-modal-footer { padding:12px 14px; }
+ .receipt-modal-footer p { margin-bottom:9px; font-size:10px; }
+ .receipt-footer-buttons { display:grid; grid-template-columns:1fr 1.4fr; }
+ .receipt-preview-scroll { padding:18px 10px; }
+}
+@media print { .receipt-modal-footer { display:none !important; } }

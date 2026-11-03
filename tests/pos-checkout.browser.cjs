@@ -40,6 +40,8 @@ const assert=require('node:assert/strict');
  await page.keyboard.press('F2');assert.equal(await page.getByRole('textbox',{name:'Search medicine or scan barcode…'}).evaluate(el=>el===document.activeElement),true);
  await page.setViewportSize({width:390,height:844});
  await page.keyboard.press('F4');await page.getByRole('heading',{name:'Review & pay',exact:true}).waitFor();
+ const footer=page.locator('.pos-checkout-actions');const footerBounds=await footer.boundingBox();assert.ok(footerBounds.y+footerBounds.height<=844);await page.screenshot({path:require('node:path').join(require('node:os').tmpdir(),'checkout-modal-mobile.png')});
+ await page.setViewportSize({width:1440,height:1000});const mainBounds=await page.locator('.pos-checkout-main').boundingBox(),paymentBounds=await page.locator('.pos-checkout-payment').boundingBox();assert.ok(paymentBounds.x>mainBounds.x+mainBounds.width);assert.ok((await page.getByRole('button',{name:'Complete sale',exact:true}).boundingBox()).height<=48);await page.screenshot({path:require('node:path').join(require('node:os').tmpdir(),'checkout-modal-desktop.png')});await page.setViewportSize({width:390,height:844});
  const amount=page.locator('.pos-tender-line input');await amount.fill('100');
  await page.getByText('Change to return',{exact:true}).waitFor();
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth <= window.innerWidth+1),true);
