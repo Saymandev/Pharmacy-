@@ -2,6 +2,8 @@
 
 Reviewed: 1 November 2026. Scope: the backend ZIP supplied in this conversation, not a fresh audit of the deployed API. The frontend uses `/api/v1` as the API base. All paths below are relative to that base.
 
+**Update, 3 November 2026:** Stock History, supplier returns/refunds, and verified customer advance events have now been implemented locally on `codex/pharmacy-stock-history` in backend and frontend. See `backend/doc/pharmacy-returns-advances.md` for the actual routes and migration procedure. The older proposal sections below are retained as historical requirements, not current route availability. Customer advance events do not reconstruct legacy unrecorded balances; invoice-linked history remains a separate statement. Production deployment and live verification have not occurred.
+
 **Important:** endpoints marked **proposed** do not exist in the inspected source. Their names/payloads are suggestions for agreement with the backend developer, not claims about live behavior. Existing routes are identified separately. No backend source was modified.
 
 ## Delivery order

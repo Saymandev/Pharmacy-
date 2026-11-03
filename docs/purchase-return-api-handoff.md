@@ -1,5 +1,7 @@
 # Purchase return API dependency
 
+**Update, 3 November 2026:** The pharmacy-only backend routes described below have been implemented on `codex/pharmacy-stock-history`, with local PostgreSQL HTTP verification. The frontend now includes a Supplier returns tab. See `backend/doc/pharmacy-returns-advances.md` for the actual contract and database rollout. The original text below records the earlier gap analysis; its proposed status is superseded by this update. Live deployed API verification remains separate.
+
 The supplied backend has `PurchaseReturn` / `PurchaseReturnItem` models in `prisma/schema/purchase.prisma` and report aggregates in `src/modules/report/pharmacy-report/pharmacy-report.service.ts`. It has no purchase-return controller/service/validator or mounted create/list/detail/status/refund routes in `src/routes/index.ts` or `src/modules/pharmacy/pharmacy.routes.ts`.
 
 The existing sales-return API handles customer returns, not supplier purchase returns. The frontend must not send supplier returns there or show a successful local-only refund.

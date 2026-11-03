@@ -59,6 +59,9 @@ export function demoRequest<T>(path: string, request: DemoRequest = {}): Promise
   let data: unknown = [];
 
   if (method !== "GET") {
+    if (pathname.startsWith("/pharmacy/purchase-returns") || /^\/customers\/[^/]+\/(advances|advance-allocations|advance-refunds)$/.test(pathname)) {
+      return Promise.reject(new Error("Financial movements are unavailable in demo mode. Connect the pharmacy server to record them."));
+    }
     if (pathname === "/sales" && method === "POST") data = { id: "sale-demo-created", invoiceNumber: "DEMO-INV-1001", createdAt: new Date().toISOString(), status: "completed" };
     else if (pathname === "/customers" && method === "POST") data = customers[0];
     else if (pathname === "/pharmacy/suppliers" && method === "POST") data = suppliers[0];
@@ -105,7 +108,13 @@ export function demoRequest<T>(path: string, request: DemoRequest = {}): Promise
     const branchId = query.get("branchId");
     data = stockRows.filter((item) => !branchId || item.branchId === branchId);
   } else if (pathname === "/pharmacy/suppliers") data = suppliers;
+  else if (pathname === "/pharmacy/purchase-returns") data = { returns: [], pagination: { total: 0, page: 1, limit: 25, totalPages: 1 } };
+  else if (pathname.startsWith("/pharmacy/purchase-returns/")) data = null;
   else if (pathname === "/pharmacy/purchases") data = purchases.filter((item) => !query.get("branchId") || item.branchId === query.get("branchId"));
+  else if (pathname.endsWith("/returnable-items") && pathname.startsWith("/pharmacy/purchases/")) {
+    const purchase = purchases.find(item => item.id === segments[2]);
+    data = { purchaseId: purchase?.id, branchId: purchase?.branchId, supplierId: purchase?.supplierId, items: purchase?.purchaseItems.map((item, index) => ({ ...item, id: `${purchase.id}-item-${index}`, completedQuantity: 0, pendingQuantity: 0, availableStock: item.quantity, remainingAllowance: item.quantity })) || [] };
+  }
   else if (pathname.startsWith("/pharmacy/purchases/")) data = purchases.find((item) => item.id === last) || purchases[0];
   else if (pathname === "/pharmacy/cash-register/active") data = query.get("branchId") === branch.id ? register : null;
   else if (pathname === "/pharmacy/cash-register") data = { data: [register], pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } };
@@ -116,7 +125,8 @@ export function demoRequest<T>(path: string, request: DemoRequest = {}): Promise
     const filtered = customers.filter((item) => (!search || item.name.toLowerCase().includes(search)) && (!phone || item.phone.includes(phone)));
     data = { success: true, message: "Demo customers", data: filtered, meta: { page: Number(query.get("page") || 1), pageSize: 20, totalItems: filtered.length, totalPages: 1 } };
     return Promise.resolve(data as T);
-  } else if (pathname.startsWith("/customers/")) data = customers.find((item) => item.id === last) || customers[0];
+  } else if (pathname.endsWith("/ledger") && pathname.startsWith("/customers/")) data = { events: [], currentAdvance: "0", pagination: { total: 0, totalPages: 1 }, scope: { historicalCoverage: "Demo only", balanceScope: "all branches" } };
+  else if (pathname.startsWith("/customers/")) data = customers.find((item) => item.id === last) || customers[0];
   else if (pathname === "/sales") {
     const customerId = query.get("customerId");
     const branchId = query.get("branchId");

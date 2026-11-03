@@ -523,6 +523,53 @@ button.data-summary-card { cursor: pointer; }
 
 /* Suppliers and purchases */
 .purchase-page { display: flex; flex-direction: column; gap: 15px; }
+.pr-panel { display: grid; gap: 18px; padding: 22px; color: #284536; }
+.ca-panel { display: grid; gap: 16px; padding: 18px; color: #284536; font-size: 13px; }
+.ca-panel h3 { margin: 0 0 4px; font-size: 17px; }
+.ca-panel h4, .ca-panel p { margin: 0; }
+.ca-panel p { line-height: 1.5; }
+.ca-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.ca-head > strong { display: grid; gap: 4px; text-align: right; color: #187451; font-size: 18px; white-space: nowrap; }
+.ca-head small { color: #708477; font-size: 11px; font-weight: 400; }
+.ca-head > button { border: 1px solid #d8e3da; border-radius: 7px; background: white; color: #286349; padding: 7px 10px; }
+.ca-coverage { padding: 10px 12px; border-left: 3px solid #d69a42; border-radius: 5px; background: #fffaf0; color: #6e6046; }
+.ca-form { display: grid; gap: 12px; padding: 15px; border: 1px solid #dce9df; border-radius: 10px; background: #f8fcf9; }
+.ca-options { display: flex; flex-wrap: wrap; gap: 7px; }
+.ca-options button { padding: 7px 10px; border: 1px solid #d5e2d7; border-radius: 7px; background: white; color: #365b45; cursor: pointer; }
+.ca-options button.selected { background: #197655; color: white; border-color: #197655; }
+.ca-fields, .ca-filters { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+.ca-fields label, .ca-filters label { display: grid; gap: 5px; min-width: 0; font-size: 12px; font-weight: 650; }
+.ca-fields input, .ca-fields select, .ca-fields textarea, .ca-filters input, .ca-filters select { width: 100%; min-height: 36px; padding: 7px 9px; border: 1px solid #d0ddd3; border-radius: 7px; background: white; color: #284536; font: inherit; }
+.ca-note { grid-column: 1 / -1; }
+.ca-events { display: grid; gap: 7px; }
+.ca-event { display: flex; justify-content: space-between; gap: 10px; padding: 10px; border: 1px solid #e4ede5; border-radius: 8px; }
+.ca-event > span { display: grid; gap: 4px; }
+.ca-event > span:last-child { text-align: right; white-space: nowrap; }
+.ca-event small { color: #708477; font-size: 11px; }
+@media (max-width: 620px) { .ca-head { flex-wrap: wrap; } .ca-fields, .ca-filters { grid-template-columns: 1fr; } }
+.pr-panel h2 { margin: 0 0 5px; font-size: 19px; }
+.pr-panel h3 { margin: 0; font-size: 16px; }
+.pr-panel h4 { margin: 0; font-size: 14px; }
+.pr-panel p { margin: 0; line-height: 1.5; }
+.pr-head, .pr-history-row, .pr-lines label { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+.pr-head p, .pr-history-row small, .pr-lines small { color: #708477; font-size: 12px; }
+.pr-head > button, .pr-actions > button:not(.purchase-primary-action) { padding: 8px 12px; border: 1px solid #d8e3da; border-radius: 8px; background: #fff; color: #286349; cursor: pointer; }
+.pr-create, .pr-detail, .pr-refund { display: grid; gap: 13px; padding: 18px; border: 1px solid #e0e9e2; border-radius: 11px; background: #fbfdfb; }
+.pr-create label, .pr-refund label { display: grid; gap: 5px; font-size: 12px; font-weight: 650; }
+.pr-create input, .pr-create select, .pr-create textarea, .pr-refund input, .pr-refund select, .pr-lines input { width: 100%; min-height: 38px; padding: 7px 9px; border: 1px solid #cfddd2; border-radius: 7px; background: white; color: #284536; font: inherit; }
+.pr-lines { display: grid; gap: 8px; }
+.pr-lines label, .pr-lines > p { padding: 9px 0; border-bottom: 1px solid #e7eee8; font-size: 13px; }
+.pr-lines label > span { display: grid; gap: 3px; }
+.pr-lines input { max-width: 88px; }
+.pr-history { display: grid; gap: 5px; }
+.pr-history-row { width: 100%; padding: 12px; border: 1px solid #e5eee7; border-radius: 8px; background: white; text-align: left; color: #284536; cursor: pointer; }
+.pr-history-row > span { display: grid; gap: 4px; }
+.pr-history-row > span:last-child { text-align: right; }
+.pr-totals { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 8px; }
+.pr-totals span { display: grid; gap: 5px; padding: 12px; border-radius: 8px; background: #eef6f0; font-size: 11px; }
+.pr-totals strong { font-size: 14px; }
+.pr-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+@media (max-width: 760px) { .pr-panel { padding: 14px; } .pr-totals { grid-template-columns: repeat(2, minmax(0,1fr)); } .pr-head { align-items: flex-start; } }
 .purchase-page-context { display: flex; align-items: flex-end; gap: 8px; }
 .purchase-register-pill { display: flex; height: 35px; align-items: center; gap: 7px; padding: 0 9px; border: 1px solid #f0e5d1; border-radius: 7px; background: #fffcf5; color: #977438; font-size: 8px; font-weight: 650; white-space: nowrap; }
 .purchase-register-pill i { width: 7px; height: 7px; border-radius: 50%; background: #d59a3f; box-shadow: 0 0 0 3px #fff0d6; }
