@@ -1,5 +1,7 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "Register session": "রেজিস্টার সেশন",
+  "Updated by": "সর্বশেষ পরিবর্তনকারী",
   "Advanced filters": "বিস্তারিত ফিল্টার",
   "Name, barcode, unit and strength": "নাম, বারকোড, একক ও মাত্রা",
   "Supplier returns": "সরবরাহকারীকে ফেরত",
