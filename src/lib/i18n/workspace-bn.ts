@@ -1,5 +1,11 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "Generated": "তৈরি করা হয়েছে",
+  "Value": "মান",
+  "Metric": "হিসাব",
+  "PDF could not be created. Please try again.": "PDF তৈরি করা যায়নি। আবার চেষ্টা করুন।",
+  "Preparing PDF…": "PDF তৈরি হচ্ছে…",
+  "Download PDF": "PDF ডাউনলোড",
   "Operational entries for the selected branch and filters.": "নির্বাচিত শাখা ও ফিল্টারের আয়-ব্যয়ের এন্ট্রি।",
   "Recorded account movements and payment references.": "সংরক্ষিত অ্যাকাউন্ট লেনদেন ও পেমেন্ট রেফারেন্স।",
   "Select an account to review its activity.": "লেনদেন দেখতে একটি অ্যাকাউন্ট বেছে নিন।",

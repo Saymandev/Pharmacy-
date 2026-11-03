@@ -2,7 +2,7 @@
 
 import { FilterPopover } from "@/components/ui/filter-popover";
 import { Select } from "@/components/ui/select";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, ArrowDownToLine, CalendarDays, FileBarChart2, Printer, RefreshCw } from "lucide-react";
 import { ApiClientError } from "@/lib/api/client";
 import { getReport, type ReportKey, type ReportParams } from "./report-service";
@@ -10,6 +10,8 @@ import { buildReportModel, formatReportValue, isMoneyColumn, reportCsv, reportDa
 import { useActiveBranch } from "@/components/providers/active-branch-provider";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useLanguage } from "@/lib/i18n/language-provider";
+
+import { downloadReportPdf } from "./report-pdf";
 
 const tabs: { key: ReportKey; label: string; group: string; note: string }[] = [
  {key:"pharmacy-summary",label:"Pharmacy summary",group:"Summary",note:"Completed/returned POS sales, purchases, expenses and cost of goods for this selection."},
@@ -80,9 +82,12 @@ export function ReportsWorkspace(){
  const comparable=(value:Filters)=>({...value,search:searchable.has(tab)?value.search:"",type:tab==="income"?value.type:"pos"});
  const dirty=JSON.stringify(comparable(draft))!==JSON.stringify(comparable(applied));
  const canExport=ready&&!!current&&!error&&!dirty&&(model.metrics.length>0||model.tables.length>0);
+ const [pdfBusy,setPdfBusy]=useState(false),[pdfError,setPdfError]=useState("");
+ const pdfLock=useRef(false);
  const active=tabs.find(item=>item.key===tab)!;
  const context={Report:active.label,Branch:branchName,From:applied.startDate||"All dates",To:applied.endDate||"All dates",Search:searchable.has(tab)?applied.search:"",Type:tab==="income"?applied.type:"pos",Generated:current?.at??""};
  const filename=`pharmacy-${tab}-${applied.startDate||"all"}-${applied.endDate||"all"}.csv`;
+ async function downloadPdf(){if(!canExport||pdfLock.current)return;pdfLock.current=true;setPdfBusy(true);setPdfError("");try{await downloadReportPdf(model,{title:t(active.label),branch:branchName,startDate:applied.startDate,endDate:applied.endDate,generated:current!.at,search:searchable.has(tab)?applied.search:"",type:tab==="income"?applied.type:undefined,language},filename.replace(/\.csv$/,".pdf"),t);}catch{setPdfError(t("PDF could not be created. Please try again."));}finally{pdfLock.current=false;setPdfBusy(false);}}
  function apply(event:React.FormEvent){event.preventDefault();const message=reportDateError(draft.startDate,draft.endDate);setFilterError(message);if(!message){setApplied({...draft});setRefresh(value=>value+1);}}
  function choosePreset(value:string){setPreset(value);if(value!=="custom"){setDraft(current=>({...current,...reportDateRange(value as DatePreset)}));setFilterError("");}}
  if(!canRead)return <section className="reports-page"><h1>{t("Reports")}</h1><div className="data-empty"><AlertCircle/><strong>{t("Your role cannot view reports.")}</strong><span>{t("Ask an administrator for report access.")}</span></div></section>;
@@ -95,8 +100,9 @@ export function ReportsWorkspace(){
   {tab==="income"&&<label>{t("Sale type")}<Select aria-label={t("Sale type")} value={draft.type} onChange={event=>setDraft({...draft,type:event.target.value})}>{["pos"].map(type=><option value={type} key={type}>{type}</option>)}</Select></label>}
   <button className="purchase-primary-action" type="submit">{t("Apply filters")}</button><button className="reports-clear" type="button" onClick={()=>{const next=initialFilters();setDraft(next);setApplied(next);setPreset("today");setFilterError("");setRefresh(value=>value+1);}}>{t("Reset to today")}</button>
   {filterError&&<p className="reports-filter-message" role="alert">{filterError}</p>}{dirty&&!filterError&&<p className="reports-filter-message" role="status">{t("Filters changed. Apply them to update the report and export.")}</p>}
- </form></FilterPopover><button type="button" className="purchase-save-pending" onClick={()=>setRefresh(value=>value+1)} disabled={loading||!ready||dirty}><RefreshCw size={14}/>{t("Refresh")}</button><button type="button" className="purchase-save-pending" onClick={()=>window.print()} disabled={!canExport}><Printer size={14}/>{t("Print report")}</button><button type="button" className="purchase-primary-action" onClick={()=>downloadCsv(model,context,filename)} disabled={!canExport}><ArrowDownToLine size={15}/>{t("Export CSV")}</button></div></div>
+ </form></FilterPopover><button type="button" className="purchase-save-pending" onClick={()=>setRefresh(value=>value+1)} disabled={loading||!ready||dirty}><RefreshCw size={14}/>{t("Refresh")}</button><button type="button" className="purchase-primary-action" aria-busy={pdfBusy} onClick={()=>void downloadPdf()} disabled={!canExport||pdfBusy}><ArrowDownToLine size={15}/>{t(pdfBusy?"Preparing PDF…":"Download PDF")}</button><button type="button" className="purchase-save-pending" onClick={()=>window.print()} disabled={!canExport}><Printer size={14}/>{t("Print report")}</button><button type="button" className="purchase-save-pending" onClick={()=>downloadCsv(model,context,filename)} disabled={!canExport}><ArrowDownToLine size={15}/>{t("Export CSV")}</button></div></div>
 
+ {pdfError&&<div className="sales-alert error" role="alert"><AlertCircle size={15}/><span>{pdfError}</span><button type="button" disabled={pdfBusy||!canExport} onClick={()=>void downloadPdf()}>{t("Retry")}</button></div>}
  <div className="reports-layout"><aside className="reports-nav panel" aria-label={t("Report types")}>{["Summary","Pharmacy","Finance"].map(group=><div className="reports-nav-group" key={t(group)}><span>{t(group)}</span>{tabs.filter(item=>item.group===group).map(item=><button type="button" key={item.key} className={tab===item.key?"selected":""} aria-pressed={tab===item.key} onClick={()=>{setTab(item.key);setFilterError("");}}><FileBarChart2 size={15}/><span>{t(item.label)}</span></button>)}</div>)}</aside>
  <div className="reports-content reports-print-view" aria-busy={loading}><div className="reports-report-title"><div><span className="eyebrow">{t(active.group)} · {t("Report")}</span><h2>{t(active.label)}</h2><p>{applied.startDate?`${applied.startDate} — ${applied.endDate}`:"All available dates"} · {branchName}</p>{searchable.has(tab)&&applied.search&&<p>{t("Invoice search:")} {applied.search}</p>}{tab==="income"&&applied.type&&<p>{t("Sale type:")} {applied.type}</p>}{current&&<small>{t("Loaded")} {new Date(current.at).toLocaleString(locale,{timeZone:"Asia/Dhaka"})}{t("· Asia/Dhaka")}</small>}</div></div><p className="reports-definition">{t(active.note)}</p>
  {error&&<div className="sales-alert error" role="alert"><AlertCircle size={15}/><span>{error}</span><button type="button" onClick={()=>setRefresh(value=>value+1)}>{t("Retry")}</button></div>}

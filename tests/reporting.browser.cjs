@@ -5,7 +5,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
  try{
   const page=await browser.newPage({viewport:{width:1440,height:1000},acceptDownloads:true});const errors=[];const calls=[];let unavailable=false;
   page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>{window.print=()=>{window.__reportPrinted=true;};});
-  const saleRows=Array.from({length:105},(_,i)=>({slNo:i+1,invoiceNumber:`INV-${String(i).padStart(3,'0')}`,patientNumber:'001',totalPrice:'100.00',discountAmount:'0.00',taxAmount:'0.00',netAmount:'100.00',paid:'90.00',due:'10.00',createdBy:'Test Cashier',createdAt:'2026-10-31T19:00:00Z'}));
+  const saleRows=Array.from({length:105},(_,i)=>({slNo:i+1,invoiceNumber:`INV-${String(i).padStart(3,'0')}`,patientNumber:'001',patientName:'পরীক্ষার ক্রেতা',totalPrice:'100.00',discountAmount:'0.00',taxAmount:'0.00',netAmount:'100.00',paid:'90.00',due:'10.00',createdBy:'Test Cashier',createdAt:'2026-10-31T19:00:00Z'}));
   await page.route('**/api/backend/**',async route=>{
    const url=new URL(route.request().url());const path=url.pathname.replace('/api/backend','');let data=[];let status=200;
    if(path==='/auth/me')data={id:'user-a',fullName:'Reporting user',role:{permissions:[{key:'report:read'}]}};
@@ -26,16 +26,18 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
   const content=page.locator('.reports-content');await content.getByText('Net profit',{exact:true}).waitFor();
   const reportNav=await page.locator('.reports-nav').boundingBox(),reportBody=await content.boundingBox();assert.ok(reportNav.y<reportBody.y && Math.abs(reportNav.width-reportBody.width)<3,'Report navigation should sit above the full-width content');
   assert.match(await content.getByText('Net profit',{exact:true}).locator('..').locator('strong').innerText(),/^-.*42\.50/);assert.ok(calls[0].searchParams.get('startDate'));assert.equal(calls[0].searchParams.get('branchId'),'branch-a');
+  let failPdfFont=true;await page.route('**/fonts/NotoSansBengali*.ttf',route=>failPdfFont?route.fulfill({status:503,body:'Unavailable'}):route.continue());await page.getByRole('button',{name:'Download PDF',exact:true}).click();await page.getByRole('alert').filter({hasText:'PDF could not be created'}).waitFor();failPdfFont=false;const retryPdf=page.waitForEvent('download');await page.getByRole('alert').filter({hasText:'PDF could not be created'}).getByRole('button',{name:'Retry',exact:true}).click();await retryPdf;
   const firstDownload=page.waitForEvent('download');await page.getByRole('button',{name:'Export CSV',exact:true}).click();let download=await firstDownload;
   let csv=await fs.readFile(await download.path(),'utf8');assert.match(csv,/Main Branch/);assert.match(csv,/Net profit/);assert.match(csv,/-42.5/);
   await page.getByRole('button',{name:'All operations overview',exact:true}).click();await content.getByText('Net profit',{exact:true}).waitFor();assert.equal(await content.locator('.reports-metrics article').count(),10);
   await page.getByRole('button',{name:'Income',exact:true}).click();await content.getByText('INCOME-001',{exact:true}).first().waitFor();assert.match(await content.innerText(),/POS/);assert.doesNotMatch(await content.innerText(),/1 items/);
-  await page.getByRole('button',{name:'Sales detail',exact:true}).click();const table=page.locator('.reports-screen-table table');await table.waitFor();assert.equal(await table.locator('th').count(),11);assert.equal(await table.locator('tbody tr').count(),50);
+  await page.getByRole('button',{name:'Sales detail',exact:true}).click();const table=page.locator('.reports-screen-table table');await table.waitFor();assert.equal(await table.locator('th').count(),12);assert.equal(await table.locator('tbody tr').count(),50);
   const nav=page.getByRole('navigation',{name:/Outdoor.*Sales pagination/});await nav.getByRole('button',{name:'Next',exact:true}).click();assert.match(await table.innerText(),/INV-050/);
   const allDownload=page.waitForEvent('download');await page.getByRole('button',{name:'Export CSV',exact:true}).click();download=await allDownload;csv=await fs.readFile(await download.path(),'utf8');assert.match(csv,/INV-104/);assert.match(csv,/Created by/);
   await page.getByRole('button',{name:'Filters',exact:true}).click();
+  const pdfDownload=page.waitForEvent('download');await page.getByRole('button',{name:'Download PDF',exact:true}).evaluate(button=>{button.click();button.click();});const pdf=await pdfDownload;assert.match(pdf.suggestedFilename(),/\.pdf$/);await pdf.saveAs(require('node:path').resolve('../work/report-wide-browser.pdf'));assert.equal((await fs.readFile(await pdf.path())).subarray(0,5).toString(),'%PDF-');
   const filters=page.getByRole('form',{name:'Report filters'});await filters.getByLabel('From',{exact:true}).fill('2026-10-01');await filters.getByLabel('To',{exact:true}).fill('2026-10-31');await filters.getByLabel('Branch',{exact:true}).selectOption('branch-b');
-  assert.equal(await page.getByRole('button',{name:'Export CSV',exact:true}).isDisabled(),true);
+  assert.equal(await page.getByRole('button',{name:'Export CSV',exact:true}).isDisabled(),true);assert.equal(await page.getByRole('button',{name:'Download PDF',exact:true}).isDisabled(),true);
   const nextRequest=page.waitForRequest(r=>r.url().includes('/reports/pharmacy/sales-report')&&r.url().includes('branch-b'));
   await filters.getByRole('button',{name:'Apply filters',exact:true}).click();await nextRequest;await content.getByText('INV-000',{exact:true}).first().waitFor();assert.match(await content.locator('.reports-report-title').innerText(),/Second Branch/);
   const applied=calls.at(-1);assert.equal(applied.searchParams.get('startDate'),'2026-10-01');assert.equal(applied.searchParams.get('endDate'),'2026-10-31');
