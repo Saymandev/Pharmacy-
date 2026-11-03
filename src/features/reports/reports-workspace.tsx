@@ -11,7 +11,7 @@ import { useLanguage } from "@/lib/i18n/language-provider";
 
 const tabs: { key: ReportKey; label: string; group: string; note: string }[] = [
  {key:"pharmacy-summary",label:"Pharmacy summary",group:"Summary",note:"Completed/returned POS sales, purchases, expenses and cost of goods for this selection."},
- {key:"overall",label:"All operations overview",group:"Summary",note:"Pharmacy POS sales, purchases, collections and expenses."},
+ {key:"overall",label:"All operations overview",group:"Summary",note:"Account movements include recorded advances and supplier refunds. Branch views exclude unassigned manual movements. Sales less purchases and invoice payment surplus are not accounting profit. Cash follows transaction dates; invoice totals follow creation dates."},
  {key:"sales",label:"Sales detail",group:"Pharmacy",note:"POS sales and returns, filtered by sale/return creation date."},
  {key:"purchases",label:"Purchase detail",group:"Pharmacy",note:"Pharmacy purchases with their return and payment totals."},
  {key:"dues",label:"Due collection",group:"Pharmacy",note:"Payments collected on a later Dhaka calendar day than the original sale. Filter dates refer to the collection, not the sale."},

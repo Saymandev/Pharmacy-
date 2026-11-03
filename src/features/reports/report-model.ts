@@ -4,6 +4,7 @@ export type ReportTable = { id: string; name: string; rows: ReportRecord[]; colu
 export type ReportModel = { metrics: ReportMetric[]; tables: ReportTable[] };
 
 const labels: Record<string, string> = {
+ totalCashReceived: 'Recorded money received', totalCashPaid: 'Recorded money paid', netCashMovement: 'Net account movement', purchaseSpread: 'Sales less purchases', invoicePaymentSurplus: 'Invoice payments less expenses and purchase payments',
  totalSales: 'Total sales', totalSale: 'Gross sales', totalPrice: 'Gross amount', totalNetSale: 'Net sales', netSales: 'Net sales',
  totalPaid: 'Paid', totalDues: 'Outstanding dues', totalDiscount: 'Discounts', totalReturned: 'Returns', totalReturn: 'Returns',
  totalExpenses: 'Expenses', totalPurchases: 'Purchases', totalPurchasesPaid: 'Purchase payments', grossProfit: 'Gross profit', netProfit: 'Net profit', cogs: 'Cost of goods sold',
@@ -29,7 +30,7 @@ export function numericReportValue(value: unknown): number | null {
 }
 export function isMoneyColumn(key: string) {
  if (/count|visited|quantity|percentage|percent|rate|method$|^slNo$|number$|^id$|Id$/i.test(key)) return false;
- return /amount|price|sales|sale$|paid|due|discount|profit|purchase|collect|payment|tax|expen|income|charge|return|commission|^cogs$/i.test(key);
+ return /cash|amount|price|sales|sale$|paid|due|discount|profit|purchase|collect|payment|tax|expen|income|charge|return|commission|^cogs$/i.test(key);
 }
 export function formatReportValue(key: string, value: unknown, locale='en-BD'): string {
  if(value===null||value===undefined||value==='')return '—';

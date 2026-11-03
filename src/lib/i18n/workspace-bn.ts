@@ -1,5 +1,11 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "Recorded money received": "সংরক্ষিত টাকা প্রাপ্তি",
+  "Recorded money paid": "সংরক্ষিত টাকা পরিশোধ",
+  "Net account movement": "অ্যাকাউন্টের নিট পরিবর্তন",
+  "Sales less purchases": "বিক্রয় থেকে ক্রয় বাদ",
+  "Invoice payments less expenses and purchase payments": "ইনভয়েস পরিশোধ থেকে খরচ ও ক্রয় পরিশোধ বাদ",
+  "Account movements include recorded advances and supplier refunds. Branch views exclude unassigned manual movements. Sales less purchases and invoice payment surplus are not accounting profit. Cash follows transaction dates; invoice totals follow creation dates.": "অ্যাকাউন্টের লেনদেনে সংরক্ষিত অগ্রিম ও সরবরাহকারীর ফেরত টাকা অন্তর্ভুক্ত। শাখার হিসাবে শাখাবিহীন ম্যানুয়াল লেনদেন নেই। বিক্রয়-ক্রয়ের পার্থক্য ও ইনভয়েসের পরিশোধ উদ্বৃত্ত হিসাবভিত্তিক লাভ নয়। টাকার হিসাব লেনদেনের তারিখে, ইনভয়েসের হিসাব তৈরির তারিখে।",
   "Register session": "রেজিস্টার সেশন",
   "Updated by": "সর্বশেষ পরিবর্তনকারী",
   "Advanced filters": "বিস্তারিত ফিল্টার",
