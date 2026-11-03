@@ -24,6 +24,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
   });
   const base=process.env.POS_TEST_BASE_URL||'http://127.0.0.1:3000';await page.goto(base+'/reports');
   const content=page.locator('.reports-content');await content.getByText('Net profit',{exact:true}).waitFor();
+  const reportNav=await page.locator('.reports-nav').boundingBox(),reportBody=await content.boundingBox();assert.ok(reportNav.y<reportBody.y && Math.abs(reportNav.width-reportBody.width)<3,'Report navigation should sit above the full-width content');
   assert.match(await content.getByText('Net profit',{exact:true}).locator('..').locator('strong').innerText(),/^-.*42\.50/);assert.ok(calls[0].searchParams.get('startDate'));assert.equal(calls[0].searchParams.get('branchId'),'branch-a');
   const firstDownload=page.waitForEvent('download');await page.getByRole('button',{name:'Export CSV',exact:true}).click();let download=await firstDownload;
   let csv=await fs.readFile(await download.path(),'utf8');assert.match(csv,/Main Branch/);assert.match(csv,/Net profit/);assert.match(csv,/-42.5/);

@@ -1,5 +1,11 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "Operational entries for the selected branch and filters.": "নির্বাচিত শাখা ও ফিল্টারের আয়-ব্যয়ের এন্ট্রি।",
+  "Recorded account movements and payment references.": "সংরক্ষিত অ্যাকাউন্ট লেনদেন ও পেমেন্ট রেফারেন্স।",
+  "Select an account to review its activity.": "লেনদেন দেখতে একটি অ্যাকাউন্ট বেছে নিন।",
+  "View details": "বিস্তারিত দেখুন",
+  "Current balance": "বর্তমান ব্যালেন্স",
+  "Key figures": "মূল হিসাব",
   "No customer selected. This will be a walk-in sale.": "ক্রেতা নির্বাচন করা হয়নি। এটি সাধারণ বিক্রয় হিসেবে সংরক্ষিত হবে।",
   "Choose a customer or continue as a walk-in sale.": "ক্রেতা বেছে নিন অথবা সাধারণ বিক্রয় হিসেবে চালিয়ে যান।",
   "Walk-in customer": "সাধারণ ক্রেতা",
