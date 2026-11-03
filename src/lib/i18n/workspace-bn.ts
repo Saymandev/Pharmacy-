@@ -1,5 +1,8 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "Full screen": "পূর্ণ পর্দা",
+  "Exit full screen": "পূর্ণ পর্দা থেকে ফিরুন",
+  "Close filters": "ফিল্টার বন্ধ করুন",
   "Recorded money received": "সংরক্ষিত টাকা প্রাপ্তি",
   "Recorded money paid": "সংরক্ষিত টাকা পরিশোধ",
   "Net account movement": "অ্যাকাউন্টের নিট পরিবর্তন",
