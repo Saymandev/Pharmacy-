@@ -1446,3 +1446,32 @@ fieldset.admin-backup-config{min-inline-size:0;margin:0}
  .pos-cart-modal { width: 100%; }
  .pos-cart-modal .pos-cart-controls { flex-shrink: 0; }
 }
+
+@media screen {
+ .data-page .data-toolbar { gap: 12px; padding-bottom: 6px; }
+ .data-page .data-search { min-height: 46px; border-radius: 10px; background: var(--surface); }
+ .data-page .data-search input { font-size: 14px; }
+ .data-page .data-filter-drawer { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 16px; padding: 20px; border-radius: 12px; }
+ .data-page .data-filter-drawer label { min-width: 0; font-size: 12px; color: var(--ink-soft); }
+ .data-page .data-filter-drawer :is(input,select) { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; }
+ .catalog-advanced-filters { grid-column: 1 / -1; grid-row: 10; padding-top: 14px; border-top: 1px solid var(--line); }
+ .catalog-advanced-filters summary { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; cursor: pointer; color: var(--brand); font-weight: 650; font-size: 13px; list-style: revert; }
+ .catalog-advanced-filters summary span { color: var(--ink-soft); font-weight: 400; font-size: 12px; }
+ .catalog-advanced-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; padding-top: 16px; }
+ .data-page .data-tabs a { min-height: 42px; font-size: 13px; padding-inline: 16px; }
+ .data-page .data-summary-card { padding: 18px; border-radius: 12px; }
+ .data-page .data-summary-card strong { font-size: 24px; }
+ .data-page .data-table td { padding-block: 15px; line-height: 1.5; }
+ .data-page .data-table td strong { font-size: 14px; }
+ .data-page .data-table td small { font-size: 12px; line-height: 1.5; }
+}
+@media screen and (max-width: 800px) {
+ .data-page .data-filter-drawer, .catalog-advanced-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+ .data-page .data-toolbar { flex-wrap: wrap; }
+ .data-page .data-search { flex-basis: 100%; }
+}
+@media screen and (max-width: 480px) {
+ .data-page .data-filter-drawer, .catalog-advanced-grid { grid-template-columns: 1fr; }
+ .data-page .data-filter-drawer { padding: 14px; }
+ .data-page .data-filter-drawer :is(input,select) { font-size: 16px; }
+}

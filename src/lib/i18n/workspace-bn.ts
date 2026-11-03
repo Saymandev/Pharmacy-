@@ -1,5 +1,7 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "Advanced filters": "বিস্তারিত ফিল্টার",
+  "Name, barcode, unit and strength": "নাম, বারকোড, একক ও মাত্রা",
   "Supplier returns": "সরবরাহকারীকে ফেরত",
   "Financial movements are unavailable in demo mode. Connect the pharmacy server to record them.": "ডেমো মোডে আর্থিক লেনদেন করা যায় না। লেনদেন লিখতে ফার্মেসি সার্ভারে সংযোগ দিন।",
   "Supplier returns and refunds": "সরবরাহকারী ফেরত ও টাকা প্রাপ্তি",
