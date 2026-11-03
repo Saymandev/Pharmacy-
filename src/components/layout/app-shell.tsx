@@ -179,7 +179,7 @@ export function AppShell() {
           <p className="nav-caption nav-caption-spaced">{t("PHARMACY")}</p>
           {plannedModules.filter(({ href }) => !href || (modulePermissions[href] ?? []).some(hasPermission)).map(({ label, icon: Icon, href }) => href ? (
             <Link className={`nav-link nav-link-planned ${pathname === href ? "nav-link-active" : ""}`} key={label} title={t(label)} href={demoMode ? `${href}?demo=1` : href}>
-              <Icon size={17} /><span>{t(label)}</span><span className="nav-soon">{t("Open")}</span>
+              <Icon size={17} /><span>{t(label)}</span>
             </Link>
           ) : <button className="nav-link nav-link-planned" key={label} type="button" disabled title={`${t(label)} — ${t("Soon")}`}><Icon size={17} /><span>{t(label)}</span><span className="nav-soon">{t("Soon")}</span></button>)}
         </nav>
