@@ -64,9 +64,10 @@ export function ActiveBranchProvider({ children }: { children: ReactNode }) {
   }, [refreshBranches, status]);
 
   const setActiveBranchId = useCallback((id: string) => {
+    if (!branches.some(branch => branch.id === id)) return;
     setActiveBranchIdState(id);
     persistBranch(id);
-  }, []);
+  }, [branches]);
 
   const value = useMemo(() => ({
     branches,

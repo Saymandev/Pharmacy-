@@ -1364,3 +1364,6 @@ button.data-summary-card { cursor: pointer; }
 
 /* Disabled backup fields keep the existing responsive grid. */
 fieldset.admin-backup-config{min-inline-size:0;margin:0}
+.settings-branch-choice { display: grid; gap: 12px; color: var(--text-muted, #718277); font-size: 13px; line-height: 1.5; }
+.settings-branch-choice select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #cddfd3; border-radius: 10px; background: var(--surface, #fff); color: var(--text-primary, #254b37); font: inherit; font-weight: 650; }
+.settings-branch-choice select:focus-visible { outline: 3px solid #b3ddc4; outline-offset: 2px; }

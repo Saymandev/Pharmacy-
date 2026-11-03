@@ -185,7 +185,7 @@ export function AppShell() {
         </nav>
 
         <div className="sidebar-bottom">
-          <button className="nav-link" type="button" onClick={()=>setPreferencesOpen(true)}><Settings2 size={17} /><span>{t("Display preferences")}</span></button>
+          <button className="nav-link" type="button" onClick={()=>setPreferencesOpen(true)}><Settings2 size={17} /><span>{t("Settings")}</span></button>
           <button className="nav-link" type="button" disabled><CircleHelp size={17} /><span>{t("Help & support")}</span></button>
           <div className="sidebar-footer"><span className="online-dot" />{t("All systems operational")}</div>
         </div>
@@ -197,7 +197,7 @@ export function AppShell() {
           <div className="topbar-actions">
             <label className="language-switcher"><span className="sr-only">{t("Language")}</span><select aria-label={t("Language")} value={language} onChange={(event) => setLanguage(event.target.value as "en" | "bn")}><option value="en">English</option><option value="bn">বাংলা</option></select></label>
             <button className="icon-button theme-toggle" type="button" aria-label={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} title={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>{theme === "dark" ? <Sun size={18}/> : <Moon size={18}/>}</button>
-            <button className="icon-button display-preferences-trigger" type="button" aria-label={t("Display preferences")} title={t("Display preferences")} onClick={()=>setPreferencesOpen(true)}><Settings2 size={18}/></button>
+            <button className="icon-button display-preferences-trigger" type="button" aria-label={t("Settings")} title={t("Settings")} onClick={()=>setPreferencesOpen(true)}><Settings2 size={18}/></button>
             {demoMode && <span className="demo-mode-badge"><span className="demo-badge-full">{t("DEMO DATA · Local only")}</span><span className="demo-badge-compact">{language === "bn" ? "ডেমো" : "DEMO"}</span></span>}<span className="shortcut-hint"><Command size={12} /> K</span>
             <button className="icon-button notification-button" type="button" aria-label={t("Notifications")}><Bell size={18} /><i /></button>
             <div className="topbar-divider" />
