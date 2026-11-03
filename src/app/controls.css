@@ -79,3 +79,66 @@
  .app-frame .page-heading-row h1 { font-size:26px; }
  .app-frame .page-heading-row .page-subtitle { font-size:13px; }
 }
+
+/* Compact workspace chrome and one visual border per search field. */
+@media screen {
+ .app-frame .page-heading-row { padding:0; border:0; border-radius:0; background:transparent !important; gap:10px; }
+ .app-frame .page-heading-row .eyebrow { display:none; }
+ .app-frame .page-heading-row h1 { margin:0 0 4px; font-size:24px; }
+ .app-frame .page-heading-row .page-subtitle { font-size:12px; }
+ .app-frame .page-heading-row :is(button,.catalog-import-button) { min-height:38px; padding:8px 13px; }
+ .app-frame :is(.data-search,.sales-search,.pos-search-box,.pos-input-with-icon,.purchase-medicine-search,.roster-search,.supplier-toolbar > div) { display:flex; align-items:center; min-width:0; gap:9px; padding:0 12px; border:1px solid var(--ux-line); border-radius:10px; background:var(--ux-surface); }
+ .app-frame :is(.data-search,.sales-search,.pos-search-box,.pos-input-with-icon,.purchase-medicine-search,.roster-search,.supplier-toolbar > div) > input { flex:1; width:100%; min-width:0; min-height:42px; padding:9px 0; border:0 !important; border-radius:0; background:transparent !important; box-shadow:none !important; outline:none !important; }
+ .app-frame :is(.data-search,.sales-search,.pos-search-box,.pos-input-with-icon,.purchase-medicine-search,.roster-search,.supplier-toolbar > div):focus-within { border-color:var(--brand); box-shadow:0 0 0 2px color-mix(in srgb,var(--brand) 12%,transparent); }
+ .app-frame .topbar { min-height:58px; padding-block:9px; }
+ .pos-page.pos-focus-mode { padding:12px; padding-bottom:88px; }
+ .app-frame .pos-page { gap:8px; }
+ .app-frame .pos-page > .pos-draft-toolbar { margin:0; padding:0; min-height:32px; gap:8px; }
+ .app-frame .pos-page > .pos-draft-toolbar > span { font-size:11px; }
+ .app-frame .pos-page > .pos-draft-toolbar button { min-height:32px; padding:6px 10px; font-size:12px; }
+ .app-frame .pos-page .pos-catalog { padding:14px; }
+ .app-frame .pos-page .pos-catalog-top { gap:8px; }
+ .app-frame .pos-page .pos-catalog-top h2 { font-size:16px; }
+ .app-frame .pos-page .pos-catalog-top p { display:none; }
+ .app-frame .pos-page .pos-utility-menu > summary { min-height:32px; padding:6px 10px; }
+ .app-frame .pos-page .pos-search-row { margin-top:10px; gap:8px; }
+ .app-frame .pos-page .pos-search-box { height:44px; min-height:44px; }
+ .app-frame .pos-page .pos-scan-button { min-height:44px; height:44px; padding:0 12px; }
+ .app-frame .pos-page .pos-filter-toolbar { margin-top:8px; }
+ .app-frame .pos-page .pos-filter-button { min-height:34px; padding:6px 10px; font-size:12px; }
+ .app-frame .pos-page .pos-results-meta { margin:10px 0; font-size:11px; }
+ .app-frame .pos-page .pos-product-grid { gap:10px; }
+ .app-frame .pos-page .pos-product-card { min-height:170px; padding:13px; background:hsl(var(--medicine-hue) 58% 96%) !important; border-color:hsl(var(--medicine-hue) 35% 83%) !important; }
+ .app-frame[data-theme=dark] .pos-page .pos-product-card { background:hsl(var(--medicine-hue) 24% 17%) !important; border-color:hsl(var(--medicine-hue) 25% 31%) !important; }
+ .app-frame .pos-page .pos-product-icon { width:30px; height:30px; border-radius:8px; }
+ .app-frame .pos-page .pos-product-copy { margin-top:8px; }
+ .app-frame .pos-page .pos-product-bottom { padding-top:9px; }
+ .app-frame .floating-filter[popover] { position:fixed !important; inset:auto; display:none; margin:0 !important; padding:16px !important; max-width:calc(100vw - 24px); min-width:0; border:1px solid var(--ux-line,var(--line)) !important; border-radius:14px; background:var(--ux-surface,var(--surface)) !important; color:var(--ux-text,var(--ink)); box-shadow:0 18px 70px #071c2640; overflow-y:auto; overscroll-behavior:contain; }
+ .app-frame .floating-filter[popover]:popover-open { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+ .floating-filter-heading { grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom:12px; border-bottom:1px solid var(--line); }
+ .floating-filter-heading strong { display:flex; align-items:center; gap:7px; font-size:14px; }
+ .floating-filter-heading > button { display:grid; place-items:center; width:32px; height:32px; padding:4px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); }
+ .floating-filter > :is(form,details,fieldset,.record-filter,.purchase-filter-clear,.return-clear-filters) { grid-column:1/-1; min-width:0; }
+ .app-frame .floating-filter > form { position:static !important; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; width:100%; max-height:none; margin:0; padding:0; border:0; background:transparent; box-shadow:none; }
+ .floating-filter label { display:grid; min-width:0; gap:6px; font-size:12px; }
+ .floating-filter :is(input,select,textarea) { width:100%; min-width:0; }
+ .floating-filter input:is([type=checkbox],[type=radio]) { width:16px; min-height:16px; flex:0 0 16px; }
+ .floating-filter label:has(> input[type=checkbox]) { display:flex; grid-column:1/-1; align-items:center; justify-content:flex-start; gap:8px; }
+ .filter-popover-control { position:relative; margin-block:8px; }
+ .filter-popover-control > button { display:inline-flex; align-items:center; gap:7px; min-height:36px; padding:8px 12px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink); }
+ .floating-filter .reports-filterbar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:0; padding:0; border:0; box-shadow:none; }
+ .app-frame[data-theme=dark] .sales-page :is(.sales-card,.sales-row,.sales-metrics>div,.sales-detail-drawer,.sales-detail-head,.sales-detail-totals,.sales-action-summary) { background:var(--ux-surface) !important; border-color:var(--ux-line) !important; color:var(--ux-text) !important; }
+ .app-frame[data-theme=dark] .sales-page :is(.sales-toolbar,.sales-table-head,.sales-pagination,.sales-detail-line,.sales-detail-metrics) { background:var(--ux-soft) !important; border-color:var(--ux-line) !important; color:var(--ux-text) !important; }
+ .app-frame[data-theme=dark] .sales-page :is(h1,h2,h3,strong,.sales-invoice,.sales-total,.sales-customer-name,.sales-detail-title) { color:var(--ux-text) !important; }
+ .app-frame[data-theme=dark] .sales-page :is(small,.sales-date,.sales-row p,.sales-metrics p,.sales-detail-line span) { color:var(--ux-muted) !important; }
+ .app-frame[data-theme=dark] .sales-page :is(.sales-row-icon,.sales-compact-select,.sales-row-actions button,.data-row-action) { background:var(--ux-soft) !important; color:var(--ux-text) !important; border-color:var(--ux-line) !important; }
+}
+@media screen and (max-width:600px) {
+ .app-frame .page-heading-row .page-subtitle { display:none; }
+ .app-frame .page-heading-row > div:first-child { flex-basis:auto; }
+ .app-frame .page-heading-row h1 { font-size:22px; }
+ .app-frame .floating-filter[popover]:popover-open { grid-template-columns:1fr; }
+ .floating-filter .reports-filterbar, .app-frame .floating-filter > form { grid-template-columns:1fr; }
+ .app-frame .pos-page > .pos-draft-toolbar > span { display:none; }
+ .app-frame .pos-page .pos-catalog { padding:10px; }
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import { FilterPopover } from "@/components/ui/filter-popover";
 import { Select } from "@/components/ui/select";
 import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, ArrowDownToLine, CalendarDays, FileBarChart2, Printer, RefreshCw } from "lucide-react";
@@ -85,7 +86,7 @@ export function ReportsWorkspace(){
  function choosePreset(value:string){setPreset(value);if(value!=="custom"){setDraft(current=>({...current,...reportDateRange(value as DatePreset)}));setFilterError("");}}
  if(!canRead)return <section className="reports-page"><h1>{t("Reports")}</h1><div className="data-empty"><AlertCircle/><strong>{t("Your role cannot view reports.")}</strong><span>{t("Ask an administrator for report access.")}</span></div></section>;
  return <section className="reports-page"><div className="page-heading-row"><div><p className="eyebrow">{t("ANALYTICS · OPERATIONS")}</p><h1>{t("Reports")}</h1><p className="page-subtitle">{t("Review saved sales, collections, costs and operational totals.")}</p></div><div className="reports-heading-actions"><button type="button" className="purchase-save-pending" onClick={()=>setRefresh(value=>value+1)} disabled={loading||!ready||dirty}><RefreshCw size={14}/>{t("Refresh")}</button><button type="button" className="purchase-save-pending" onClick={()=>window.print()} disabled={!canExport}><Printer size={14}/>{t("Print report")}</button><button type="button" className="purchase-primary-action" onClick={()=>downloadCsv(model,context,filename)} disabled={!canExport}><ArrowDownToLine size={15}/>{t("Export CSV")}</button></div></div>
- <form className="reports-filterbar panel" onSubmit={apply} aria-label={t("Report filters")}>
+ <FilterPopover><form className="reports-filterbar panel" onSubmit={apply} aria-label={t("Report filters")}>
   <label><CalendarDays size={15}/>{t("Period")}<Select aria-label={t("Period")} value={preset} onChange={event=>choosePreset(event.target.value)}><option value="today">{t("Today")}</option><option value="yesterday">{t("Yesterday")}</option><option value="last7">{t("Last 7 days")}</option><option value="thisMonth">{t("This month")}</option><option value="lastMonth">{t("Last month")}</option><option value="all">{t("All dates")}</option><option value="custom">{t("Custom dates")}</option></Select></label>
   <label>{t("From")}<input type="date" value={draft.startDate} max={draft.endDate||undefined} onChange={event=>{setPreset("custom");setDraft({...draft,startDate:event.target.value});}}/></label>
   <label>{t("To")}<input type="date" value={draft.endDate} min={draft.startDate||undefined} onChange={event=>{setPreset("custom");setDraft({...draft,endDate:event.target.value});}}/></label>
@@ -94,7 +95,7 @@ export function ReportsWorkspace(){
   {tab==="income"&&<label>{t("Sale type")}<Select aria-label={t("Sale type")} value={draft.type} onChange={event=>setDraft({...draft,type:event.target.value})}>{["pos"].map(type=><option value={type} key={type}>{type}</option>)}</Select></label>}
   <button className="purchase-primary-action" type="submit">{t("Apply filters")}</button><button className="reports-clear" type="button" onClick={()=>{const next=initialFilters();setDraft(next);setApplied(next);setPreset("today");setFilterError("");setRefresh(value=>value+1);}}>{t("Reset to today")}</button>
   {filterError&&<p className="reports-filter-message" role="alert">{filterError}</p>}{dirty&&!filterError&&<p className="reports-filter-message" role="status">{t("Filters changed. Apply them to update the report and export.")}</p>}
- </form>
+ </form></FilterPopover>
  <div className="reports-layout"><aside className="reports-nav panel" aria-label={t("Report types")}>{["Summary","Pharmacy","Finance"].map(group=><div className="reports-nav-group" key={t(group)}><span>{t(group)}</span>{tabs.filter(item=>item.group===group).map(item=><button type="button" key={item.key} className={tab===item.key?"selected":""} aria-pressed={tab===item.key} onClick={()=>{setTab(item.key);setFilterError("");}}><FileBarChart2 size={15}/><span>{t(item.label)}</span></button>)}</div>)}</aside>
  <div className="reports-content reports-print-view" aria-busy={loading}><div className="reports-report-title"><div><span className="eyebrow">{active.group.toUpperCase()}{t("REPORT")}</span><h2>{t(active.label)}</h2><p>{applied.startDate?`${applied.startDate} — ${applied.endDate}`:"All available dates"} · {branchName}</p>{searchable.has(tab)&&applied.search&&<p>{t("Invoice search:")} {applied.search}</p>}{tab==="income"&&applied.type&&<p>{t("Sale type:")} {applied.type}</p>}{current&&<small>{t("Loaded")} {new Date(current.at).toLocaleString(locale,{timeZone:"Asia/Dhaka"})}{t("· Asia/Dhaka")}</small>}</div></div><p className="reports-definition">{t(active.note)}</p>
  {error&&<div className="sales-alert error" role="alert"><AlertCircle size={15}/><span>{error}</span><button type="button" onClick={()=>setRefresh(value=>value+1)}>{t("Retry")}</button></div>}

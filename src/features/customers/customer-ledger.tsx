@@ -1,4 +1,5 @@
 "use client";
+import { FilterPopover } from "@/components/ui/filter-popover";
 import { Select } from "@/components/ui/select";
 import {useEffect,useMemo,useState} from 'react';
 import {createPortal} from 'react-dom';
@@ -30,7 +31,7 @@ export function CustomerLedger({customer,sales,canReadSales,canReadReturns,refre
  if(!canReadSales)return <p>{t('Your role cannot view invoice history.')}</p>;
  return <section className="customer-ledger" aria-label="Customer statement">
   <h3>{t('Statement & history')}</h3><p>{t('Invoice values and cash movements are shown separately. Returns do not automatically mean a cash refund.')}</p>
-  <div className="customer-ledger-filters"><label>{t('Branch')}<Select aria-label="Statement branch" value={branch} onChange={e=>{setBranch(e.target.value);setPage(1);}}><option value="">{t('All branches')}</option>{branches.map(([id,name])=><option key={id} value={id}>{name}</option>)}</Select></label><label>{t('From')}<input aria-label="Statement from" type="date" value={start} onChange={e=>{setStart(e.target.value);setPage(1);}}/></label><label>{t('To')}<input aria-label="Statement to" type="date" value={end} onChange={e=>{setEnd(e.target.value);setPage(1);}}/></label><button onClick={()=>{setStart('');setEnd('');setBranch('');setPage(1);}}>{t('Clear filters')}</button></div>
+  <FilterPopover className="customer-ledger-filters"><label>{t('Branch')}<Select aria-label="Statement branch" value={branch} onChange={e=>{setBranch(e.target.value);setPage(1);}}><option value="">{t('All branches')}</option>{branches.map(([id,name])=><option key={id} value={id}>{name}</option>)}</Select></label><label>{t('From')}<input aria-label="Statement from" type="date" value={start} onChange={e=>{setStart(e.target.value);setPage(1);}}/></label><label>{t('To')}<input aria-label="Statement to" type="date" value={end} onChange={e=>{setEnd(e.target.value);setPage(1);}}/></label><button onClick={()=>{setStart('');setEnd('');setBranch('');setPage(1);}}>{t('Clear filters')}</button></FilterPopover>
   {!canReadReturns&&<p role="note">{t('Return history requires sale-return:read access. This statement includes invoices and their recorded transactions only.')}</p>}
   {problem&&<div role="alert" className="purchase-alert error">{t(problem)}{error&&<button onClick={()=>setRetry(x=>x+1)}>{t('Retry')}</button>}</div>}
   {loading&&<p role="status">{t('Loading customer history…')}</p>}

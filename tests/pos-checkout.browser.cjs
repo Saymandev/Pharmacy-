@@ -44,11 +44,9 @@ const assert=require('node:assert/strict');
  await page.getByText('Change to return',{exact:true}).waitFor();
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth <= window.innerWidth+1),true);
  await page.screenshot({path:'/tmp/pos-mobile-checkout.png'});
- await page.getByRole('button',{name:'Review & confirm sale',exact:true}).click();
- // Inspect confirmation before committing the mocked request.
- const confirm=page.getByRole('dialog',{name:'Confirm completed sale'});
-
- await confirm.getByRole('button').filter({hasText:/Confirm|Complete/}).last().click();
+ assert.equal(posted.length,0);
+ await page.getByRole('button',{name:'Complete sale',exact:true}).click();
+ assert.equal(await page.getByRole('dialog',{name:'Confirm completed sale'}).count(),0);
  await page.getByRole('dialog').filter({hasText:'SALE-TEST-1'}).waitFor();
  assert.equal(posted.length,1);assert.equal(posted[0].paidAmount,75.5);assert.equal(posted[0].payments[0].amount,75.5);assert.equal(posted[0].dueAmount,0);assert.equal(posted[0].saleItems[0].batchNumber,'A');
  await page.locator('.pos-receipt-paper').getByText(/Cash change returned/).waitFor();

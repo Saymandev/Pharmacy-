@@ -32,6 +32,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
   await page.getByRole('button',{name:'Sales detail',exact:true}).click();const table=page.locator('.reports-screen-table table');await table.waitFor();assert.equal(await table.locator('th').count(),11);assert.equal(await table.locator('tbody tr').count(),50);
   const nav=page.getByRole('navigation',{name:/Outdoor.*Sales pagination/});await nav.getByRole('button',{name:'Next',exact:true}).click();assert.match(await table.innerText(),/INV-050/);
   const allDownload=page.waitForEvent('download');await page.getByRole('button',{name:'Export CSV',exact:true}).click();download=await allDownload;csv=await fs.readFile(await download.path(),'utf8');assert.match(csv,/INV-104/);assert.match(csv,/Created by/);
+  await page.getByRole('button',{name:'Filters',exact:true}).click();
   const filters=page.getByRole('form',{name:'Report filters'});await filters.getByLabel('From',{exact:true}).fill('2026-10-01');await filters.getByLabel('To',{exact:true}).fill('2026-10-31');await filters.getByLabel('Branch',{exact:true}).selectOption('branch-b');
   assert.equal(await page.getByRole('button',{name:'Export CSV',exact:true}).isDisabled(),true);
   const nextRequest=page.waitForRequest(r=>r.url().includes('/reports/pharmacy/sales-report')&&r.url().includes('branch-b'));

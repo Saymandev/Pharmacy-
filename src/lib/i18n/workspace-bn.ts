@@ -1,5 +1,6 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "Complete sale": "বিক্রয় সম্পন্ন করুন",
   "Search options": "অপশন খুঁজুন",
   "Options": "অপশন",
   "No matching options": "মিল পাওয়া যায়নি",

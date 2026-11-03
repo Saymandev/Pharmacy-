@@ -1,5 +1,6 @@
 "use client";
 
+import { FilterPopover } from "@/components/ui/filter-popover";
 import { Select } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { api, ApiClientError } from "@/lib/api/client";
@@ -57,7 +58,7 @@ export function StockHistoryPanel({ branchId }: { branchId: string }) {
   const invalidDates = !!(draft.startDate && draft.endDate && draft.startDate > draft.endDate);
   return <section className="data-card panel stock-history-panel" aria-label={t("Stock history")}>
     <div className="panel-heading"><div><h2>{t("Stock history")}</h2><p>{t("Recorded movements for the selected branch. Dates use Asia/Dhaka.")}</p></div></div>
-    <form className="data-filter-drawer" onSubmit={event => { event.preventDefault(); if (!invalidDates) { setPage(1); setFilters({ ...draft }); } }}>
+    <FilterPopover><form className="data-filter-drawer" onSubmit={event => { event.preventDefault(); if (!invalidDates) { setPage(1); setFilters({ ...draft }); } }}>
       <label>{t("Medicine")}<input value={draft.search} onChange={event => field("search", event.target.value)} /></label>
       <label>{t("Batch number")}<input value={draft.batchNumber} onChange={event => field("batchNumber", event.target.value)} /></label>
       <label>{t("Direction")}<Select aria-label={t("Direction")} value={draft.type} onChange={event => field("type", event.target.value)}><option value="">{t("All directions")}</option><option value="in">{t("Stock in")}</option><option value="out">{t("Stock out")}</option></Select></label>
@@ -67,7 +68,7 @@ export function StockHistoryPanel({ branchId }: { branchId: string }) {
       <button type="submit" disabled={invalidDates || !branchId}>{t("Apply filters")}</button>
       <button type="button" onClick={() => { setDraft(initialFilters); setFilters(initialFilters); setPage(1); }}>{t("Clear filters")}</button>
       <button type="button" disabled={loading || !branchId} onClick={() => setRefresh(current => current + 1)}>{t("Refresh")}</button>
-    </form>
+    </form></FilterPopover>
     {invalidDates && <p role="alert">{t("Start date must be on or before end date.")}</p>}
     {error && <div className="data-alert" role="alert"><span>{t(error)}</span><button type="button" onClick={() => setRefresh(current => current + 1)}>{t("Retry")}</button></div>}
     {!branchId ? <div className="data-empty">{t("Select a branch to view stock history.")}</div> : loading ? <div className="data-loading" role="status">{t("Loading stock history…")}</div> : !error && <>
