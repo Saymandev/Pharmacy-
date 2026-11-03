@@ -1,5 +1,13 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "Search options": "অপশন খুঁজুন",
+  "Options": "অপশন",
+  "No matching options": "মিল পাওয়া যায়নি",
+  "Product identity": "ওষুধের পরিচিতি",
+  "Classification & stock": "শ্রেণিবিভাগ ও স্টক",
+  "Default pricing": "প্রাথমিক মূল্য",
+  "Prices are per unit in BDT. Opening stock is added separately.": "প্রতি ইউনিটের মূল্য টাকায় দিন। প্রাথমিক স্টক আলাদাভাবে যোগ করা হয়।",
+  "e.g. Paracetamol 500mg": "যেমন: Paracetamol 500mg",
   "Full screen": "পূর্ণ পর্দা",
   "Exit full screen": "পূর্ণ পর্দা থেকে ফিরুন",
   "Close filters": "ফিল্টার বন্ধ করুন",

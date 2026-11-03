@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { api, ApiClientError } from "@/lib/api/client";
 import { readPagination } from "@/lib/api/pagination";
@@ -59,8 +60,8 @@ export function StockHistoryPanel({ branchId }: { branchId: string }) {
     <form className="data-filter-drawer" onSubmit={event => { event.preventDefault(); if (!invalidDates) { setPage(1); setFilters({ ...draft }); } }}>
       <label>{t("Medicine")}<input value={draft.search} onChange={event => field("search", event.target.value)} /></label>
       <label>{t("Batch number")}<input value={draft.batchNumber} onChange={event => field("batchNumber", event.target.value)} /></label>
-      <label>{t("Direction")}<select aria-label={t("Direction")} value={draft.type} onChange={event => field("type", event.target.value)}><option value="">{t("All directions")}</option><option value="in">{t("Stock in")}</option><option value="out">{t("Stock out")}</option></select></label>
-      <label>{t("Movement type")}<select aria-label={t("Movement type")} value={draft.stockChangeType} onChange={event => field("stockChangeType", event.target.value)}><option value="">{t("All movements")}</option>{["opening-stock", "purchase", "sale", "transfer", "adjust", "sale-return", "purchase-return"].map(type => <option key={type} value={type}>{t(type)}</option>)}</select></label>
+      <label>{t("Direction")}<Select aria-label={t("Direction")} value={draft.type} onChange={event => field("type", event.target.value)}><option value="">{t("All directions")}</option><option value="in">{t("Stock in")}</option><option value="out">{t("Stock out")}</option></Select></label>
+      <label>{t("Movement type")}<Select aria-label={t("Movement type")} value={draft.stockChangeType} onChange={event => field("stockChangeType", event.target.value)}><option value="">{t("All movements")}</option>{["opening-stock", "purchase", "sale", "transfer", "adjust", "sale-return", "purchase-return"].map(type => <option key={type} value={type}>{t(type)}</option>)}</Select></label>
       <label>{t("From date")}<input type="date" value={draft.startDate} onChange={event => field("startDate", event.target.value)} /></label>
       <label>{t("To date")}<input type="date" value={draft.endDate} onChange={event => field("endDate", event.target.value)} /></label>
       <button type="submit" disabled={invalidDates || !branchId}>{t("Apply filters")}</button>

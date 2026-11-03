@@ -1,5 +1,7 @@
 "use client";
 
+import { DialogBehavior } from "@/components/ui/dialog-behavior";
+import { Select } from "@/components/ui/select";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useBrowserPreference } from "@/lib/browser/use-browser-preference";
@@ -158,7 +160,7 @@ export function AppShell() {
     : plannedModules.find(({ href }) => href === pathname)?.label ?? "Overview";
 
   return (
-    <ActiveBranchProvider><div className={`app-frame${sidebarCollapsed ? " sidebar-collapsed" : ""}`} data-theme={theme}>
+    <ActiveBranchProvider><DialogBehavior/><div className={`app-frame${sidebarCollapsed ? " sidebar-collapsed" : ""}`} data-theme={theme}>
       {preferencesOpen&&<DisplayPreferences onClose={()=>setPreferencesOpen(false)}/>}
       {mobileSidebarOpen && <button type="button" className="sidebar-mobile-backdrop" aria-label={t("Close navigation")} onClick={() => setMobileSidebarOpen(false)} />}
       <aside className={`sidebar${mobileSidebarOpen ? " sidebar-mobile-open" : ""}`}>
@@ -195,7 +197,7 @@ export function AppShell() {
         <header className="topbar">
           <div className="topbar-leading"><button className="topbar-menu-button" type="button" aria-label={mobileSidebarOpen ? t("Close navigation") : t("Toggle sidebar")} aria-expanded={mobileSidebarOpen} onClick={() => { if (window.matchMedia("(max-width: 800px)").matches) setMobileSidebarOpen((open) => !open); else setSidebarCollapsed((collapsed) => !collapsed); }}>{mobileSidebarOpen ? <X size={19}/> : sidebarCollapsed ? <PanelLeftOpen size={19}/> : <PanelLeftClose size={19}/>}</button><div className="breadcrumb"><span>{t("Workspace")}</span><span className="breadcrumb-slash">/</span><strong>{t(currentPageName)}</strong></div></div>
           <div className="topbar-actions">
-            <label className="language-switcher"><span className="sr-only">{t("Language")}</span><select aria-label={t("Language")} value={language} onChange={(event) => setLanguage(event.target.value as "en" | "bn")}><option value="en">English</option><option value="bn">বাংলা</option></select></label>
+            <label className="language-switcher"><span className="sr-only">{t("Language")}</span><Select aria-label={t("Language")} value={language} onChange={(event) => setLanguage(event.target.value as "en" | "bn")}><option value="en">English</option><option value="bn">বাংলা</option></Select></label>
             <button className="icon-button theme-toggle" type="button" aria-label={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} title={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>{theme === "dark" ? <Sun size={18}/> : <Moon size={18}/>}</button>
             <button className="icon-button display-preferences-trigger" type="button" aria-label={t("Settings")} title={t("Settings")} onClick={()=>setPreferencesOpen(true)}><Settings2 size={18}/></button>
             {demoMode && <span className="demo-mode-badge"><span className="demo-badge-full">{t("DEMO DATA · Local only")}</span><span className="demo-badge-compact">{language === "bn" ? "ডেমো" : "DEMO"}</span></span>}<span className="shortcut-hint"><Command size={12} /> K</span>

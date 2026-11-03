@@ -10,7 +10,7 @@ export function useDismissiblePanel(open: boolean, close: () => void) {
       if (event.target instanceof Node && !ref.current?.contains(event.target)) close();
     }
     function keyboard(event: KeyboardEvent) {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && !(event.target instanceof Element && event.target.closest("[popover]:popover-open"))) {
         event.stopPropagation();
         close();
         ref.current?.querySelector<HTMLElement>("button[aria-expanded]")?.focus();
