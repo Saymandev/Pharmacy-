@@ -1,9 +1,4 @@
 /* Compact, keyboard-first order entry and alternate catalogue view. */
-.app-frame .pos-page .pos-view-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:6px 0 12px; }
-.app-frame .pos-page .pos-view-toolbar > div { display:inline-flex; padding:3px; border:1px solid var(--ux-line); border-radius:10px; background:var(--ux-canvas); }
-.app-frame .pos-page .pos-view-toolbar button { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:32px; padding:6px 10px; border:0; border-radius:7px; background:transparent; color:var(--ux-muted); font-size:12px; }
-.app-frame .pos-page .pos-view-toolbar button[aria-pressed=true] { color:var(--ux-text); background:var(--ux-surface); box-shadow:0 1px 4px #0002; font-weight:700; }
-.app-frame .pos-page .pos-view-toolbar > small { color:var(--ux-muted); font-size:11px; }
 .app-frame .pos-page .pos-quick-quantity { display:flex; align-items:center; flex-wrap:wrap; gap:10px 16px; margin:8px 0; padding:10px 12px; border:1px solid var(--ux-line); border-radius:12px; background:var(--ux-soft); }
 .app-frame .pos-page .pos-quick-quantity > div:first-child { flex:1; min-width:130px; display:grid; gap:2px; }
 .app-frame .pos-page .pos-quick-quantity strong { color:var(--ux-text); font-size:13px; overflow-wrap:anywhere; }
@@ -14,22 +9,6 @@
 .app-frame .pos-page .pos-quick-quantity .pos-quantity-stepper input { width:40px; height:32px !important; min-height:32px !important; border:0; border-inline:1px solid var(--ux-line); border-radius:0; margin:0; padding:0; font-size:13px; text-align:center; color:var(--ux-text); background:var(--ux-canvas); }
 .app-frame .pos-page .pos-quick-quantity .pos-quantity-stepper button:disabled { opacity:.35; }
 .app-frame .pos-page .pos-quick-quantity .pos-quantity-stepper :focus-visible { outline-offset:-3px; }
-.app-frame .pos-page .pos-table-scroll { max-width:100%; overflow:auto; border:1px solid var(--ux-line); border-radius:12px; }
-.app-frame .pos-page .pos-catalog-table { width:100%; min-width:680px; border-collapse:collapse; color:var(--ux-text); font-size:12px; }
-.app-frame .pos-page .pos-catalog-table th { padding:10px 12px; background:var(--ux-canvas); color:var(--ux-muted); text-align:left; font-size:11px; font-weight:700; white-space:nowrap; }
-.app-frame .pos-page .pos-catalog-table td { padding:9px 12px; border-top:1px solid var(--ux-line); vertical-align:middle; }
-.app-frame .pos-page .pos-catalog-table tr:hover td,.app-frame .pos-page .pos-catalog-table tr[data-keyboard-active=true] td { background:var(--ux-soft); }
-.app-frame .pos-page .pos-catalog-table tr[data-keyboard-active=true] td:first-child { box-shadow:inset 3px 0 0 var(--brand); }
-.app-frame .pos-page .pos-catalog-table td strong { font-size:12px; color:var(--ux-text); }
-.app-frame .pos-page .pos-catalog-table td small { display:block; margin-top:3px; color:var(--ux-muted); font-size:11px; }
-.app-frame .pos-page .pos-table-name { text-align:left; border:0; background:transparent; padding:3px 0; min-height:32px; }
-.app-frame .pos-page .pos-table-name:disabled { opacity:.5; }
-.app-frame .pos-page .pos-table-stock { padding:4px 7px; border-radius:6px; background:var(--ux-soft); color:var(--ux-text); white-space:nowrap; }
-.app-frame .pos-page .pos-table-stock.empty { opacity:.5; }
-.app-frame .pos-page .pos-table-price { white-space:nowrap; font-weight:700; font-variant-numeric:tabular-nums; }
-.app-frame .pos-page .pos-table-add { display:inline-flex; gap:5px; align-items:center; min-height:32px; padding:6px 8px; border:1px solid var(--ux-line); border-radius:8px; color:var(--ux-text); background:var(--ux-soft); }
-.app-frame .pos-page .pos-table-add:disabled { opacity:.4; }
-.app-frame .pos-page .pos-table-empty { padding:20px; color:var(--ux-muted); }
 .app-frame .pos-page .pos-cart-modal .pos-cart-line { padding:12px 16px; }
 .app-frame .pos-page .pos-cart-modal .pos-line-main strong { font-size:14px; }
 .app-frame .pos-page .pos-cart-modal .pos-line-main small { font-size:11px; }
@@ -57,7 +36,6 @@
 .app-frame .pos-calculator-keys .is-equals { grid-column:1/-1; background:var(--brand-wash); font-weight:700; }
 .app-frame .pos-calculator > small { display:block; margin-top:12px; font-size:11px; line-height:1.5; color:var(--ux-muted); }
 @media(max-width:650px) {
- .app-frame .pos-page .pos-view-toolbar { flex-wrap:wrap; gap:6px; }
  .app-frame .pos-page .pos-quick-quantity { gap:8px; padding:9px; }
  .app-frame .pos-page .pos-quick-quantity > div:first-child { flex-basis:100%; }
  .app-frame .pos-page .pos-quick-quantity > small { flex-basis:100%; }
@@ -66,4 +44,74 @@
  .app-frame .pos-page .pos-cart-modal .pos-quantity-stepper { grid-template-columns:36px 38px 36px; height:38px; }
  .app-frame .pos-page .pos-cart-modal .pos-quantity-stepper button { width:36px; min-width:36px; height:36px; min-height:36px; }
  .app-frame .pos-page .pos-cart-modal .pos-quantity-stepper input { height:36px !important; min-height:36px !important; }
+}
+
+/* Two compact control rows on laptops: workspace tools, then search/filter/view. */
+.app-frame .pos-page .pos-compact-top { display:flex; align-items:center; flex-wrap:nowrap; gap:10px; min-height:34px; }
+.app-frame .pos-page .pos-compact-top h2 { flex-shrink:0; margin:0; font-size:14px; color:var(--ux-text); }
+.app-frame .pos-page .pos-header-branch { min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; color:var(--ux-muted); }
+.app-frame .pos-page .pos-header-actions { display:flex; align-items:center; gap:5px; margin-left:auto; }
+.app-frame .pos-page .pos-header-actions .pos-pending-button { display:inline-flex; align-items:center; justify-content:center; gap:5px; min-height:30px; padding:5px 8px; font-size:11px; white-space:nowrap; }
+.app-frame .pos-page .pos-header-actions .pos-utility-menu > summary { min-height:30px; padding:5px 8px; font-size:11px; }
+.app-frame .pos-page .pos-catalog { padding:8px 10px; }
+.app-frame .pos-page .pos-search-row { align-items:center; gap:6px; margin-top:0; }
+.app-frame .pos-page .pos-search-box { flex:1; min-width:0; height:40px; min-height:40px; }
+.app-frame .pos-page .pos-search-box input { min-width:0; height:36px; min-height:36px !important; font-size:13px; }
+.app-frame .pos-page .pos-scan-button { height:40px; min-height:40px; padding:0 10px; }
+.app-frame .pos-page .pos-filter-popover-wrap { flex:0 0 auto; }
+.app-frame .pos-page .pos-filter-toolbar { margin:0; gap:4px; }
+.app-frame .pos-page .pos-filter-button { height:36px; min-height:36px; padding:6px 8px; font-size:12px; }
+.app-frame .pos-page .pos-clear-filters { display:grid; place-items:center; width:26px; height:30px; min-height:30px; padding:0; }
+.app-frame .pos-page .pos-view-switch { display:flex; flex:0 0 auto; gap:2px; padding:3px; border:1px solid var(--ux-line); border-radius:9px; background:var(--ux-canvas); }
+.app-frame .pos-page .pos-view-switch button { display:inline-flex; gap:5px; align-items:center; justify-content:center; min-width:30px; min-height:30px; padding:5px 7px; border:0; border-radius:6px; background:transparent; color:var(--ux-muted); font-size:11px; }
+.app-frame .pos-page .pos-view-switch button[aria-pressed=true] { background:var(--ux-surface); color:var(--ux-text); box-shadow:0 1px 3px #0002; }
+.app-frame .pos-page .pos-results-meta { min-height:14px; margin:4px 0 6px; font-size:10px; }
+.app-frame .pos-page .pos-quick-quantity { flex-wrap:nowrap; gap:10px; margin:6px 0 0; padding:6px 9px; min-height:46px; }
+.app-frame .pos-page .pos-quick-quantity > div:first-child { display:flex; align-items:center; flex-wrap:nowrap; gap:8px; min-width:0; }
+.app-frame .pos-page .pos-quick-quantity > div:first-child > small:first-child,.app-frame .pos-page .pos-quick-quantity > small { display:none; }
+.app-frame .pos-page .pos-quick-quantity strong { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.app-frame .pos-page .pos-quick-quantity > div:first-child > small:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.app-frame .pos-page .pos-quick-done { min-height:32px; padding:5px 8px; white-space:nowrap; }
+.app-frame .pos-page .pos-catalog-list { display:grid; gap:3px; list-style:none; margin:0; padding:0; }
+.app-frame .pos-page .pos-catalog-list-row { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(82px,auto); gap:12px; align-items:center; width:100%; min-height:46px; padding:5px 12px; border:1px solid var(--ux-line); border-radius:8px; text-align:left; color:var(--ux-text); background:var(--ux-surface); }
+.app-frame .pos-page .pos-catalog-list-row:hover,.app-frame .pos-page .pos-catalog-list-row[data-keyboard-active=true] { background:var(--ux-soft); border-color:var(--brand); }
+.app-frame .pos-page .pos-catalog-list-row[data-keyboard-active=true] { box-shadow:inset 3px 0 0 var(--brand); }
+.app-frame .pos-page .pos-catalog-list-row:disabled { cursor:not-allowed; opacity:.45; }
+.app-frame .pos-page .pos-list-identity { min-width:0; display:grid; gap:2px; }
+.app-frame .pos-page .pos-list-identity strong { color:var(--ux-text); font-size:13px; line-height:1.35; }
+.app-frame .pos-page .pos-list-identity small { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ux-muted); font-size:10px; line-height:1.3; }
+.app-frame .pos-page .pos-list-stock { padding:3px 6px; border-radius:6px; background:var(--ux-soft); font-size:11px; white-space:nowrap; }
+.app-frame .pos-page .pos-list-price { font-size:13px; color:var(--ux-text); text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.app-frame .pos-page .pos-list-empty { padding:20px; color:var(--ux-muted); }
+@media(max-width:1100px) {
+ .app-frame .pos-page .pos-header-actions .pos-pending-button > span,.app-frame .pos-page .pos-view-switch button > span { display:none; }
+ .app-frame .pos-page .pos-header-actions .pos-pending-button { min-width:30px; }
+ .app-frame .pos-page .pos-scan-button > span { display:none; }
+}
+@media(max-height:760px) and (min-width:651px) {
+ .app-frame .pos-page .pos-product-card { min-height:138px; padding:10px; }
+ .app-frame .pos-page .pos-product-copy { margin-top:5px; }
+ .app-frame .pos-page .pos-catalog-footer { display:none; }
+}
+@media(max-width:650px) {
+ .app-frame .pos-page .pos-compact-top { gap:6px; }
+ .app-frame .pos-page .pos-compact-top h2 { flex-shrink:1; font-size:12px; min-width:0; }
+ .app-frame .pos-page .pos-header-branch { display:none; }
+ .app-frame .pos-page .pos-header-actions { gap:3px; }
+ .app-frame .pos-page .pos-header-actions .pos-pending-button { padding:4px; }
+ .app-frame .pos-page .pos-header-actions .pos-utility-menu > summary { padding:4px 5px; font-size:10px; }
+ .app-frame .pos-page .pos-search-row { flex-wrap:wrap; }
+ .app-frame .pos-page .pos-search-box { flex:1 1 calc(100% - 50px); }
+ .app-frame .pos-page .pos-scan-button { width:38px; padding:0; }
+ .app-frame .pos-page .pos-filter-popover-wrap { flex:1; }
+ .app-frame .pos-page .pos-filter-toolbar { justify-content:flex-start; }
+ .app-frame .pos-page .pos-results-meta > span:last-child { display:none; }
+ .app-frame .pos-page .pos-quick-quantity { gap:6px; }
+ .app-frame .pos-page .pos-quick-quantity > div:first-child { flex-basis:auto; }
+ .app-frame .pos-page .pos-quick-quantity > div:first-child > small:last-child { display:none; }
+ .app-frame .pos-page .pos-quick-done { font-size:11px; padding:5px; }
+ .app-frame .pos-page .pos-quick-done svg { display:none; }
+ .app-frame .pos-page .pos-catalog-list-row { grid-template-columns:minmax(0,1fr) auto auto; padding:7px 9px; gap:7px; }
+ .app-frame .pos-page .pos-list-identity strong { font-size:12px; }
+ .app-frame .pos-page .pos-list-price { font-size:12px; }
 }

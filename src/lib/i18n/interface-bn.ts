@@ -479,7 +479,8 @@ export const interfaceBangla: Record<string, string> = {
   "↑/↓ select · Enter add · F6 quantity": "↑/↓ সিলেক্ট · Enter অ্যাড · F6 কোয়ান্টিটি",
   "Catalog view": "ক্যাটালগ ভিউ",
   "Card mode": "কার্ড মোড",
-  "Table mode": "টেবিল মোড",
+  "List mode": "লিস্ট মোড",
+  "Medicine list": "মেডিসিন লিস্ট",
   "Batch / expiry": "ব্যাচ / এক্সপায়ারি",
   "Add": "অ্যাড",
   "F2 Search · F6 Quantity · F4 Checkout · F9 Calculator": "F2 সার্চ · F6 কোয়ান্টিটি · F4 চেকআউট · F9 ক্যালকুলেটর"
