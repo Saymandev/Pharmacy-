@@ -1,0 +1,90 @@
+/* Directory panels must not inherit Purchase's compact .supplier-card layout. */
+.app-frame .supplier-page { width:100%; min-width:0; }
+.app-frame .supplier-directory-card { display:block; width:100%; padding:0; overflow:hidden; border-radius:16px; }
+.app-frame .supplier-page .supplier-summary { margin:0; }
+.app-frame .supplier-summary article { padding:17px 20px; }
+.app-frame .supplier-summary small { font-size:13px; color:var(--ink-soft); }
+.app-frame .supplier-summary strong { font-size:20px; color:var(--ink); }
+.app-frame .supplier-page .supplier-toolbar { display:flex; align-items:center; width:100%; gap:10px; padding:18px 20px; border-bottom:1px solid var(--line); }
+.app-frame .supplier-page .supplier-toolbar>div { flex:1; width:100%; max-width:none; min-width:0; }
+.app-frame .supplier-page .supplier-toolbar input { min-height:44px; font-size:14px; }
+.app-frame .supplier-page .supplier-toolbar>button { min-height:44px; padding:10px 20px; border-radius:10px; font-size:13px; }
+.app-frame .supplier-page .supplier-table-wrap { width:100%; min-width:0; }
+.app-frame .supplier-page .supplier-table { width:100%; min-width:790px; table-layout:auto; }
+.app-frame .supplier-page .supplier-table th { padding:14px 20px; background:var(--canvas); color:var(--ink-soft); font-size:11px; text-transform:uppercase; letter-spacing:.5px; }
+.app-frame .supplier-page .supplier-table td { padding:19px 20px; color:var(--ink); font-size:13px; border-color:var(--line); }
+.app-frame .supplier-page .supplier-table tr { background:var(--surface); }
+.app-frame .supplier-name-cell { gap:12px; }
+.app-frame .supplier-name-cell>i { width:38px; height:38px; flex-shrink:0; background:var(--brand-wash); color:var(--brand); border:1px solid var(--line); }
+.app-frame .supplier-name-cell strong { font-size:14px; color:var(--ink); }
+.app-frame .supplier-name-cell small { font-size:12px; color:var(--ink-soft); }
+.app-frame .supplier-contact { gap:8px; }
+.app-frame .supplier-contact a { color:var(--ink-soft); font-size:13px; overflow-wrap:anywhere; }
+.app-frame .supplier-address { max-width:300px; min-width:120px; white-space:normal; align-items:flex-start; gap:8px; color:var(--ink-soft); line-height:1.7; overflow-wrap:anywhere; }
+.app-frame .supplier-address svg { margin-top:4px; }
+.app-frame .supplier-actions { gap:8px; }
+.app-frame .supplier-actions button { display:inline-flex; width:auto; height:auto; min-height:37px; align-items:center; justify-content:center; gap:7px; padding:8px 10px; font-size:12px; background:var(--surface); color:var(--ink); border-color:var(--line); border-radius:8px; }
+.app-frame .supplier-actions button:last-child { color:#be3949; }
+.app-frame .supplier-pagination { width:100%; border-top:1px solid var(--line); padding:16px 20px; font-size:12px; color:var(--ink-soft); }
+.app-frame .supplier-pagination button { min-height:36px; padding:8px 12px; font-size:12px; color:var(--ink); background:var(--surface); border-color:var(--line); border-radius:8px; }
+.app-frame .supplier-empty strong { font-size:16px; color:var(--ink); }
+.app-frame .supplier-empty span,.app-frame .supplier-loading { font-size:13px; color:var(--ink-soft); }
+
+.app-frame .sales-page .sales-detail-drawer { width:min(600px,100vw); color:var(--ink); background:var(--surface); }
+.app-frame .sales-page .sales-invoice-drawer { overflow:hidden; border:1px solid var(--line); border-radius:16px; }
+.app-frame .sales-invoice-body { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding-bottom:8px; }
+.app-frame .sales-page .sales-detail-head { position:relative; flex-shrink:0; padding:23px 24px 19px; background:var(--surface); border-color:var(--line); }
+.app-frame .sales-detail-head .purchase-close { position:static; flex-shrink:0; margin:0; }
+.app-frame .sales-page .sales-detail-head h2 { font-size:23px; color:var(--ink); overflow-wrap:anywhere; }
+.app-frame .sales-page .sales-detail-head p:not(.eyebrow) { color:var(--ink-soft); font-size:13px; line-height:1.7; }
+.app-frame .sales-page .sales-detail-metrics { margin:20px 24px; padding:17px; gap:17px; border-color:var(--line); border-radius:12px; background:var(--canvas); }
+.app-frame .sales-page .sales-detail-metrics small { color:var(--ink-soft); font-size:12px; }
+.app-frame .sales-page .sales-detail-metrics strong { color:var(--ink); font-size:21px; }
+.app-frame .sales-page .sales-detail-title { margin:22px 24px 12px; font-size:14px; color:var(--ink); }
+.app-frame .sales-page .sales-detail-line { margin:0 24px; padding:16px 0; gap:18px; border-color:var(--line); background:transparent; color:var(--ink); }
+.app-frame .sales-page .sales-detail-line>span { display:flex; min-width:0; flex:1; flex-direction:column; gap:6px; }
+.app-frame .sales-page .sales-detail-line strong { font-size:14px; color:var(--ink); }
+.app-frame .sales-page .sales-detail-line small { font-size:12px; line-height:1.7; color:var(--ink-soft); }
+.app-frame .sales-page .sales-detail-line>b { flex-shrink:0; font-size:14px; font-variant-numeric:tabular-nums; color:var(--ink); }
+.app-frame .sales-page .sales-detail-totals { margin:14px 24px; padding:18px 0 0; gap:13px; color:var(--ink-soft); border-color:var(--line); font-size:14px; }
+.app-frame .sales-page .sales-detail-totals b { font-size:14px; color:var(--ink); font-variant-numeric:tabular-nums; }
+.app-frame .sales-page .sales-detail-totals>strong { padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--brand-wash); color:var(--ink); font-size:16px; }
+.app-frame .sales-page .sales-detail-totals>strong b { font-size:18px; color:var(--brand); }
+.app-frame .sales-page .sales-invoice-drawer>.sales-detail-actions { flex-shrink:0; margin:0; padding:16px 24px; border-top:1px solid var(--line); background:var(--surface); gap:9px; }
+.app-frame .sales-page .sales-detail-actions button { display:inline-flex; align-items:center; justify-content:center; min-height:43px; font-size:13px; }
+.app-frame[data-theme=dark] .supplier-page :is(.supplier-table tr,.supplier-table th) { background:var(--surface)!important; }
+.app-frame[data-theme=dark] .supplier-page .supplier-name-cell strong { color:var(--ink)!important; }
+.app-frame[data-theme=dark] .supplier-page .supplier-actions button:last-child { color:#ffadb7!important; }
+.app-frame[data-theme=dark] .sales-page .sales-detail-line { background:transparent!important; }
+.app-frame[data-theme=dark] .sales-page .sales-detail-drawer :is(.sales-detail-line>b,.sales-detail-totals b,.sales-detail-metrics strong) { color:var(--ink)!important; }
+.app-frame[data-theme=dark] .sales-page .sales-detail-totals>strong b { color:var(--brand)!important; }
+.app-frame[data-theme=dark] .sales-page .sales-detail-drawer :is(.sales-detail-line small,.sales-detail-totals>span) { color:var(--ink-soft)!important; }
+@media(max-width:900px) {
+  .app-frame .supplier-page .supplier-table td,.app-frame .supplier-page .supplier-table th { padding-inline:14px; }
+}
+@media(max-width:650px) {
+  .app-frame .supplier-page .supplier-toolbar { padding:14px; }
+  .app-frame .supplier-page .supplier-toolbar>div { flex-basis:100%; }
+  .app-frame .supplier-page .supplier-table { display:block; min-width:0; white-space:normal; }
+  .app-frame .supplier-page .supplier-table tbody { display:grid; padding:12px; gap:12px; }
+  .app-frame .supplier-page .supplier-table tr { padding:8px; border-color:var(--line); border-radius:12px; }
+  .app-frame .supplier-page .supplier-table td { padding:9px 5px; min-width:0; }
+  .app-frame .supplier-page .supplier-table td::before { font-size:11px; color:var(--ink-soft); }
+  .app-frame .supplier-page .supplier-table .supplier-address { min-width:0; }
+  .app-frame .supplier-page .supplier-actions { width:100%; }
+  .app-frame .supplier-page .supplier-actions button { flex:1; }
+  .app-frame .supplier-summary article { padding:14px; gap:9px; }
+  .app-frame .supplier-summary small { font-size:11px; }
+  .app-frame .supplier-summary strong { font-size:17px; }
+  .app-frame .supplier-pagination { padding:14px; gap:13px; }
+  .app-frame .sales-page .sales-detail-drawer { width:100vw; }
+  .app-frame .sales-page .sales-detail-head { padding:19px 16px 16px; }
+  .app-frame .sales-page .sales-detail-head h2 { font-size:21px; }
+  .app-frame .sales-page .sales-detail-metrics { margin:16px; padding:14px; gap:15px; }
+  .app-frame .sales-page .sales-detail-metrics strong { font-size:18px; }
+  .app-frame .sales-page .sales-detail-title { margin-inline:16px; }
+  .app-frame .sales-page .sales-detail-line { margin-inline:16px; gap:10px; }
+  .app-frame .sales-page .sales-detail-line>b { font-size:13px; }
+  .app-frame .sales-page .sales-detail-totals { margin-inline:16px; }
+  .app-frame .sales-page .sales-invoice-drawer>.sales-detail-actions { padding:13px 16px max(13px,env(safe-area-inset-bottom)); }
+}
