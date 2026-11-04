@@ -1,0 +1,27 @@
+/* Supplier returns use the same semantic surfaces in both themes. */
+.app-frame .pr-panel { color:var(--ux-text); background:var(--ux-surface); border-color:var(--ux-line); min-width:0; }
+.app-frame .pr-panel :is(h2,h3,h4,strong,b) { color:var(--ux-text); }
+.app-frame .pr-panel :is(.pr-head p,.pr-history-row small,.pr-lines small) { color:var(--ux-muted); font-size:13px; line-height:1.6; }
+.app-frame .pr-panel :is(.pr-create,.pr-detail,.pr-refund) { background:var(--ux-canvas); border-color:var(--ux-line); border-radius:14px; padding:20px; gap:16px; min-width:0; }
+.app-frame .pr-panel :is(label,input,textarea) { font-size:14px; line-height:1.5; }
+.app-frame .pr-panel label { gap:8px; }
+.app-frame .pr-panel :is(input,textarea,select) { background:var(--ux-surface); color:var(--ux-text); border-color:var(--ux-line); min-height:44px; border-radius:10px; }
+.app-frame .pr-panel textarea { min-height:88px; resize:vertical; }
+.app-frame .pr-panel :is(.pr-head > button,.pr-actions > button:not(.purchase-primary-action),.pr-history-row) { background:var(--ux-surface); color:var(--ux-text); border-color:var(--ux-line); min-height:44px; }
+.app-frame .pr-panel .pr-history-row { padding:16px; gap:16px; border-radius:12px; }
+.app-frame .pr-panel .pr-history-row:hover { background:var(--ux-soft); }
+.app-frame .pr-panel :is(.pr-lines label,.pr-lines > p) { border-color:var(--ux-line); color:var(--ux-text); overflow-wrap:anywhere; }
+.app-frame .pr-panel .pr-totals span { background:var(--ux-surface); border:1px solid var(--ux-line); color:var(--ux-muted); font-size:13px; border-radius:10px; min-width:0; }
+.app-frame .pr-panel .pr-totals strong { font-size:16px; overflow-wrap:anywhere; }
+.app-frame .pr-panel .pr-create > label,.app-frame .pr-panel .pr-refund > label { display:grid; min-width:0; }
+.app-frame .pr-panel .pr-head > div { min-width:0; }
+.app-frame .pr-panel .pr-head > button { flex-shrink:0; }
+@media(max-width:1100px) { .app-frame .pr-panel .pr-totals { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:650px) {
+  .app-frame .pr-panel :is(.pr-create,.pr-detail,.pr-refund) { padding:14px; }
+  .app-frame .pr-panel .pr-head { align-items:flex-start; flex-wrap:wrap; }
+  .app-frame .pr-panel .pr-history-row { align-items:flex-start; flex-wrap:wrap; }
+  .app-frame .pr-panel .pr-history-row > span { overflow-wrap:anywhere; }
+  .app-frame .pr-panel .pr-lines label { align-items:flex-start; }
+  .app-frame .pr-panel .pr-lines input { flex-shrink:0; }
+}

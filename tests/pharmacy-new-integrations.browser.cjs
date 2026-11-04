@@ -66,6 +66,34 @@ const fs = require('node:fs');
     await panel.getByRole('button', { name: 'Post refund received' }).click();
     await panel.getByText('PRF-A').waitFor();
     await page.screenshot({ path: require('node:path').resolve('../work/supplier-return-mobile.png'), fullPage: true });
+    // Return creation, history, detail and refund surfaces must all follow the theme.
+    const backgrounds = {};
+    for (const theme of ['light', 'dark']) {
+      await page.evaluate(theme => { localStorage.setItem('pharmacy.theme', theme); }, theme);
+      await page.reload();
+      await page.getByRole('button', {name:'Supplier returns', exact:true}).click();
+      await page.locator('.pr-history-row').click();
+      await page.locator('.pr-refund').waitFor();
+      backgrounds[theme] = await page.locator('.pr-create').evaluate(el => getComputedStyle(el).backgroundColor);
+      for (const selector of ['.pr-create', '.pr-detail', '.pr-refund', '.pr-history-row', '.pr-totals span']) {
+        const colors = await page.locator(selector).first().evaluate(el => ({bg:getComputedStyle(el).backgroundColor,fg:getComputedStyle(el).color}));
+        assert.notEqual(colors.bg, colors.fg, `${theme} ${selector} readable text`);
+        if(theme === 'dark') assert.notEqual(colors.bg, 'rgb(255, 255, 255)', `${selector} must not remain white`);
+      }
+      for (const width of [390, 1280]) {
+        await page.setViewportSize({width,height:844});
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth+1));
+      }
+      await page.screenshot({path:require('node:path').resolve(`../work/supplier-returns-${theme}.png`),fullPage:true});
+    }
+    assert.notEqual(backgrounds.light, backgrounds.dark);
+    await page.evaluate(() => {localStorage.setItem('pharmacy.language','bn');});
+    await page.reload();
+    await page.getByRole('button', {name:'সরবরাহকারীকে ফেরত', exact:true}).click();
+    await page.getByRole('heading', {name:'সরবরাহকারী ফেরত ও টাকা প্রাপ্তি'}).waitFor();
+    await page.evaluate(() => {localStorage.setItem('pharmacy.language','en');});
+    await page.reload();
+    await page.setViewportSize({width:390,height:844});
     assert.equal(writes[0].body.items[0].purchaseItemId, source.id);
     assert.ok(writes[0].key && writes[2].key);
     assert.equal(writes[2].body.amount, 5);

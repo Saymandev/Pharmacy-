@@ -166,7 +166,7 @@ export function AppShell() {
       {preferencesOpen&&<DisplayPreferences onClose={()=>setPreferencesOpen(false)}/>}
       {mobileSidebarOpen && <button type="button" className="sidebar-mobile-backdrop" aria-label={t("Close navigation")} onClick={() => setMobileSidebarOpen(false)} />}
       <aside ref={sidebarRef} onScroll={rememberSidebarScroll} className={`sidebar${mobileSidebarOpen ? " sidebar-mobile-open" : ""}`}>
-        <Link scroll={false} onClick={navigateSidebar} className="brand" href={demoMode ? "/dashboard?demo=1" : "/dashboard"} aria-label="Pharmacy home">
+        <Link scroll={false} onClick={navigateSidebar} className="brand" href={demoMode ? "/dashboard?demo=1" : "/dashboard"} aria-label={t("Home")}>
           <span className="brand-mark"><Pill size={21} strokeWidth={2.1} /></span>
           <span className="brand-copy"><strong>Pharmacy</strong><small>CARE · CONTROL · CLARITY</small></span>
         </Link>
