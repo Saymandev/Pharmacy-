@@ -18,6 +18,7 @@ import "./finance-ledger.css";
 import "./supplier-returns.css";
 import "./pos-cart.css";
 import "./pos-productivity.css";
+import "./review-permissions.css";
 
 export const metadata: Metadata = {
   title: "Pharmacy POS | Pharmacy operations",

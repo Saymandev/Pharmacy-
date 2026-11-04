@@ -1,0 +1,112 @@
+/* Order review: compact chrome, one scrolling body, payment before items on phones. */
+.app-frame .pos-page .pos-review-dialog { width:min(1000px,100%); height:min(680px,calc(100dvh - 24px)); max-height:calc(100dvh - 24px); border-radius:16px; border-color:var(--ux-line); }
+.app-frame .pos-page .pos-review-dialog .pos-checkout-heading { flex:0 0 auto; align-items:center; gap:10px; padding:13px 18px; border-bottom:1px solid var(--ux-line); }
+.app-frame .pos-review-dialog .pos-checkout-heading > div { min-width:0; flex:1; }
+.app-frame .pos-review-dialog .pos-checkout-heading .eyebrow { display:none; }
+.app-frame .pos-review-dialog .pos-checkout-heading h2 { font-size:21px; line-height:1.2; padding:0; }
+.app-frame .pos-review-dialog .pos-checkout-heading p:last-child { margin:4px 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:12px; }
+.app-frame .pos-review-dialog .pos-checkout-back { margin-left:auto; min-height:34px; padding:7px 9px; }
+.app-frame .pos-review-dialog .pos-checkout-close { position:static; display:grid; place-items:center; flex-shrink:0; margin:0; width:34px; height:34px; border:1px solid var(--ux-line); border-radius:9px; background:var(--ux-surface); color:var(--ux-text); }
+.app-frame .pos-page .pos-review-dialog .pos-checkout-body { flex:1; min-height:0; grid-template-columns:minmax(0,1fr) minmax(320px,.95fr); padding:14px; gap:14px; }
+.app-frame .pos-review-dialog :is(.pos-checkout-customer,.pos-checkout-items,.pos-checkout-payment,.pos-checkout-adjustments) { padding:13px; border-radius:10px; margin-bottom:12px; }
+.app-frame .pos-review-dialog .pos-checkout-payment { margin:0; }
+.app-frame .pos-review-dialog .pos-checkout-section-top { margin-bottom:10px; align-items:center; }
+.app-frame .pos-review-dialog .pos-checkout-section-top h3 { font-size:14px; }
+.app-frame .pos-review-dialog .pos-checkout-customer .pos-opd-hint { font-size:11px; margin-top:6px; }
+.app-frame .pos-review-dialog .pos-checkout-items > summary { display:flex; align-items:center; gap:8px; cursor:pointer; list-style:none; }
+.app-frame .pos-review-dialog .pos-checkout-items > summary::-webkit-details-marker { display:none; }
+.app-frame .pos-review-dialog .pos-checkout-items > summary h3 { margin:0; font-size:14px; flex:1; }
+.app-frame .pos-review-dialog .pos-checkout-items > summary span { font-size:11px; color:var(--ux-muted); }
+.app-frame .pos-review-dialog .pos-checkout-items > summary svg { color:var(--ux-muted); flex-shrink:0; transition:transform .15s; }
+.app-frame .pos-review-dialog .pos-checkout-items[open] > summary svg { transform:rotate(180deg); }
+.app-frame .pos-review-dialog .pos-checkout-items[open] > summary { padding-bottom:8px; border-bottom:1px solid var(--ux-line); }
+.app-frame .pos-review-dialog .pos-checkout-item { padding:9px 0; gap:9px; border-color:var(--ux-line); }
+.app-frame .pos-review-dialog .pos-checkout-item:last-child { border-bottom:0; }
+.app-frame .pos-review-dialog .pos-checkout-item > span strong { font-size:13px; color:var(--ux-text); overflow-wrap:anywhere; }
+.app-frame .pos-review-dialog .pos-checkout-item > span small { font-size:11px; color:var(--ux-muted); }
+.app-frame .pos-review-dialog .pos-checkout-item > strong { color:var(--ux-text); font-variant-numeric:tabular-nums; }
+.app-frame .pos-review-dialog .pos-checkout-payment .pos-grand-total { display:flex; justify-content:space-between; align-items:center; gap:12px; min-height:64px; padding:12px; margin-bottom:14px; background:var(--ux-soft); }
+.app-frame .pos-review-dialog .pos-grand-total > span { color:var(--ux-muted); font-size:12px; }
+.app-frame .pos-review-dialog .pos-grand-total > strong { color:var(--ux-text); font-size:27px; font-variant-numeric:tabular-nums; }
+.app-frame .pos-review-dialog .pos-tender-line { background:var(--ux-canvas); gap:10px; padding:11px; }
+.app-frame .pos-review-dialog .pos-tender-line label { display:grid; gap:6px; }
+.app-frame .pos-review-dialog .pos-tender-line .ui-select-display { min-height:40px; padding:8px 10px; font-size:13px; }
+.app-frame .pos-review-dialog .pos-tender-line .pos-currency-input { background:var(--ux-surface); border-radius:8px; }
+.app-frame .pos-review-dialog .pos-tender-line .pos-currency-input > input { min-height:42px; font-size:22px; }
+.app-frame .pos-review-dialog .pos-full-payment-hint { grid-column:1/-1; color:var(--ux-muted); font-size:11px; line-height:1.5; }
+.app-frame .pos-review-dialog .pos-add-tender { width:100%; justify-content:center; min-height:36px; padding:8px; border:1px dashed var(--ux-line); border-radius:8px; background:transparent; color:var(--ux-text); }
+.app-frame .pos-review-dialog .pos-tender-heading { padding:7px 0; color:var(--ux-muted); }
+.app-frame .pos-review-dialog .pos-tender-heading strong,.app-frame .pos-review-dialog .pos-due-row strong { color:var(--ux-text); }
+.app-frame .pos-page .pos-review-dialog .pos-checkout-actions { flex:0 0 auto; border-top:1px solid var(--ux-line); padding:11px 18px; gap:5px 14px; }
+.app-frame .pos-review-dialog .pos-checkout-footer-summary > strong { font-size:22px; }
+.app-frame .pos-review-dialog .pos-checkout-footer-summary > small { font-size:11px; }
+.app-frame .pos-review-dialog .pos-checkout-note { display:none; }
+.app-frame .pos-review-dialog .pos-checkout-footer-buttons .pos-pending-button { background:transparent; border:1px solid var(--ux-line); color:var(--ux-text); }
+.app-frame .pos-review-dialog .pos-checkout-error { flex:0 0 auto; margin:0; border-radius:0; padding:10px 18px; }
+/* Permissions are grouped flat lists, not a grid of module cards. */
+.app-frame .access-permission-groups { display:block; margin-top:12px; }
+.app-frame .access-permission-groups fieldset { width:100%; min-width:0; margin:0 0 14px; padding:0; border:0; border-radius:0; background:transparent !important; }
+.app-frame .access-permission-groups legend { width:100%; padding:9px 12px; border-block:1px solid var(--line); border-radius:0; background:var(--canvas); font-size:13px; text-transform:capitalize; }
+.app-frame .access-permission-groups .access-module-summary { padding:7px 12px; margin:0; }
+.app-frame .access-permission-list { list-style:none; margin:0; padding:0; }
+.app-frame .access-permission-list > li { margin:0; padding:0; border-bottom:1px solid var(--line); }
+.app-frame .access-permission-list > li:last-child { border-bottom:0; }
+.app-frame .access-permission-list :is(label,.access-permission-read-row) { display:grid; grid-template-columns:20px minmax(0,1fr); align-items:start; gap:12px; min-height:48px; margin:0; padding:11px 12px; border:0; border-radius:0; }
+.app-frame .access-permission-list label { cursor:pointer; }
+.app-frame .access-permission-list label:hover { background:var(--canvas); }
+.app-frame .access-permission-list label[data-selected=true] { background:color-mix(in srgb,var(--brand-wash) 45%,var(--surface)); box-shadow:inset 3px 0 0 var(--brand); }
+.app-frame .access-permission-list input[type=checkbox] { width:18px; height:18px; margin:3px 0 0; accent-color:var(--brand); }
+.app-frame .access-permission-read-row > svg { margin-top:5px; color:var(--brand); width:16px; height:16px; }
+.app-frame .access-permission-list :is(label,.access-permission-read-row) > span { display:grid; grid-template-columns:110px minmax(150px,.8fr) minmax(0,1fr); align-items:start; gap:5px 14px; min-width:0; }
+.app-frame .access-permission-list strong { font-size:15px; line-height:1.5; color:var(--ink); }
+.app-frame .access-permission-list code { font:12px/1.8 ui-monospace,monospace; color:var(--ink-soft); overflow-wrap:anywhere; }
+.app-frame .access-permission-list small { color:var(--ink-soft); font-size:12px; line-height:1.7; overflow-wrap:anywhere; }
+.app-frame .access-role-editor .access-permission-toolbar { position:sticky; top:-1px; z-index:2; padding:8px 0; margin:12px 0 4px; background:var(--surface); }
+.app-frame .access-role-editor .access-editor-heading { padding:18px 22px; }
+.app-frame .access-role-detail { display:flex; flex-direction:column; width:min(900px,calc(100vw - 24px)); max-height:calc(100dvh - 24px); padding:0; overflow:hidden; border-radius:16px; }
+.app-frame .access-permission-view-heading { display:flex; gap:14px; align-items:flex-start; flex-shrink:0; padding:18px 22px; border-bottom:1px solid var(--line); }
+.app-frame .access-permission-view-heading > div { min-width:0; flex:1; }
+.app-frame .access-permission-view-heading h2 { margin:0; }
+.app-frame .access-permission-view-heading p { margin:6px 0 0; font-size:12px; color:var(--ink-soft); }
+.app-frame .access-permission-view-heading .purchase-close { position:static; display:grid; place-items:center; margin:0; flex-shrink:0; width:34px; height:34px; }
+.app-frame .access-role-detail > .access-permission-groups { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; padding:0 18px 14px; }
+@media(max-width:760px) {
+ .app-frame .pos-page .pos-review-dialog { height:calc(100dvh - 12px); max-height:calc(100dvh - 12px); border-radius:12px; }
+ .app-frame .pos-review-dialog .pos-checkout-heading { padding:11px 12px; gap:7px; }
+ .app-frame .pos-review-dialog .pos-checkout-heading h2 { font-size:19px; }
+ .app-frame .pos-review-dialog .pos-checkout-heading p:last-child { font-size:11px; }
+ .app-frame .pos-review-dialog .pos-checkout-back { font-size:10px; min-height:32px; padding:5px 6px; }
+ .app-frame .pos-page .pos-review-dialog .pos-checkout-body { display:flex; flex-direction:column; gap:10px; padding:10px; }
+ .app-frame .pos-review-dialog .pos-checkout-main { display:contents; }
+ .app-frame .pos-review-dialog .pos-checkout-customer { order:0; }
+ .app-frame .pos-review-dialog .pos-checkout-payment { order:1; }
+ .app-frame .pos-review-dialog .pos-checkout-items { order:2; }
+ .app-frame .pos-review-dialog .pos-checkout-adjustments { order:3; }
+ .app-frame .pos-review-dialog :is(.pos-checkout-customer,.pos-checkout-items,.pos-checkout-payment,.pos-checkout-adjustments) { flex-shrink:0; width:100%; margin:0; padding:11px; }
+ .app-frame .pos-page .pos-review-dialog .pos-checkout-actions { padding:9px 12px max(9px,env(safe-area-inset-bottom)); gap:7px; }
+ .app-frame .pos-review-dialog .pos-checkout-footer-summary > small { font-size:10px; }
+ .app-frame .access-permission-list :is(label,.access-permission-read-row) { gap:10px; padding:10px 8px; }
+ .app-frame .access-permission-list :is(label,.access-permission-read-row) > span { grid-template-columns:minmax(0,1fr); gap:2px; }
+ .app-frame .access-permission-list small { font-size:12px; }
+ .app-frame .access-permission-view-heading { padding:15px; }
+ .app-frame .access-role-detail > .access-permission-groups { padding:0 10px 12px; }
+}
+
+/* Each desktop column scrolls independently, keeping payment beside order review. */
+@media(min-width:761px) {
+ .app-frame .pos-page .pos-review-dialog .pos-checkout-body { grid-template-rows:minmax(0,1fr); align-items:stretch; overflow:hidden; }
+ .app-frame .pos-review-dialog .pos-checkout-main,.app-frame .pos-review-dialog .pos-checkout-payment { min-height:0; max-height:100%; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
+ .app-frame .pos-review-dialog .pos-checkout-main { padding-right:3px; }
+}
+.app-frame .access-role-editor .access-editor-heading { padding:14px 18px; gap:10px; }
+.app-frame .access-role-editor .access-editor-heading small { display:none; }
+.app-frame .access-role-editor .access-editor-heading h2 { font-size:22px; }
+.app-frame .access-role-editor .access-editor-heading p { margin-top:4px; font-size:12px; }
+.app-frame .access-role-editor .access-editor-icon { width:36px; height:36px; border-radius:10px; }
+.app-frame .access-role-editor .access-editor-body { padding:14px 18px; }
+.app-frame .access-role-editor .access-editor-footer { padding:12px 18px; }
+.app-frame .access-role-editor .access-permission-toolbar { margin-top:7px; padding:5px 0; }
+.app-frame .access-permission-list :is(label,.access-permission-read-row) { padding-block:8px; }
+@media(max-height:760px) { .app-frame .access-role-editor .access-editor-heading p { display:none; } }
+
+.app-frame .access-role-editor .access-permission-toolbar > label > input { min-height:40px; padding:8px 0; border:0 !important; background:transparent !important; box-shadow:none !important; }

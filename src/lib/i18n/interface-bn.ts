@@ -483,5 +483,7 @@ export const interfaceBangla: Record<string, string> = {
   "Medicine list": "মেডিসিন লিস্ট",
   "Batch / expiry": "ব্যাচ / এক্সপায়ারি",
   "Add": "অ্যাড",
-  "F2 Search · F6 Quantity · F4 Checkout · F9 Calculator": "F2 সার্চ · F6 কোয়ান্টিটি · F4 চেকআউট · F9 ক্যালকুলেটর"
+  "F2 Search · F6 Quantity · F4 Checkout · F9 Calculator": "F2 সার্চ · F6 কোয়ান্টিটি · F4 চেকআউট · F9 ক্যালকুলেটর",
+  "Close checkout": "ক্লোজ চেকআউট",
+  "Leave the amount blank to pay the full total.": "পুরো অ্যামাউন্ট দিতে এই ঘর খালি রাখতে পারেন।"
 };
