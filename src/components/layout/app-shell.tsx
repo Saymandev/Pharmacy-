@@ -149,7 +149,7 @@ export function AppShell() {
   }
 
   if (status !== "authenticated") {
-    return <main className="auth-loading"><span className="loading-mark"><Pill size={19} /></span><span>Opening your workspace…</span></main>;
+    return <main className="auth-loading"><span className="loading-mark"><Pill size={19} /></span><span>{t("Opening your workspace…")}</span></main>;
   }
 
   const initials = (user?.fullName ?? "Pharmacy User")
@@ -174,10 +174,10 @@ export function AppShell() {
 
         <div className="branch-switcher">
           <span className="branch-avatar">P</span>
-          <span className="branch-name"><strong>Pharmacy</strong><small>Workspace</small></span>
+          <span className="branch-name"><strong>Pharmacy</strong><small>{t("Workspace")}</small></span>
         </div>
 
-        <nav className="side-navigation" aria-label="Main navigation">
+        <nav className="side-navigation" aria-label={t("Main navigation")}>
           <p className="nav-caption">{t("WORKSPACE")}</p>
           <Link scroll={false} onClick={navigateSidebar} className={`nav-link ${pathname === "/dashboard" ? "nav-link-active" : ""}`} title={t("Overview")} href={demoMode ? "/dashboard?demo=1" : "/dashboard"}><LayoutDashboard size={17} /><span>{t("Overview")}</span></Link>
           <p className="nav-caption nav-caption-spaced">{t("PHARMACY")}</p>
@@ -202,17 +202,17 @@ export function AppShell() {
             <label className="language-switcher"><span className="sr-only">{t("Language")}</span><Select aria-label={t("Language")} value={language} onChange={(event) => setLanguage(event.target.value as "en" | "bn")}><option value="en">English</option><option value="bn">বাংলা</option></Select></label>
             <button className="icon-button theme-toggle" type="button" aria-label={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} title={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>{theme === "dark" ? <Sun size={18}/> : <Moon size={18}/>}</button>
             <button className="icon-button display-preferences-trigger" type="button" aria-label={t("Settings")} title={t("Settings")} onClick={()=>setPreferencesOpen(true)}><Settings2 size={18}/></button>
-            {demoMode && <span className="demo-mode-badge"><span className="demo-badge-full">{t("DEMO DATA · Local only")}</span><span className="demo-badge-compact">{language === "bn" ? "ডেমো" : "DEMO"}</span></span>}<span className="shortcut-hint"><Command size={12} /> K</span>
+            {demoMode && <span className="demo-mode-badge"><span className="demo-badge-full">{t("DEMO DATA · Local only")}</span><span className="demo-badge-compact">{language === "bn" ? "ডেমো" : t("DEMO")}</span></span>}<span className="shortcut-hint"><Command size={12} /> K</span>
             <button className="icon-button notification-button" type="button" aria-label={t("Notifications")}><Bell size={18} /><i /></button>
             <div className="topbar-divider" />
             <div className="profile-menu-wrap" ref={profileMenuRef}>
               <button className="profile-trigger" type="button" aria-haspopup="menu" aria-expanded={profileOpen} aria-controls="profile-dropdown" onClick={() => setProfileOpen((open) => !open)}>
                 <span className="user-avatar">{initials}</span>
-                <span className="user-menu-copy"><strong>{language === "bn" ? user?.fullNameBangla || user?.fullName : user?.fullName}</strong><small>{user?.role?.name ?? "Team member"}</small></span>
+                <span className="user-menu-copy"><strong>{language === "bn" ? user?.fullNameBangla || user?.fullName : user?.fullName}</strong><small>{t(user?.role?.name ?? "Team member")}</small></span>
                 <ChevronDown className={profileOpen ? "profile-chevron is-open" : "profile-chevron"} size={16}/>
               </button>
               {profileOpen && <div className="profile-dropdown" id="profile-dropdown" role="menu" aria-label={t("Profile menu")}>
-                <div className="profile-dropdown-identity"><span className="user-avatar">{initials}</span><span><strong>{language === "bn" ? user?.fullNameBangla || user?.fullName : user?.fullName}</strong><small>{user?.role?.name ?? "Team member"}</small></span></div>
+                <div className="profile-dropdown-identity"><span className="user-avatar">{initials}</span><span><strong>{language === "bn" ? user?.fullNameBangla || user?.fullName : user?.fullName}</strong><small>{t(user?.role?.name ?? "Team member")}</small></span></div>
                 <button type="button" role="menuitem" onClick={() => { setProfileOpen(false); setPasswordError(""); setPasswordDialog(true); }}><KeyRound size={16}/>{t("Change password")}</button>
                 <button type="button" className="profile-signout" role="menuitem" onClick={() => { setProfileOpen(false); handleLogout(); }}><LogOut size={16}/>{t("Sign out")}</button>
               </div>}

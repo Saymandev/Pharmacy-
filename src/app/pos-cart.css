@@ -1,0 +1,38 @@
+/* Keep the cart header and checkout action fixed; only the item list scrolls. */
+.app-frame .pos-page .pos-cart-modal { width:min(540px,100vw); display:flex; flex-direction:column; height:100dvh; max-height:100dvh; overflow:hidden; }
+.app-frame .pos-page .pos-cart-modal .pos-cart-heading { flex:0 0 auto; padding:16px 20px; align-items:center; border-color:var(--ux-line); background:var(--ux-surface); }
+.app-frame .pos-page .pos-cart-modal .pos-cart-heading > div { display:flex; align-items:center; flex-wrap:wrap; gap:10px; }
+.app-frame .pos-page .pos-cart-modal .pos-cart-heading h2 { margin:0; font-size:19px; }
+.app-frame .pos-page .pos-cart-modal .pos-cart-heading p { margin:0; padding:4px 9px; border-radius:20px; background:var(--ux-soft); color:var(--ux-muted); font-size:12px; }
+.app-frame .pos-page .pos-cart-modal .pos-cart-lines { flex:1 1 0; min-height:0; overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable; scroll-padding:14px; }
+.app-frame .pos-page .pos-cart-modal .pos-cart-line { padding:16px 20px; border-color:var(--ux-line); }
+.app-frame .pos-page .pos-cart-modal .pos-line-main { gap:10px; }
+.app-frame .pos-page .pos-cart-modal .pos-line-main strong { font-size:15px; line-height:1.45; overflow-wrap:anywhere; }
+.app-frame .pos-page .pos-cart-modal .pos-line-main small { font-size:12px; color:var(--ux-muted); }
+.app-frame .pos-page .pos-cart-modal .pos-icon-action { width:40px; height:40px; min-width:40px; flex-shrink:0; border:1px solid var(--ux-line); border-radius:10px; color:var(--ux-text); }
+.app-frame .pos-page .pos-cart-modal .pos-remove:hover { color:#bf3547; background:color-mix(in srgb,#bf3547 12%,var(--ux-surface)); }
+.app-frame .pos-page .pos-cart-modal .pos-batch-select { margin-top:10px; }
+.app-frame .pos-page .pos-cart-modal .pos-batch-select .ui-select-display { min-height:42px; font-size:12px; padding:9px 10px; }
+.app-frame .pos-page .pos-cart-modal .pos-line-controls { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:12px; margin-top:12px; }
+.app-frame .pos-page .pos-cart-modal .pos-quantity-stepper { display:grid; grid-template-columns:40px 44px 40px; align-items:center; height:42px; min-height:42px; padding:0; border:1px solid var(--ux-line); border-radius:10px; overflow:hidden; background:var(--ux-canvas); }
+.app-frame .pos-page .pos-cart-modal .pos-quantity-stepper button { width:40px; height:40px; min-height:40px; min-width:40px; border:0; border-radius:0; color:var(--ux-text); }
+.app-frame .pos-page .pos-cart-modal .pos-quantity-stepper button:disabled { opacity:.35; }
+.app-frame .pos-page .pos-cart-modal .pos-quantity-stepper input { width:44px; height:40px; min-height:40px; padding:0; margin:0; border:0; border-inline:1px solid var(--ux-line); border-radius:0; background:var(--ux-surface); color:var(--ux-text); font-size:15px; text-align:center; box-shadow:none; }
+.app-frame .pos-page .pos-cart-modal .pos-quantity-stepper :is(input,button):focus-visible { outline-offset:-3px; }
+.app-frame .pos-page .pos-cart-modal .pos-stock-hint { font-size:12px; color:var(--ux-muted); white-space:normal; }
+.app-frame .pos-page .pos-cart-modal .pos-line-total { font-size:16px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.app-frame .pos-page .pos-cart-modal .pos-cart-summary { flex:0 0 auto; padding:12px 20px; gap:12px; background:var(--ux-surface); border-color:var(--ux-line); }
+.app-frame .pos-page .pos-cart-modal .pos-cart-summary > span { font-size:13px; color:var(--ux-text); }
+.app-frame .pos-page .pos-cart-modal .pos-cart-summary small { margin-top:2px; font-size:11px; color:var(--ux-muted); }
+.app-frame .pos-page .pos-cart-modal .pos-cart-summary > strong { font-size:22px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.app-frame .pos-page .pos-cart-modal .pos-cart-footer { flex:0 0 auto; padding:0 20px max(16px,env(safe-area-inset-bottom)); background:var(--ux-surface); }
+.app-frame .pos-page .pos-cart-modal .pos-proceed-button { min-height:48px; border-radius:11px; font-size:14px; color:white; }
+@media(max-width:540px) {
+ .app-frame .pos-page .pos-cart-modal { width:100%; }
+ .app-frame .pos-page .pos-cart-modal :is(.pos-cart-heading,.pos-cart-line) { padding:12px 14px; }
+ .app-frame .pos-page .pos-cart-modal .pos-line-controls { grid-template-columns:auto 1fr; gap:8px 12px; }
+ .app-frame .pos-page .pos-cart-modal .pos-line-total { grid-column:2; grid-row:1; justify-self:end; }
+ .app-frame .pos-page .pos-cart-modal .pos-stock-hint { grid-column:1/-1; }
+ .app-frame .pos-page .pos-cart-modal .pos-cart-summary { padding:10px 14px; }
+ .app-frame .pos-page .pos-cart-modal .pos-cart-footer { padding-inline:14px; }
+}
