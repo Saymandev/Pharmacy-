@@ -1,9 +1,13 @@
 "use client";
 
+import { useBrowserPreference } from "@/lib/browser/use-browser-preference";
+import { QuantityInput } from "./quantity-input";
+import { PosCalculator } from "./pos-calculator";
+import { CatalogTable } from "./catalog-table";
 import { FilterPopover } from "@/components/ui/filter-popover";
 import { Select } from "@/components/ui/select";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Maximize2, Minimize2, Activity, Barcode, Check, ChevronDown, ChevronRight, CircleAlert, Clock3, Filter, Minus, Package, Plus, Search, ShoppingBag, ShoppingCart, Trash2, UserRound, X } from "lucide-react";
+import { Calculator, LayoutGrid, Table2, Maximize2, Minimize2, Activity, Barcode, Check, ChevronDown, ChevronRight, CircleAlert, Clock3, Filter, Minus, Package, Plus, Search, ShoppingBag, ShoppingCart, Trash2, UserRound, X } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api/client";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useLanguage } from "@/lib/i18n/language-provider";
@@ -19,6 +23,7 @@ import { exactBarcodeMatch } from "./barcode-policy";
 import { useDismissiblePanel } from "@/lib/use-dismissible-panel";
 import { readPagination } from "@/lib/api/pagination";
 
+const catalogViews = ["cards", "table"] as const;
 type Row = Record<string, unknown>;
 import type {Stock,Medicine} from "./pos-types";
 type Customer = { id: string; name: string; nameBangla?: string; phone: string; balance?: number; customerNumber?: string };
@@ -101,6 +106,13 @@ export function PosWorkspace() {
   const sessionRequestId = useRef(0);
   const paymentIdCounter = useRef(2);
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [viewMode, setViewMode] = useBrowserPreference<"cards" | "table">("pharmacy.pos-view", "cards", catalogViews);
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [quickStockId, setQuickStockId] = useState("");
+  const [quantityFocus, requestQuantityFocus] = useState(0);
+  const quickQuantity = useRef<HTMLInputElement>(null);
+  const quickLine = cart.find(line => line.stock.id === quickStockId) ?? cart.at(-1);
+  useEffect(() => { if (quantityFocus) { quickQuantity.current?.focus(); quickQuantity.current?.select(); } }, [quantityFocus]);
   const searchInput = useRef<HTMLInputElement>(null);
   const submissionLock = useRef(false);
   const [heldOpen, setHeldOpen] = useState(false);
@@ -318,7 +330,7 @@ export function PosWorkspace() {
   const totalUnits = cart.reduce((sum, line) => sum + line.quantity, 0);
   const activeFilterCount = [categoryId, genericId, manufacturerId, groupId, unitId, formulation.trim(), strength.trim(), inStockOnly ? "stock" : ""].filter(Boolean).length;
 
-  function addMedicine(medicine: Medicine) {
+  function addMedicine(medicine: Medicine, editQuantity = false) {
     if(!canCreateSales||saving||submissionLock.current)return false;
     if (cart.some((line) => line.stock.branchId !== branchId)) { setError(t("Hold the previous branch cart before adding items in this branch.")); return false; }
     const available = sellableStocks(medicine.stocks ?? [], branchId);
@@ -332,6 +344,8 @@ export function PosWorkspace() {
       if (existing) return current.map((line) => line.stock.id === chosen.id ? { ...line, quantity: Math.min(line.quantity + 1, Math.floor(chosen.quantity)) } : line);
       return [...current, { medicine, stock: chosen, quantity: 1, price: numeric(medicine.salePrice) || numeric(chosen.mrp) || numeric(medicine.mrp), discountPercent: 0 }];
     });
+    setQuickStockId(chosen.id);
+    if (editQuantity) requestQuantityFocus(value => value + 1);
     setNotice(available.length > 1 ? `${medicineName(medicine)}: ${t("Earliest-expiry batch selected. Change it in the cart if needed.")}` : "");
     return true;
   }
@@ -341,7 +355,7 @@ export function PosWorkspace() {
     if(!capturedBranch)return;
     if(selectionKey===catalogKey&&!catalogRefreshing&&!/^\d+$/.test(value)){
       const match=exactBarcodeMatch(visibleMedicines,value)??visibleMedicines[Math.min(keyboardProduct,visibleMedicines.length-1)];
-      if(match&&addMedicine(match)){setQuery("");querySnapshot.current="";setKeyboardProduct(0);}return;
+      if(match&&addMedicine(match, true)){setQuery("");querySnapshot.current="";setKeyboardProduct(0);}return;
     }
     searchCommitLock.current=true;setSearchCommitting(true);setError("");
     try{
@@ -353,9 +367,13 @@ export function PosWorkspace() {
       if(unitId)found=found.filter(m=>m.medicineUnit?.id===unitId||units.find(u=>u.id===unitId)?.name===m.medicineUnit?.name||units.find(u=>u.id===unitId)?.name===m.unit);
       const match=exactBarcodeMatch(found,value)??(!/^\d+$/.test(value)?found[Math.min(keyboardProduct,found.length-1)]:undefined);
       if(!match){setNotice(t("No matching medicine. Check the search or use Barcode mode."));return;}
-      if(addMedicine(match)){setQuery("");querySnapshot.current="";setKeyboardProduct(0);}
+      if(addMedicine(match, true)){setQuery("");querySnapshot.current="";setKeyboardProduct(0);}
     }catch(cause){if(currentBranch.current===capturedBranch&&querySnapshot.current.trim()===value)setError(getError(cause));}finally{searchCommitLock.current=false;setSearchCommitting(false);}
   }
+  const focusSearch = useCallback(() => {
+    setCartOpen(false);
+    window.requestAnimationFrame(() => { searchInput.current?.focus(); searchInput.current?.select(); });
+  }, []);
   const openCheckout=useCallback(()=>{if(scanPending||searchCommitting){setNotice(t("Wait for pending scans or search before checkout."));return;}setError("");setCheckoutOpen(true);setCartOpen(false);},[scanPending,searchCommitting,t]);
   function updatePaymentLine(id: string, patch: Partial<PaymentLine>) {
     setPaymentLines((current) => current.map((line) => line.id === id ? { ...line, ...patch } : line));
@@ -575,8 +593,12 @@ export function PosWorkspace() {
   }
   useEffect(() => {
     function shortcuts(event: KeyboardEvent) {
-      if (saving || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || document.querySelector("dialog[open]") || opening || closing || historyOpen || customerQuickOpen || accountQuickOpen) return;
-      if (event.key === "F2") { event.preventDefault(); if (!checkoutOpen && !heldOpen && !receipt) searchInput.current?.focus(); }
+      const modal = document.querySelector("dialog[open]");
+      if (saving || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || (modal && modal !== cartDialog.current) || calculatorOpen || opening || closing || historyOpen || customerQuickOpen || accountQuickOpen || document.querySelector(".ui-select-popup:popover-open")) return;
+      if ((event.key === "F2" || event.key === "F1") && !checkoutOpen && !heldOpen && !receipt) { event.preventDefault(); focusSearch(); }
+      if (event.key === "F6" && quickLine && !checkoutOpen && !heldOpen && !receipt) { event.preventDefault(); setCartOpen(false); requestQuantityFocus(value => value + 1); }
+      if (event.key === "F9" && !checkoutOpen && !heldOpen && !receipt) { event.preventDefault(); setCalculatorOpen(true); }
+      if (event.key === "/" && !checkoutOpen && !heldOpen && !receipt && !(event.target instanceof HTMLElement && event.target.closest("input,textarea,select,[contenteditable=true]"))) { event.preventDefault(); focusSearch(); }
       if(event.key==="F3"&&!checkoutOpen&&!heldOpen&&!receipt&&canCreateSales){event.preventDefault();setScannerOpen(true);window.setTimeout(()=>document.querySelector<HTMLInputElement>(".pos-barcode-input")?.focus(),0);}
       if (event.key === "F4" && !receipt && !heldOpen && canCreateSales && cart.length) {
         event.preventDefault(); openCheckout();
@@ -590,7 +612,7 @@ export function PosWorkspace() {
     }
     window.addEventListener("keydown", shortcuts);
     return () => window.removeEventListener("keydown", shortcuts);
-  }, [saving, checkoutOpen, heldOpen, receipt, canCreateSales, cart.length,scannerOpen,scanPending,searchCommitting,opening,closing,historyOpen,customerQuickOpen,accountQuickOpen,openCheckout]);
+  }, [calculatorOpen, quickLine, focusSearch, saving, checkoutOpen, heldOpen, receipt, canCreateSales, cart.length,scannerOpen,scanPending,searchCommitting,opening,closing,historyOpen,customerQuickOpen,accountQuickOpen,openCheckout]);
 
   const customerPicker = <div className="pos-customer-wrap">
         {customer ? <div className="pos-selected-customer"><span className="pos-customer-icon"><UserRound size={16} /></span><span><strong>{language === "bn" ? customer.nameBangla || customer.name : customer.name}</strong><small>{customer.phone} · {t("Due")} {money(numeric(customer.balance))}</small></span><button className="pos-icon-action" onClick={() => { setCustomer(null); setCustomerQuery(""); setCustomerOpen(true); }} aria-label={t("Change customer")} title={t("Change customer")}><X size={15} /></button></div> : <><label className="pos-field-caption" htmlFor="customer-search">{t("Customer")} <span>{t("optional")}</span></label><div className="pos-input-with-icon"><UserRound size={16} /><input id="customer-search" value={customerQuery} onChange={(event) => { setCustomerQuery(event.target.value); setCustomerOpen(true); }} onFocus={() => setCustomerOpen(true)} placeholder={t("Search name or phone")} autoComplete="off" onKeyDown={(event) => { if (event.key === "Escape") setCustomerOpen(false); if (event.key === "Enter" && customers[0]) { event.preventDefault(); setCustomer(customers[0]); setCustomerQuery(""); setCustomerOpen(false); } }} /></div><small className="pos-opd-hint">{t("No customer selected. This will be a walk-in sale.")}</small>{customerOpen && customerQuery.trim() && <div className="pos-customer-options">{customerSearchLoading ? <div className="pos-customer-search-state">{t("Searching customers…")}</div> : customerSearchError ? <div className="pos-customer-search-state is-error">{t(customerSearchError)}</div> : customers.length > 0 ? customers.map((item) => <button key={item.id} type="button" onClick={() => { setCustomer(item); setCustomerQuery(""); setCustomerOpen(false); }}><strong>{language === "bn" ? item.nameBangla || item.name : item.name}</strong><small>{item.phone} · {t("Balance")} {money(numeric(item.balance))}</small></button>) : <div className="pos-customer-search-state">{t("No matching customer found.")}</div>}</div>}</>}
@@ -601,7 +623,7 @@ export function PosWorkspace() {
     <div className="pos-cart-lines">
       {cart.length === 0 ? <div className="pos-empty-cart"><span><ShoppingBag size={21} /></span><strong>{t("Your cart is empty")}</strong><small>{t("Search or scan a medicine to begin.")}</small></div> : cart.map((line) => <div className="pos-cart-line" key={line.stock.id}>
         <div className="pos-line-main"><div><strong>{medicineName(line.medicine)}</strong><small>{line.medicine.strength || line.medicine.genericName || t("Medicine")}</small><Select className="pos-batch-select" aria-label={`${t("Batch for")} ${medicineName(line.medicine)}`} value={line.stock.id} onChange={(event) => { const nextStock = (line.medicine.stocks ?? []).find((stock) => stock.id === event.target.value); if (nextStock) setCart((current) => current.some((entry) => entry.stock.id === nextStock.id && entry.stock.id !== line.stock.id) ? current : current.map((entry) => entry.stock.id === line.stock.id ? { ...entry, stock: nextStock, quantity: Math.min(entry.quantity, Math.floor(nextStock.quantity)), price: numeric(entry.medicine.salePrice) || numeric(nextStock.mrp) || entry.price } : entry)); }}>{sellableStocks(line.medicine.stocks ?? [], branchId).map((stock) => <option key={stock.id} value={stock.id} disabled={stock.id !== line.stock.id && cart.some((entry) => entry.stock.id === stock.id)}>{t("Batch")} {stock.batchNumber} · {t("exp")} {new Date(stock.expiryDate).toLocaleDateString(locale)} · {stock.quantity} {t("available")}</option>)}</Select></div><button className="pos-icon-action pos-remove" onClick={() => setCart((current) => current.filter((item) => item.stock.id !== line.stock.id))} aria-label={`${t("Remove")} ${medicineName(line.medicine)}`}><Trash2 size={15} /></button></div>
-        <div className="pos-line-controls"><div className="pos-quantity-stepper"><button onClick={() => changeLine(line.stock.id, { quantity: line.quantity - 1 })} disabled={line.quantity <= 1} aria-label={t("Decrease quantity")}><Minus size={13} /></button><input aria-label={t("Quantity")} inputMode="numeric" value={line.quantity} onChange={(event) => { const next = Math.floor(numeric(event.target.value)) || 1; changeLine(line.stock.id, { quantity: Math.max(1, Math.min(line.stock.quantity, next)) }); }} /><button onClick={() => changeLine(line.stock.id, { quantity: Math.min(line.stock.quantity, line.quantity + 1) })} aria-label={t("Increase quantity")} disabled={line.quantity >= line.stock.quantity}><Plus size={13} /></button></div><span className="pos-stock-hint">{line.stock.quantity} {line.stock.unit} {t("available")}</span><strong className="pos-line-total">{money(line.price * line.quantity * (1 - line.discountPercent / 100))}</strong></div>
+        <div className="pos-line-controls"><div className="pos-quantity-stepper"><button onClick={() => changeLine(line.stock.id, { quantity: line.quantity - 1 })} disabled={line.quantity <= 1} aria-label={t("Decrease quantity")}><Minus size={13} /></button><QuantityInput quantity={line.quantity} max={line.stock.quantity} onChange={quantity => changeLine(line.stock.id, { quantity })} onDone={focusSearch}/><button onClick={() => changeLine(line.stock.id, { quantity: Math.min(line.stock.quantity, line.quantity + 1) })} aria-label={t("Increase quantity")} disabled={line.quantity >= line.stock.quantity}><Plus size={13} /></button></div><span className="pos-stock-hint">{line.stock.quantity} {line.stock.unit} {t("available")}</span><strong className="pos-line-total">{money(line.price * line.quantity * (1 - line.discountPercent / 100))}</strong></div>
       </div>)}
     </div>
     <div className="pos-cart-summary"><span>{t("Cart subtotal")}<small>{totalUnits} {t(totalUnits === 1 ? "unit" : "units")} · {t("discounts at checkout")}</small></span><strong>{money(subtotal)}</strong></div>
@@ -641,10 +663,11 @@ export function PosWorkspace() {
   return <section className={`pos-page${expanded ? " pos-focus-mode" : ""}`}>
     {(error || notice) && <div className={`pos-alert ${error ? "pos-alert-error" : "pos-alert-success"}`} role={error ? "alert" : "status"}>{error ? <CircleAlert size={17} /> : <Check size={17} />}<span>{t(error || notice)}</span><button onClick={() => { setError(""); setNotice(""); }} aria-label={t("Dismiss message")}><X size={15}/></button></div>}
     <div className="pos-draft-toolbar" aria-label={t("Cart tools")}>
-      <span>{t("F2: Search · F3: Barcode · F4: Checkout")}</span><button type="button" className="pos-pending-button" aria-pressed={expanded} onClick={() => setExpanded(value => !value)}>{expanded ? <Minimize2 size={16}/> : <Maximize2 size={16}/>} {t(expanded ? "Exit full screen" : "Full screen")}</button>
+      <span>{t("F2 Search · F6 Quantity · F4 Checkout · F9 Calculator")}</span><button type="button" className="pos-pending-button" aria-pressed={expanded} onClick={() => setExpanded(value => !value)}>{expanded ? <Minimize2 size={16}/> : <Maximize2 size={16}/>} {t(expanded ? "Exit full screen" : "Full screen")}</button>
       {canCreateSales && <button type="button" className="pos-pending-button" disabled={!cart.length || saving} onClick={holdCart}>{t("Hold cart")}</button>}
       <button type="button" className="pos-pending-button" disabled={saving} onClick={() => { setCartOpen(false); setHeldOpen(true); }}>{t("Held carts")} ({heldCarts.filter((entry) => entry.branchId === branchId).length})</button>
-    </div>
+    <button type="button" className="pos-pending-button" onClick={() => setCalculatorOpen(true)}><Calculator size={16}/>{t("Calculator")}</button></div>
+    {calculatorOpen && <PosCalculator onClose={() => setCalculatorOpen(false)}/>}
     {heldOpen && <div className="pos-dialog-backdrop" role="presentation" onClick={() => setHeldOpen(false)}><section className="pos-register-dialog" role="dialog" aria-modal="true" aria-labelledby="held-carts-title" onClick={(event) => event.stopPropagation()}>
       <h2 id="held-carts-title">{t("Held carts")}</h2><p>{t("Held carts stay in this tab until you leave or refresh. They do not reserve stock.")}</p>
       {cart.length > 0 && <p role="status">{t("Hold or finish the current cart before resuming another.")}</p>}
@@ -657,21 +680,27 @@ export function PosWorkspace() {
         <div className="pos-catalog-top"><div><h2>{t("Medicine catalog")}</h2><p>{t("Search by name, generic or barcode")}</p></div><span className="pos-catalog-branch">{activeBranch?.name ?? t("Select a branch")}</span><details className="pos-utility-menu"><summary><span>{session ? t("Register open") : t("Register closed")}</span><ChevronDown size={14}/></summary><div className="pos-utility-popover"><p>{activeBranch?.name ?? t("No branch selected")}{session && <small>{t("Session")} {String(session.sessionNumber ?? session.id ?? "active").slice(0, 12)}</small>}</p>{canCreateSales&&(session ? <button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setError(""); setRegisterBranch(branchId);setActualBalance("");setClosingNote(""); setClosing(true); }}>{t("Close register")}</button> : <button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setRegisterBranch(branchId);setOpening(true); }}>{t("Open register")}</button>)}{canReadSales&&<button type="button" disabled={!branchId} onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setHistoryOpen(true); setSelectedHistory(null); setHistoryPage(1); setHistoryStatus(""); void loadRegisterHistory(1, ""); }}><Clock3 size={14}/>{t("Register history")}</button>}</div></details></div>
         <div className="pos-search-row"><div className="pos-search-box"><Search size={18}/><input ref={searchInput} autoFocus aria-label={t("Search medicine or scan barcode…")} placeholder={t("Search medicine or scan barcode…")} value={query} onChange={(event) => { setQuery(event.target.value);querySnapshot.current=event.target.value; setKeyboardProduct(0); }} onKeyDown={(event) => {
           if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-            event.preventDefault(); setKeyboardProduct((index) => Math.max(0, Math.min(visibleMedicines.length - 1, index + (event.key === "ArrowDown" ? 1 : -1))));
+            event.preventDefault(); setKeyboardProduct((index) => { const next = Math.max(0, Math.min(visibleMedicines.length - 1, index + (event.key === "ArrowDown" ? 1 : -1))); window.requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-pos-result="${next}"]`)?.scrollIntoView({block:"nearest"})); return next; });
           }
           if(event.key==="Enter"&&query.trim()&&!event.nativeEvent.isComposing&&!event.repeat){event.preventDefault();void commitSearch();}
         }} /><kbd>{t("Enter")}</kbd>{query && <button type="button" aria-label={t("Clear search")} onClick={() => {setQuery("");querySnapshot.current="";}}><X size={16}/></button>}</div><button type="button" className="pos-scan-button" aria-expanded={scannerOpen} aria-controls="pos-barcode-panel" disabled={!canCreateSales||!branchId} onClick={() => setScannerOpen(open=>!open)}><Barcode size={17}/><span>{t("Barcode")}</span></button></div>
+        {quickLine && canCreateSales && <div className="pos-quick-quantity" role="region" aria-label={t("Quick quantity")}>
+          <div><small>{t("Last added item")}</small><strong>{medicineName(quickLine.medicine)}</strong><small>{quickLine.stock.batchNumber} · {quickLine.stock.quantity} {quickLine.stock.unit} {t("available")}</small></div>
+          <div className="pos-quantity-stepper"><button type="button" disabled={quickLine.quantity <= 1} aria-label={t("Decrease quantity")} onClick={() => changeLine(quickLine.stock.id, {quantity:quickLine.quantity - 1})}><Minus size={14}/></button><QuantityInput inputRef={quickQuantity} quantity={quickLine.quantity} max={quickLine.stock.quantity} onChange={quantity => changeLine(quickLine.stock.id, {quantity})} onDone={focusSearch}/><button type="button" disabled={quickLine.quantity >= quickLine.stock.quantity} aria-label={t("Increase quantity")} onClick={() => changeLine(quickLine.stock.id, {quantity:quickLine.quantity + 1})}><Plus size={14}/></button></div>
+          <button type="button" className="pos-quick-done" onClick={focusSearch}>{t("Done · Enter")}<Search size={14}/></button><small>{t("↑/↓ or +/− quantity · Enter back to search")}</small>
+        </div>}
         {scannerOpen&&canCreateSales&&branchId&&!checkoutOpen&&!heldOpen&&!receipt&&!opening&&!closing&&!historyOpen&&<BarcodeScanner key={branchId} branchId={branchId} onMedicine={addMedicine} onPendingChange={setScanPending} onClose={()=>{setScannerOpen(false);setScanPending(0);searchInput.current?.focus();}}/>}
         <div className="pos-filter-popover-wrap" ref={filterPanel}><div className="pos-filter-toolbar"><button aria-expanded={filtersOpen} aria-controls="pos-filter-popover" className={`pos-filter-button ${filtersOpen ? "active" : ""}`} onClick={() => setFiltersOpen(!filtersOpen)}><Filter size={15}/> {t("Filters")}{activeFilterCount > 0 && <span className="pos-filter-count">{activeFilterCount}</span>}<ChevronDown size={14}/></button>{activeFilterCount > 0 && <button className="pos-clear-filters" onClick={() => { setCategoryId(""); setGenericId(""); setManufacturerId(""); setGroupId(""); setUnitId(""); setFormulation(""); setStrength(""); setInStockOnly(false); }}>{t("Clear filters")}</button>}</div>
         {filtersOpen && <FilterPopover id="pos-filter-popover" className="pos-filter-drawer" onClose={() => setFiltersOpen(false)}><label><span>{t("Category")}</span><Select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}><option value="">{t("All categories")}</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></label><label><span>{t("Generic")}</span><Select value={genericId} onChange={(event) => setGenericId(event.target.value)}><option value="">{t("All generics")}</option>{generics.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></label><label><span>{t("Manufacturer")}</span><Select value={manufacturerId} onChange={(event) => setManufacturerId(event.target.value)}><option value="">{t("All manufacturers")}</option>{manufacturers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></label><label><span>{t("Group")}</span><Select value={groupId} onChange={(event) => setGroupId(event.target.value)}><option value="">{t("All groups")}</option>{groups.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></label><label><span>{t("Unit")}</span><Select value={unitId} onChange={(event) => setUnitId(event.target.value)}><option value="">{t("All units")}</option>{units.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></label><label><span>{t("Dosage form")}</span><input placeholder={t("e.g. Tablet")} value={formulation} onChange={(event) => setFormulation(event.target.value)}/></label><label><span>{t("Strength")}</span><input placeholder={t("e.g. 500 mg")} value={strength} onChange={(event) => setStrength(event.target.value)}/></label><label className="pos-stock-toggle"><input type="checkbox" checked={inStockOnly} onChange={(event) => setInStockOnly(event.target.checked)}/> {t("In stock only")}</label></FilterPopover>}</div>
         <div className="pos-results-meta"><span>{loading ? t("Loading catalog…") : searchCommitting ? t("Finding your selection…") : catalogRefreshing ? t("Updating results…") : `${visibleMedicines.length} ${t(unitId ? "matching" : "shown")}${!unitId && totalProducts > medicines.length ? ` ${t("of")} ${totalProducts}` : ""} ${t("medicines")}`}</span><span><span className="pos-dot-green"/> {t("Batch stock · selected branch")}</span></div>
-        <div className="pos-product-grid">{visibleMedicines.map((medicine, index) => {
+        <div className="pos-view-toolbar"><div role="group" aria-label={t("Catalog view")}><button type="button" aria-pressed={viewMode === "cards"} onClick={() => setViewMode("cards")}><LayoutGrid size={15}/>{t("Card mode")}</button><button type="button" aria-pressed={viewMode === "table"} onClick={() => setViewMode("table")}><Table2 size={15}/>{t("Table mode")}</button></div><small>{t("↑/↓ select · Enter add · F6 quantity")}</small></div>
+        {viewMode === "table" ? <><CatalogTable medicines={visibleMedicines} branchId={branchId} selected={query.trim() ? keyboardProduct : -1} canAdd={canCreateSales} onAdd={addMedicine} money={money}/>{!loading && !visibleMedicines.length && <p className="pos-table-empty">{t("No matching medicines")}</p>}</> : <div className="pos-product-grid">{visibleMedicines.map((medicine, index) => {
           const available = sellableStocks(medicine.stocks ?? [], branchId).reduce((sum, stock) => sum + stock.quantity, 0);
           const earliest = sellableStocks(medicine.stocks ?? [], branchId).sort((a,b) => a.expiryDate.localeCompare(b.expiryDate))[0];
-          return <button type="button" key={medicine.id} style={{ "--medicine-hue": Math.round(index * 360 / Math.max(visibleMedicines.length, 1)) } as React.CSSProperties} data-keyboard-active={query.trim() && index === keyboardProduct ? "true" : undefined} className={`pos-product-card ${available === 0 ? "out-of-stock" : ""}`} onClick={() => addMedicine(medicine)} disabled={available === 0 || !canCreateSales}>
+          return <button type="button" key={medicine.id} style={{ "--medicine-hue": Math.round(index * 360 / Math.max(visibleMedicines.length, 1)) } as React.CSSProperties} data-keyboard-active={query.trim() && index === keyboardProduct ? "true" : undefined} data-pos-result={index} className={`pos-product-card ${available === 0 ? "out-of-stock" : ""}`} onClick={event => addMedicine(medicine, event.detail === 0)} disabled={available === 0 || !canCreateSales}>
             <span className="pos-product-icon"><Package size={19}/></span><span className="pos-product-copy"><strong>{medicineName(medicine)}</strong><small>{[medicine.strength, medicine.dosageForm || medicine.genericName].filter(Boolean).join(" · ") || t("Pharmacy medicine")}</small><small className="pos-product-brand">{medicine.medicineManufacturer?.name || medicine.category?.name || t("Catalog item")}</small></span><span className={`pos-stock-badge ${available > 0 ? "" : "empty"}`}>{available > 0 ? `${available} ${medicine.unit || t("pcs")}` : t("Out of stock")}</span><span className="pos-product-bottom"><span><strong>{money(numeric(medicine.salePrice) || numeric(earliest?.mrp) || numeric(medicine.mrp))}</strong><small>{earliest ? `${t("Batch")} ${earliest.batchNumber}` : medicine.barcode || t("No batch")}</small></span><span className="pos-add-icon"><Plus size={17}/></span></span>
           </button>;
-        })}{!loading && visibleMedicines.length === 0 && <div className="pos-no-products"><Package size={22}/><strong>{t("No matching medicines")}</strong><span>{unitId && hasMoreProducts ? t("Load more results to find medicines in this unit.") : t("Try another name or clear some filters.")}</span></div>}</div>
+        })}{!loading && visibleMedicines.length === 0 && <div className="pos-no-products"><Package size={22}/><strong>{t("No matching medicines")}</strong><span>{unitId && hasMoreProducts ? t("Load more results to find medicines in this unit.") : t("Try another name or clear some filters.")}</span></div>}</div>}
         {hasMoreProducts && <button type="button" className="pos-load-more" disabled={loading} onClick={() => void loadProducts(productPage + 1, true)}>{loading ? t("Loading more…") : `${t("Load more medicines")}${!unitId && totalProducts > medicines.length ? ` · ${totalProducts - medicines.length} ${t("remaining")}` : ""}`}</button>}
         <div className="pos-catalog-footer"><span><Activity size={14}/> {t("Prices and batch availability come from current stock.")}</span><span>{t("Whole-unit quantities only")}</span></div>
       </div>
