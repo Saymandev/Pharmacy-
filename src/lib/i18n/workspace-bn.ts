@@ -1,5 +1,9 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "Set a new login password for this team member.": "এই সদস্যের লগইনের জন্য নতুন পাসওয়ার্ড দিন।",
+  "Passwords match": "পাসওয়ার্ড দুটি মিলেছে",
+  "View batches": "ব্যাচ দেখুন",
+
   "HR configuration sections": "কর্মী ব্যবস্থাপনার বিভাগ",
   "HR configuration": "কর্মী ব্যবস্থাপনার কনফিগারেশন",
   "Organize your team": "দলকে সাজান",
