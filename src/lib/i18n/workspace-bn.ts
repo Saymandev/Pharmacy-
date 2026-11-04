@@ -1,5 +1,16 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "Collections": "আদায়",
+  "Same-day sale receipts": "একই দিনের বিক্রি থেকে আদায়",
+  "Previous-day dues collected": "আগের দিনের বকেয়া আদায়",
+  "Money refunded": "ফেরত দেওয়া টাকা",
+  "Advance applied (no new receipt)": "অগ্রিম দিয়ে সমন্বয় (নতুন আদায় নয়)",
+  "All invoice dues at period end": "মেয়াদ শেষে সব বিলের মোট বকেয়া",
+  "Paid at period end": "মেয়াদ শেষে পরিশোধিত",
+  "Due at period end": "মেয়াদ শেষে বকেয়া",
+  "Sale date": "বিক্রির তারিখ",
+  "Collection date": "আদায়ের তারিখ",
+  "Net collections less expenses and purchase payments": "নিট আদায় থেকে খরচ ও ক্রয়ের পরিশোধ বাদ",
   "Generated": "তৈরি করা হয়েছে",
   "Value": "মান",
   "Metric": "হিসাব",

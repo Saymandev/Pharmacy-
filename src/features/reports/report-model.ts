@@ -4,7 +4,8 @@ export type ReportTable = { id: string; name: string; rows: ReportRecord[]; colu
 export type ReportModel = { metrics: ReportMetric[]; tables: ReportTable[] };
 
 const labels: Record<string, string> = {
- totalCashReceived: 'Recorded money received', totalCashPaid: 'Recorded money paid', netCashMovement: 'Net account movement', purchaseSpread: 'Sales less purchases', invoicePaymentSurplus: 'Invoice payments less expenses and purchase payments',
+ sameDayCollected: 'Same-day sale receipts', previousDayDueCollected: 'Previous-day dues collected', cashRefunded: 'Money refunded', advanceApplied: 'Advance applied (no new receipt)', outstandingDueAtEnd: 'All invoice dues at period end', saleDate: 'Sale date', collectedAt: 'Collection date', paidAtEnd: 'Paid at period end', dueAtEnd: 'Due at period end',
+ totalCashReceived: 'Recorded money received', totalCashPaid: 'Recorded money paid', netCashMovement: 'Net account movement', purchaseSpread: 'Sales less purchases', invoicePaymentSurplus: 'Net collections less expenses and purchase payments',
  totalSales: 'Total sales', totalSale: 'Gross sales', totalPrice: 'Gross amount', totalNetSale: 'Net sales', netSales: 'Net sales',
  totalPaid: 'Paid', totalDues: 'Outstanding dues', totalDiscount: 'Discounts', totalReturned: 'Returns', totalReturn: 'Returns',
  totalExpenses: 'Expenses', totalPurchases: 'Purchases', totalPurchasesPaid: 'Purchase payments', grossProfit: 'Gross profit', netProfit: 'Net profit', cogs: 'Cost of goods sold',
@@ -19,7 +20,7 @@ const labels: Record<string, string> = {
  createdBy: 'Created by', createdAt: 'Created', lastPaymentDate: 'Last payment', paymentMethod: 'Payment method', doctorName: 'Doctor', recordedBy: 'Recorded by',
  appointmentSale: 'Appointment sales', consultationChargeGot: 'Consultation commission', amountPaid: 'Paid', amountDue: 'Due', chargePaid: 'Charges paid', chargeDue: 'Charges due',
  commissionPaid: 'Commission paid', commissionDue: 'Commission due', totalCommission: 'Total commission',
- outdoor: 'Outdoor', indoor: 'Indoor', pharmacy: 'Pharmacy', hospital: 'Hospital', clinic: 'Clinic', salesByType: 'Sales by type', collections: 'Due collections', invoices: 'Invoices',
+ outdoor: 'Outdoor', indoor: 'Indoor', pharmacy: 'Pharmacy', hospital: 'Hospital', clinic: 'Clinic', salesByType: 'Sales by type', collections: 'Collections', invoices: 'Invoices',
 };
 export const isRecord = (value: unknown): value is ReportRecord => !!value && typeof value === 'object' && !Array.isArray(value);
 export function reportLabel(key: string) { return labels[key] ?? key.replace(/([A-Z])/g, ' $1').replace(/[_-]/g, ' ').replace(/^./, c => c.toUpperCase()); }

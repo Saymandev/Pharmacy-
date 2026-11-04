@@ -49,3 +49,12 @@ test('partial, reversed and invalid dates are rejected; all-time is explicit',()
  assert.ok(reportDateError('2026-11-02',''));assert.ok(reportDateError('2026-11-02','2026-11-01'));assert.ok(reportDateError('2026-02-30','2026-03-01'));
  assert.equal(reportDateError('',''),'');assert.equal(reportDateError('2026-11-01','2026-11-01'),'');
 });
+
+
+test('settlement and receipt amounts retain explicit labels in screen, CSV and PDF model',()=>{
+ const model=buildReportModel({sales:{paidAtEnd:600,dueAtEnd:400},collections:{sameDayCollected:0,previousDayDueCollected:400,totalCollected:400,cashRefunded:0,netCollection:400,advanceApplied:0,outstandingDueAtEnd:0}});
+ assert.equal(model.metrics.find(x=>x.key==='sales.paidAtEnd').label,'Sales · Paid at period end');
+ assert.equal(model.metrics.find(x=>x.key==='collections.previousDayDueCollected').value,400);
+ const csv=reportCsv(model,{});assert.match(csv,/Paid at period end/);assert.match(csv,/Previous-day dues collected/);assert.match(csv,/Advance applied \(no new receipt\)/);
+ assert.match(formatReportValue('sales.dueAtEnd',400),/BDT|৳/);
+});
