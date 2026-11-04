@@ -4,6 +4,7 @@ import { DialogBehavior } from "@/components/ui/dialog-behavior";
 import { Select } from "@/components/ui/select";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useSidebarScroll } from "@/lib/browser/use-sidebar-scroll";
 import { useBrowserPreference } from "@/lib/browser/use-browser-preference";
 import Link from "next/link";
 import {
@@ -92,6 +93,7 @@ export function AppShell() {
   const [preferencesOpen,setPreferencesOpen]=useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useBrowserPreference<boolean>("pharmacy.sidebar-collapsed", false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const { ref: sidebarRef, remember: rememberSidebarScroll, navigate: navigateSidebar } = useSidebarScroll(user?.id || "guest", `${pathname}:${mobileSidebarOpen}:${sidebarCollapsed}`, status === "authenticated");
   const [profileOpen, setProfileOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
@@ -163,8 +165,8 @@ export function AppShell() {
     <ActiveBranchProvider><DialogBehavior/><div className={`app-frame${sidebarCollapsed ? " sidebar-collapsed" : ""}`} data-theme={theme}>
       {preferencesOpen&&<DisplayPreferences onClose={()=>setPreferencesOpen(false)}/>}
       {mobileSidebarOpen && <button type="button" className="sidebar-mobile-backdrop" aria-label={t("Close navigation")} onClick={() => setMobileSidebarOpen(false)} />}
-      <aside className={`sidebar${mobileSidebarOpen ? " sidebar-mobile-open" : ""}`}>
-        <Link className="brand" href={demoMode ? "/dashboard?demo=1" : "/dashboard"} aria-label="Pharmacy home">
+      <aside ref={sidebarRef} onScroll={rememberSidebarScroll} className={`sidebar${mobileSidebarOpen ? " sidebar-mobile-open" : ""}`}>
+        <Link scroll={false} onClick={navigateSidebar} className="brand" href={demoMode ? "/dashboard?demo=1" : "/dashboard"} aria-label="Pharmacy home">
           <span className="brand-mark"><Pill size={21} strokeWidth={2.1} /></span>
           <span className="brand-copy"><strong>Pharmacy</strong><small>CARE · CONTROL · CLARITY</small></span>
         </Link>
@@ -177,10 +179,10 @@ export function AppShell() {
 
         <nav className="side-navigation" aria-label="Main navigation">
           <p className="nav-caption">{t("WORKSPACE")}</p>
-          <Link className={`nav-link ${pathname === "/dashboard" ? "nav-link-active" : ""}`} title={t("Overview")} href={demoMode ? "/dashboard?demo=1" : "/dashboard"}><LayoutDashboard size={17} /><span>{t("Overview")}</span></Link>
+          <Link scroll={false} onClick={navigateSidebar} className={`nav-link ${pathname === "/dashboard" ? "nav-link-active" : ""}`} title={t("Overview")} href={demoMode ? "/dashboard?demo=1" : "/dashboard"}><LayoutDashboard size={17} /><span>{t("Overview")}</span></Link>
           <p className="nav-caption nav-caption-spaced">{t("PHARMACY")}</p>
           {plannedModules.filter(({ href }) => !href || (modulePermissions[href] ?? []).some(hasPermission)).map(({ label, icon: Icon, href }) => href ? (
-            <Link className={`nav-link nav-link-planned ${pathname === href ? "nav-link-active" : ""}`} key={label} title={t(label)} href={demoMode ? `${href}?demo=1` : href}>
+            <Link scroll={false} onClick={navigateSidebar} className={`nav-link nav-link-planned ${pathname === href ? "nav-link-active" : ""}`} key={label} title={t(label)} href={demoMode ? `${href}?demo=1` : href}>
               <Icon size={17} /><span>{t(label)}</span>
             </Link>
           ) : <button className="nav-link nav-link-planned" key={label} type="button" disabled title={`${t(label)} — ${t("Soon")}`}><Icon size={17} /><span>{t(label)}</span><span className="nav-soon">{t("Soon")}</span></button>)}

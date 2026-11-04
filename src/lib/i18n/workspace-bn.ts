@@ -1,5 +1,7 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "Unknown direction": "দিক উল্লেখ নেই",
+
   "Set a new login password for this team member.": "এই সদস্যের লগইনের জন্য নতুন পাসওয়ার্ড দিন।",
   "Passwords match": "পাসওয়ার্ড দুটি মিলেছে",
   "View batches": "ব্যাচ দেখুন",
@@ -472,8 +474,8 @@ export const workspaceBangla: Record<string, string> = {
   "Message": "বার্তা",
   "Metadata": "মেটাডেটা",
   "Module · action": "মডিউল · কাজ",
-  "Money in": "টাকা জমা",
-  "Money out": "টাকা খরচ",
+  "Money in": "টাকা এসেছে",
+  "Money out": "টাকা গেছে",
   "Morning": "সকাল",
   "Morning shift": "সকালের পালা",
   "Move a balance between accounts. The server records both sides in the ledger.": "অ্যাকাউন্টের মধ্যে টাকা স্থানান্তর করুন। সার্ভার খতিয়ানে উভয় দিক সংরক্ষণ করে।",
