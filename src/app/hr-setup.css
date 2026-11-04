@@ -1,0 +1,126 @@
+/* HR configuration is scoped separately from attendance and employee screens. */
+.app-frame .hr-setup-page { color:var(--ink); }
+.app-frame .hr-setup-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:16px 0; padding:0; border:0; background:transparent; overflow:visible; white-space:normal; }
+.app-frame .hr-setup-tabs button { display:flex; align-items:center; text-align:left; gap:12px; padding:16px; border:1px solid var(--line); border-radius:13px; color:var(--ink-soft); background:var(--surface); min-width:0; cursor:pointer; }
+.app-frame .hr-setup-tabs button.selected,.app-frame[data-theme=dark] .hr-setup-tabs button.selected { color:var(--brand)!important; background:var(--brand-wash)!important; border-color:var(--brand); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brand) 25%,transparent); }
+.app-frame .hr-setup-tabs button:hover { border-color:var(--brand); }
+.app-frame .hr-setup-tab-icon { display:grid; place-items:center; width:40px; height:40px; border-radius:11px; color:var(--brand); background:var(--canvas); flex-shrink:0; }
+.app-frame .hr-setup-tabs button>span:last-child { min-width:0; }
+.app-frame .hr-setup-tabs strong { display:block; font-size:14px; line-height:1.5; color:inherit; }
+.app-frame .hr-setup-tabs small { display:block; font-size:11px; line-height:1.6; margin-top:4px; color:var(--ink-soft); }
+.app-frame .hr-setup-card { overflow:hidden; border-radius:17px; }
+.app-frame .hr-setup-section-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; padding:22px 22px 15px; }
+.app-frame .hr-setup-section-heading h2 { margin:0; color:var(--ink); font-size:20px; line-height:1.4; }
+.app-frame .hr-setup-section-heading p { margin:5px 0 0; color:var(--ink-soft); font-size:13px; line-height:1.7; }
+.app-frame .hr-setup-count { font-size:12px; color:var(--ink-soft); border:1px solid var(--line); border-radius:8px; padding:7px 10px; flex-shrink:0; }
+.app-frame .hr-setup-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:11px; padding:0 22px 20px; }
+.app-frame .hr-setup-search { display:flex; align-items:center; gap:9px; flex:1; min-width:170px; padding:0 12px; border:1px solid var(--line); border-radius:10px; background:var(--canvas); color:var(--ink-soft); }
+.app-frame .hr-setup-search:focus-within { border-color:var(--brand); outline:2px solid color-mix(in srgb,var(--brand) 14%,transparent); }
+.app-frame .hr-setup-search input,.app-frame[data-theme=dark] .hr-setup-search input { width:100%; min-width:0; min-height:43px; padding:10px 0; border:0!important; background:transparent!important; color:var(--ink); box-shadow:none!important; outline:none; font:inherit; font-size:14px; }
+.app-frame .hr-setup-search button { display:grid; place-items:center; flex-shrink:0; width:28px; height:28px; border:0; border-radius:7px; color:var(--ink-soft); background:transparent; }
+.app-frame .hr-setup-scope { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); max-width:210px; overflow-wrap:anywhere; }
+.app-frame .hr-setup-toolbar>.purchase-save-pending { display:flex; align-items:center; gap:7px; min-height:40px; padding:8px 11px; font-size:13px; }
+.app-frame .hr-setup-table { width:100%; min-width:740px; border-collapse:collapse; }
+.app-frame .hr-setup-table th { padding:12px 20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; background:var(--canvas); color:var(--ink-soft); border-block:1px solid var(--line); white-space:nowrap; }
+.app-frame .hr-setup-table td { padding:18px 20px; font-size:13px; line-height:1.65; border-color:var(--line); color:var(--ink); vertical-align:middle; }
+.app-frame .hr-setup-table tbody tr:last-child td { border-bottom:0; }
+.app-frame .hr-setup-record { display:flex; align-items:center; gap:10px; min-width:130px; max-width:270px; }
+.app-frame .hr-setup-record>span { display:grid; place-items:center; flex-shrink:0; width:34px; height:34px; border:1px solid var(--line); border-radius:9px; background:var(--canvas); color:var(--brand); }
+.app-frame .hr-setup-record strong { font-size:14px; line-height:1.6; color:var(--ink); overflow-wrap:anywhere; }
+.app-frame .hr-setup-table .hr-setup-description { min-width:150px; max-width:340px; color:var(--ink-soft); white-space:normal; overflow-wrap:anywhere; }
+.app-frame .hr-setup-days { font-size:17px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink); }
+.app-frame :is(.hr-setup-pay,.hr-setup-event-type) { display:inline-flex; align-items:center; padding:4px 9px; border:1px solid var(--line); border-radius:7px; background:var(--canvas); font-size:12px; line-height:1.5; font-weight:600; white-space:nowrap; color:var(--ink-soft); text-transform:capitalize; }
+.app-frame .hr-setup-pay[data-paid=true],.app-frame .hr-setup-event-type[data-type=holiday] { background:var(--brand-wash); color:var(--brand); }
+.app-frame .hr-setup-event-type[data-type=vacation] { background:#eef1ff; color:#4b5bab; border-color:#dce1fc; }
+.app-frame .hr-setup-date-range { display:block; white-space:nowrap; }
+.app-frame .hr-setup-date-range small { display:block; font-size:12px; color:var(--ink-soft); }
+.app-frame .hr-setup-row-actions { display:flex; align-items:center; gap:7px; }
+.app-frame .hr-setup-row-actions button { display:inline-flex; align-items:center; justify-content:center; gap:6px; border:1px solid var(--line); border-radius:8px; color:var(--ink); background:var(--surface); padding:8px 10px; min-height:35px; font:inherit; font-size:12px; cursor:pointer; }
+.app-frame .hr-setup-row-actions button:hover { background:var(--brand-wash); }
+.app-frame .hr-setup-row-actions .hr-setup-delete { color:#be3948; }
+.app-frame .hr-setup-empty { padding:48px 22px; }
+.app-frame .hr-setup-empty>svg { color:var(--brand); }
+.app-frame .hr-setup-empty button { display:inline-flex; align-items:center; justify-content:center; gap:7px; margin-top:16px; min-height:40px; padding:10px 14px; }
+.app-frame .hr-setup-page .sales-alert { font-size:13px; gap:9px; }
+.app-frame .hr-setup-dialog { display:flex; flex-direction:column; width:min(760px,calc(100vw - 32px)); max-height:calc(100dvh - 40px); padding:0; border-radius:21px; overflow:hidden; color:var(--ink); background:var(--surface); }
+.app-frame .hr-setup-dialog[data-kind=departments] { width:min(660px,calc(100vw - 32px)); }
+.app-frame .hr-setup-dialog-heading { display:flex; align-items:flex-start; flex-shrink:0; gap:14px; padding:24px 25px 20px; border-bottom:1px solid var(--line); }
+.app-frame .hr-setup-dialog-icon { display:grid; place-items:center; width:48px; height:48px; flex-shrink:0; background:var(--brand-wash); color:var(--brand); border-radius:14px; }
+.app-frame .hr-setup-dialog-heading>div { flex:1; min-width:0; }
+.app-frame .hr-setup-dialog-heading small { display:block; margin-bottom:5px; color:var(--brand); text-transform:uppercase; letter-spacing:1px; font-size:10px; font-weight:750; }
+.app-frame .hr-setup-dialog-heading h2 { margin:0; color:var(--ink); font-size:24px; line-height:1.3; }
+.app-frame .hr-setup-dialog-heading p { margin:7px 0 0; color:var(--ink-soft); font-size:13px; line-height:1.6; }
+.app-frame .hr-setup-dialog-heading .purchase-close { position:static; display:grid; place-items:center; margin:0; width:35px; height:35px; flex-shrink:0; }
+.app-frame .hr-setup-form { display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+.app-frame .hr-setup-dialog-body { min-height:0; padding:23px 25px; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
+.app-frame .hr-setup-form-section { margin:0 0 22px; padding-bottom:22px; border-bottom:1px solid var(--line); }
+.app-frame .hr-setup-form-section:last-child { margin:0; padding:0; border:0; }
+.app-frame .hr-setup-form-section h3 { font-size:14px; color:var(--ink); font-weight:750; margin:0 0 15px; }
+.app-frame .hr-setup-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:17px 19px; }
+.app-frame .hr-setup-form-grid>div { min-width:0; }
+.app-frame .hr-setup-wide { grid-column:1/-1; }
+.app-frame .hr-setup-form-section label { display:grid; gap:8px; margin:0; min-width:0; color:var(--ink); font-size:13px; font-weight:650; }
+.app-frame .hr-setup-form-section :is(input:not([type=checkbox]),textarea) { width:100%; min-width:0; min-height:44px; border:1px solid var(--line); border-radius:10px; padding:11px 12px; font:inherit; font-size:14px; font-weight:400; color:var(--ink); background:var(--canvas); }
+.app-frame .hr-setup-form-section textarea { resize:vertical; line-height:1.6; }
+.app-frame .hr-setup-dialog .hr-setup-field-help { margin:8px 0 0; font-size:12px; line-height:1.7; color:var(--ink-soft); }
+.app-frame .hr-setup-form-section .hr-setup-paid-toggle { display:flex; justify-content:space-between; align-items:center; gap:13px; border:1px solid var(--line); border-radius:11px; padding:14px; background:var(--canvas); }
+.app-frame .hr-setup-paid-toggle strong { font-size:14px; color:var(--ink); }
+.app-frame .hr-setup-paid-toggle small { display:block; margin-top:6px; color:var(--ink-soft); font-size:12px; font-weight:400; line-height:1.65; }
+.app-frame .hr-setup-switch { position:relative; display:inline-flex; flex-shrink:0; width:40px; height:24px; }
+.app-frame .hr-setup-switch input { position:absolute; inset:0; opacity:0; width:100%; height:100%; margin:0; z-index:1; cursor:pointer; }
+.app-frame .hr-setup-switch i { position:absolute; inset:0; border-radius:24px; background:var(--line); pointer-events:none; }
+.app-frame .hr-setup-switch i::after { content:""; position:absolute; left:3px; top:3px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 3px #0002; transition:transform .15s; }
+.app-frame .hr-setup-switch input:checked+i { background:#168263; }
+.app-frame .hr-setup-switch input:checked+i::after { transform:translateX(16px); }
+.app-frame .hr-setup-switch input:focus-visible+i { outline:3px solid #45a985; outline-offset:3px; }
+.app-frame .hr-setup-switch input:disabled+i { opacity:.55; }
+.app-frame .hr-setup-dialog :is(.hr-setup-policy-preview,.hr-setup-form-note) { display:flex; align-items:center; gap:10px; padding:12px 14px; margin:15px 0 0; border-radius:10px; border:1px solid var(--line); background:var(--brand-wash); color:var(--ink); font-size:13px; line-height:1.7; }
+.app-frame :is(.hr-setup-policy-preview,.hr-setup-form-note)>svg { flex-shrink:0; color:var(--brand); }
+.app-frame .hr-setup-form-error { display:flex; align-items:flex-start; gap:9px; padding:12px 14px; margin:0 0 18px; border:1px solid #e6b8bf; border-radius:10px; background:#fff1f2; color:#a32c40; font-size:13px; line-height:1.6; }
+.app-frame .hr-setup-form-error>svg { flex-shrink:0; margin-top:2px; }
+.app-frame .hr-setup-form-error>button { margin-left:auto; border:1px solid currentColor; border-radius:6px; padding:3px 8px; background:transparent; color:inherit; font-size:12px; }
+.app-frame .hr-setup-dialog-footer { display:flex; align-items:center; flex-shrink:0; gap:9px; padding:16px 25px; border-top:1px solid var(--line); background:var(--surface); }
+.app-frame .hr-setup-dialog-footer>span { color:var(--ink-soft); font-size:12px; line-height:1.6; margin-right:auto; max-width:240px; }
+.app-frame .hr-setup-dialog-footer button { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:42px; font-size:13px; white-space:nowrap; }
+.app-frame[data-theme=dark] .hr-setup-event-type[data-type=vacation] { background:#293149; color:#c1cdff; border-color:#435275; }
+.app-frame[data-theme=dark] .hr-setup-row-actions .hr-setup-delete { color:#ffadb7; }
+.app-frame[data-theme=dark] .hr-setup-page .sales-alert.success { background:var(--brand-wash)!important; border-color:var(--line)!important; color:var(--ink)!important; }
+.app-frame[data-theme=dark] .hr-setup-page .sales-alert.error,.app-frame[data-theme=dark] .hr-setup-form-error { background:#39272a!important; border-color:#72474d!important; color:#ffc1c7!important; }
+.app-frame[data-theme=dark] :is(.hr-setup-record strong,.hr-setup-dialog h2,.hr-setup-section-heading h2,.hr-setup-form-section h3,.hr-setup-paid-toggle strong) { color:var(--ink)!important; }
+@media(max-width:1150px) { .app-frame .hr-setup-tabs { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:700px) {
+  .app-frame .hr-setup-tabs { gap:8px; margin:12px 0; }
+  .app-frame .hr-setup-tabs button { padding:11px; gap:9px; align-items:center; }
+  .app-frame .hr-setup-tab-icon { width:31px; height:31px; border-radius:9px; }
+  .app-frame .hr-setup-tabs strong { font-size:12px; }
+  .app-frame .hr-setup-tabs small { display:none; }
+  .app-frame .hr-setup-section-heading { padding:18px 15px 12px; gap:10px; }
+  .app-frame .hr-setup-count { font-size:10px; padding:6px; }
+  .app-frame .hr-setup-section-heading h2 { font-size:18px; }
+  .app-frame .hr-setup-toolbar { padding:0 15px 15px; gap:10px; }
+  .app-frame .hr-setup-search { flex-basis:100%; }
+  .app-frame .hr-setup-scope { flex:1; max-width:none; }
+  .app-frame .hr-setup-table-wrap { overflow:visible; }
+  .app-frame .hr-setup-table { display:block; min-width:0; width:100%; }
+  .app-frame .hr-setup-table thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+  .app-frame .hr-setup-table tbody { display:grid; gap:12px; padding:0 12px 14px; }
+  .app-frame .hr-setup-table tr { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border:1px solid var(--line); border-radius:12px; padding:4px 0 0; background:var(--surface); }
+  .app-frame .hr-setup-table td { display:block; min-width:0; padding:10px 13px; border:0; overflow-wrap:anywhere; font-size:13px; }
+  .app-frame .hr-setup-table td::before { content:attr(data-label); display:block; margin-bottom:5px; font-size:10px; color:var(--ink-soft); font-weight:650; }
+  .app-frame .hr-setup-table :is(.hr-setup-name,.hr-setup-description,.hr-setup-actions-cell) { grid-column:1/-1; max-width:none; min-width:0; }
+  .app-frame .hr-setup-table .hr-setup-name::before,.app-frame .hr-setup-table .hr-setup-actions-cell::before { display:none; }
+  .app-frame .hr-setup-record { max-width:none; }
+  .app-frame .hr-setup-table .hr-setup-actions-cell { border-top:1px solid var(--line); padding:11px 13px; }
+  .app-frame .hr-setup-row-actions button { min-height:36px; flex:1; }
+  .app-frame .hr-setup-date-range { white-space:normal; }
+  .app-frame .hr-setup-dialog { width:calc(100vw - 20px); max-height:calc(100dvh - 20px); border-radius:16px; }
+  .app-frame .hr-setup-dialog-heading { padding:18px 16px 15px; gap:10px; }
+  .app-frame .hr-setup-dialog-icon { width:36px; height:36px; border-radius:10px; }
+  .app-frame .hr-setup-dialog-heading h2 { font-size:21px; }
+  .app-frame .hr-setup-dialog-heading p { font-size:12px; }
+  .app-frame .hr-setup-dialog-body { padding:18px 16px; }
+  .app-frame .hr-setup-form-grid { grid-template-columns:1fr; gap:16px; }
+  .app-frame .hr-setup-dialog-footer { flex-wrap:wrap; padding:12px 16px; }
+  .app-frame .hr-setup-dialog-footer>span { flex-basis:100%; max-width:none; }
+  .app-frame .hr-setup-dialog-footer button { flex:1; }
+}

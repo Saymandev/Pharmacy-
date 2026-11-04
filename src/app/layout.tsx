@@ -11,6 +11,7 @@ import "./controls.css";
 import "./pos-dialogs.css";
 import "./financial-workspaces.css";
 import "./administration.css";
+import "./hr-setup.css";
 
 export const metadata: Metadata = {
   title: "Pharmacy POS | Pharmacy operations",
