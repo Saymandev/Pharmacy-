@@ -17,7 +17,7 @@
 .app-frame .pos-page .pos-cart-modal .pos-quantity-stepper { display:grid; grid-template-columns:40px 44px 40px; align-items:center; height:42px; min-height:42px; padding:0; border:1px solid var(--ux-line); border-radius:10px; overflow:hidden; background:var(--ux-canvas); }
 .app-frame .pos-page .pos-cart-modal .pos-quantity-stepper button { width:40px; height:40px; min-height:40px; min-width:40px; border:0; border-radius:0; color:var(--ux-text); }
 .app-frame .pos-page .pos-cart-modal .pos-quantity-stepper button:disabled { opacity:.35; }
-.app-frame .pos-page .pos-cart-modal .pos-quantity-stepper input { width:44px; height:40px; min-height:40px; padding:0; margin:0; border:0; border-inline:1px solid var(--ux-line); border-radius:0; background:var(--ux-surface); color:var(--ux-text); font-size:15px; text-align:center; box-shadow:none; }
+.app-frame .pos-page .pos-cart-modal .pos-quantity-stepper input { width:44px; height:40px !important; min-height:40px !important; padding:0; margin:0; border:0; border-inline:1px solid var(--ux-line); border-radius:0; background:var(--ux-surface); color:var(--ux-text); font-size:15px; text-align:center; box-shadow:none; }
 .app-frame .pos-page .pos-cart-modal .pos-quantity-stepper :is(input,button):focus-visible { outline-offset:-3px; }
 .app-frame .pos-page .pos-cart-modal .pos-stock-hint { font-size:12px; color:var(--ux-muted); white-space:normal; }
 .app-frame .pos-page .pos-cart-modal .pos-line-total { font-size:16px; font-variant-numeric:tabular-nums; white-space:nowrap; }

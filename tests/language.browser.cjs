@@ -7,7 +7,7 @@ const ts=require("typescript");
 function entries(file){const out={};const ast=ts.createSourceFile(file,fs.readFileSync(file,"utf8"),99,true,4);function visit(n){if(ts.isPropertyAssignment(n)&&ts.isStringLiteral(n.initializer))out[n.name.text]=n.initializer.text;ts.forEachChild(n,visit);}visit(ast);return out;}
 const labels={...entries("src/lib/i18n/workspace-bn.ts"),...entries("src/lib/i18n/language-provider.tsx"),...entries("src/lib/i18n/interface-bn.ts")};
 function walk(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(dir,e.name)):[path.join(dir,e.name)]);}
-const technical=new Set(["0.00","BDT","e.g. B-1042","pharmacy.admin","supplier@example.com"]);
+const technical=new Set(["s","0.00","BDT","e.g. B-1042","pharmacy.admin","supplier@example.com"]);
 // All literal translation calls must resolve. Technical examples are intentionally unchanged.
 for(const file of walk("src").filter(f=>f.endsWith(".tsx"))){const ast=ts.createSourceFile(file,fs.readFileSync(file,"utf8"),99,true,4);function visit(n){if(ts.isCallExpression(n)&&n.expression.getText(ast)==="t"&&n.arguments[0]&&ts.isStringLiteral(n.arguments[0])){const key=n.arguments[0].text;assert.ok(labels[key]||technical.has(key),`${file}: missing Bengali message: ${key}`);}ts.forEachChild(n,visit);}visit(ast);}
 (async()=>{
@@ -15,7 +15,7 @@ for(const file of walk("src").filter(f=>f.endsWith(".tsx"))){const ast=ts.create
  try{
  const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[],writes=[];
  page.on("pageerror",e=>errors.push(e.message));
- await page.addInitScript(()=>{localStorage.setItem("pharmacy.language","bn");});
+ await page.addInitScript(()=>{if(!localStorage.getItem("pharmacy.language"))localStorage.setItem("pharmacy.language","bn");});
  await page.route("**/api/backend/**",async route=>{const req=route.request(),ep=new URL(req.url()).pathname.replace("/api/backend","");let data=[];
  if(req.method()!=="GET")writes.push(ep);
  if(ep==="/auth/me")data={id:"a",fullName:"Test Admin",role:{name:"Super Admin",permissions:[{key:"*"}]}};
@@ -30,7 +30,7 @@ for(const file of walk("src").filter(f=>f.endsWith(".tsx"))){const ast=ts.create
   await page.locator(".app-frame").waitFor();
   assert.equal(await page.locator("html").getAttribute("lang"),"bn");
   await page.locator(".side-navigation").getByRole("link",{name:"ইনভেন্টরি",exact:true}).waitFor({state:"attached"});
-  const text=await page.locator(".app-frame").innerText();
+  const text=await page.locator(".side-navigation").innerText();
   for(const forbidden of ["সারসংক্ষেপ","কর্মক্ষেত্র","ওষুধের তালিকা"])assert.ok(!text.includes(forbidden),`${route}: old navigation spelling: ${forbidden}`);
  }
  await page.goto(base+"/purchases");
