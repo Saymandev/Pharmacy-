@@ -19,6 +19,7 @@ import "./supplier-returns.css";
 import "./pos-cart.css";
 import "./pos-productivity.css";
 import "./review-permissions.css";
+import "./receipt-settlement.css";
 
 export const metadata: Metadata = {
   title: "Pharmacy POS | Pharmacy operations",

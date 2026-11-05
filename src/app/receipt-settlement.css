@@ -1,0 +1,66 @@
+/* Checkout adjustments and calculator are part of payment review. */
+.app-frame .pos-review-dialog .pos-checkout-calculator { display:inline-flex; align-items:center; justify-content:center; gap:6px; flex-shrink:0; min-height:34px; padding:7px 9px; border:1px solid var(--ux-line); border-radius:9px; color:var(--ux-text); background:var(--ux-surface); font-size:12px; }
+.app-frame .pos-review-dialog .pos-checkout-payment > .pos-checkout-adjustments { margin:0 0 12px; padding:10px; }
+.app-frame .pos-review-dialog .pos-checkout-adjustments .pos-discount-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.app-frame .pos-review-dialog .pos-checkout-adjustments .pos-discount-input { display:grid; grid-template-columns:minmax(65px,1fr) 85px; max-width:190px; gap:8px; }
+.app-frame .pos-review-dialog .pos-checkout-adjustments .pos-discount-input input { min-width:0; width:100%; }
+.app-frame .pos-review-dialog { --settlement-text:#a11b2d; --settlement-bg:#fff0f2; --settlement-line:#dd8591; --settlement-canvas:#fff9fa; }
+.app-frame[data-theme=dark] .pos-review-dialog { --settlement-text:#ffb5bf; --settlement-bg:#43252d; --settlement-line:#a95c6a; --settlement-canvas:#21191c; }
+.app-frame .pos-page .pos-review-dialog:is([data-settlement=partial],[data-settlement=due]) { border:2px solid var(--settlement-line); }
+.app-frame .pos-page .pos-review-dialog:is([data-settlement=partial],[data-settlement=due]) :is(.pos-checkout-heading,.pos-checkout-actions) { background:var(--settlement-bg); border-color:var(--settlement-line); }
+.app-frame .pos-page .pos-review-dialog:is([data-settlement=partial],[data-settlement=due]) .pos-checkout-body { background:var(--settlement-canvas); }
+.app-frame .pos-page .pos-review-dialog:is([data-settlement=partial],[data-settlement=due]) .pos-grand-total { background:var(--settlement-bg); border-color:var(--settlement-line); }
+.app-frame .pos-page .pos-review-dialog:is([data-settlement=partial],[data-settlement=due]) :is(.pos-checkout-heading h2,.pos-grand-total strong,.pos-due-row strong,.pos-checkout-footer-summary small) { color:var(--settlement-text); }
+.app-frame .pos-page .pos-review-dialog:is([data-settlement=partial],[data-settlement=due]) .pos-complete-button { background:#b42335; border-color:#b42335; color:#fff; }
+.app-frame .pos-review-dialog .pos-settlement-warning { display:flex; align-items:center; gap:9px; margin:0 0 12px; padding:9px 10px; border:1px solid var(--settlement-line); border-radius:9px; background:var(--settlement-bg); color:var(--settlement-text); }
+.app-frame .pos-review-dialog .pos-settlement-warning svg { flex-shrink:0; }
+.app-frame .pos-review-dialog .pos-settlement-warning > span { display:grid; gap:3px; }
+.app-frame .pos-review-dialog .pos-settlement-warning strong { font-size:13px; color:var(--settlement-text); }
+.app-frame .pos-review-dialog .pos-settlement-warning small { font-size:11px; color:var(--settlement-text); }
+/* The customer receipt uses the supplied sample's four-column item layout. */
+.sample-sale-receipt.thermal-receipt { font-family:ui-monospace,"Noto Sans Bengali","Nirmala UI","Segoe UI",monospace; font-size:10px; line-height:1.45; }
+.sample-sale-receipt .receipt-business-header { display:grid; gap:1mm; text-align:center; padding-bottom:3mm; border-bottom:2px solid #111; }
+.sample-sale-receipt .receipt-business-header h2 { margin:0; font-size:14px; line-height:1.3; font-weight:800; text-transform:uppercase; }
+.sample-sale-receipt .receipt-business-header > strong { font-size:10px; letter-spacing:2px; border-block:1px solid #999; padding:1mm 0; }
+.sample-sale-receipt .receipt-business-header small { display:block; font-size:8px; line-height:1.5; }
+.sample-sale-receipt .receipt-business-header .receipt-document-label { font-size:8px; text-transform:uppercase; margin-top:1mm; }
+.sample-sale-receipt .pos-receipt-meta { padding:3mm 0; gap:1mm; border-bottom:2px solid #111; }
+.sample-sale-receipt .pos-receipt-meta > span,.sample-sale-receipt .pos-receipt-meta strong { font-size:9px; line-height:1.45; }
+.sample-sale-receipt .receipt-sale-content { position:relative; }
+.sample-sale-receipt .receipt-sale-items { position:relative; z-index:1; width:100%; table-layout:fixed; border-collapse:collapse; margin:2mm 0 6mm; text-align:left; }
+.sample-sale-receipt .receipt-col-item { width:44%; }
+.sample-sale-receipt .receipt-col-qty { width:10%; }
+.sample-sale-receipt .receipt-col-rate { width:21%; }
+.sample-sale-receipt .receipt-col-total { width:25%; }
+.sample-sale-receipt .receipt-sale-items th { padding:1.5mm 0; font-size:9px; font-weight:800; text-transform:uppercase; border-bottom:2px solid #111; }
+.sample-sale-receipt .receipt-sale-items :is(th,td):not(:first-child) { text-align:right; padding-left:1mm; }
+.sample-sale-receipt .receipt-sale-items .receipt-item { display:table-row; break-inside:avoid; border-bottom:1px dashed #999; }
+.sample-sale-receipt .receipt-sale-items td { padding:1.5mm 0; vertical-align:top; font-size:9px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.sample-sale-receipt .receipt-sale-items .receipt-item-name { display:block; font-size:10px; line-height:1.35; font-weight:800; }
+.sample-sale-receipt .receipt-sale-items small { display:block; margin-top:.5mm; font-size:7px; line-height:1.5; }
+.sample-sale-receipt .receipt-sale-items .receipt-item-total { max-width:none; font-weight:700; }
+.sample-sale-receipt .pos-receipt-totals { position:relative; z-index:1; display:grid; gap:1.5mm; font-size:10px; }
+.sample-sale-receipt .pos-receipt-grand { border-top:1px dashed #111; padding-top:1.5mm; font-weight:900; text-transform:uppercase; }
+.sample-sale-receipt .pos-receipt-grand > span,.sample-sale-receipt .pos-receipt-grand > strong { font-size:12px; font-weight:900; }
+.sample-sale-receipt .receipt-due-total :is(span,strong) { color:#b91c1c !important; font-weight:900; font-size:12px; }
+.sample-sale-receipt .receipt-due-watermark { position:absolute; top:36%; left:50%; z-index:0; transform:translate(-50%,-50%) rotate(-20deg); max-width:90%; padding:2mm 4mm; border:3px double #b91c1c; border-radius:3px; color:#b91c1c !important; font-size:44px; font-weight:900; letter-spacing:3px; line-height:1; opacity:.12; pointer-events:none; user-select:none; }
+.sample-sale-receipt .receipt-due-stamp { display:grid; grid-template-columns:auto auto; align-items:center; gap:1mm 3mm; max-width:100%; width:fit-content; margin:4mm auto; padding:2mm 3mm; border:3px double #b91c1c; color:#b91c1c; transform:rotate(-3deg); break-inside:avoid; }
+.sample-sale-receipt .receipt-due-stamp :is(strong,b,small) { color:#b91c1c !important; font-weight:900; }
+.sample-sale-receipt .receipt-due-stamp > strong { font-size:21px; }
+.sample-sale-receipt .receipt-due-stamp > b { font-size:15px; overflow-wrap:anywhere; }
+.sample-sale-receipt .receipt-due-stamp > small { grid-column:1/-1; text-align:center; font-size:8px; }
+.sample-sale-receipt footer { text-align:center; margin-top:4mm; padding-top:2mm; font-size:8px; break-inside:avoid; }
+.sample-sale-receipt footer :is(strong,small) { display:block; }
+.sample-sale-receipt footer > strong { margin:3mm 0; text-transform:uppercase; font-size:9px; }
+.sample-sale-receipt .receipt-billed-by { margin:0; font-size:8px; }
+.sample-sale-receipt .receipt-billed-by strong { display:inline; }
+.sample-sale-receipt[data-paper-width="58"] .receipt-business-header h2 { font-size:12px; }
+.sample-sale-receipt[data-paper-width="58"] .receipt-sale-items :is(th,td) { font-size:8px; }
+.sample-sale-receipt[data-paper-width="58"] .receipt-sale-items .receipt-item-name { font-size:9px; }
+.sample-sale-receipt[data-paper-width="58"] .receipt-due-watermark { font-size:32px; }
+@media(max-width:760px) { .app-frame .pos-review-dialog .pos-checkout-calculator { width:32px; min-width:32px; min-height:32px; padding:6px; } .app-frame .pos-review-dialog .pos-checkout-calculator > span { display:none; } }
+@media print {
+ .receipt-backdrop .sample-sale-receipt .receipt-due-watermark,.receipt-backdrop .sample-sale-receipt .receipt-due-stamp,.receipt-backdrop .sample-sale-receipt .receipt-due-stamp *,.receipt-backdrop .sample-sale-receipt .receipt-due-total * { color:#b91c1c !important; border-color:#b91c1c !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+ .receipt-backdrop .sample-sale-receipt .receipt-due-watermark { opacity:.12 !important; }
+ .sample-sale-receipt .receipt-sale-items thead { display:table-header-group; }
+}

@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { useAuth } from "@/components/providers/auth-provider";
 import { api } from "@/lib/api/client";
 
-export type PharmacyBranch = { id: string; name: string };
+export type PharmacyBranch = { id: string; name: string; address?: string; phone?: string; email?: string };
 type ActiveBranchValue = {
   branches: PharmacyBranch[];
   activeBranchId: string;

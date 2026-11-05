@@ -51,7 +51,7 @@ const assert=require('node:assert/strict');
  assert.equal(await page.getByRole('dialog',{name:'Confirm completed sale'}).count(),0);
  await page.getByRole('dialog').filter({hasText:'SALE-TEST-1'}).waitFor();
  assert.equal(posted.length,1);assert.equal(posted[0].paidAmount,75.5);assert.equal(posted[0].payments[0].amount,75.5);assert.equal(posted[0].dueAmount,0);assert.equal(posted[0].saleItems[0].batchNumber,'A');
- await page.locator('.pos-receipt-paper').getByText(/Cash change returned/).waitFor();
+ await page.locator('.pos-receipt-paper').getByText(/Change return/).waitFor();
  assert.deepEqual(errors,[]);
  console.log('PASS browser: FEFO, expiry exclusion, duplicate batch, hold/resume, F2/F4, cash change, sale payload, receipt; mocked API only.');
  await browser.close();

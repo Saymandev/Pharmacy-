@@ -24,7 +24,7 @@ export function PosCalculator({ onClose }: { onClose: () => void }) {
     if (value !== "AC") setResult("");
     input.current?.focus();
   }
-  return <dialog ref={dialog} className="pos-calculator" aria-label={t("Calculator")} onCancel={onClose}>
+  return <dialog ref={dialog} className="pos-calculator" role="dialog" aria-modal="true" aria-label={t("Calculator")} onCancel={onClose}>
     <header><h2>{t("Calculator")}</h2><button type="button" onClick={onClose} aria-label={t("Close calculator")}><X size={18}/></button></header>
     <label>{t("Calculation")}<input ref={input} value={expression} maxLength={120} inputMode="decimal" placeholder="0" onChange={event => { setExpression(event.target.value); setResult(""); setError(""); }} onKeyDown={event => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { event.preventDefault(); equals(); } }}/></label>
     <output aria-live="polite" aria-label={t("Calculation result")}>{result || "—"}</output>

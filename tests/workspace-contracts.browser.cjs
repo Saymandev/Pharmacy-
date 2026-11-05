@@ -42,7 +42,7 @@ const assert=require('node:assert/strict');
   await page.goto(base+'/sales');await page.getByRole('button').filter({hasText:'SALE-PERSISTED-1'}).first().click();
   await page.getByRole('dialog',{name:'Sale details'}).getByRole('button',{name:'Print receipt'}).click();
   const receipt=page.getByRole('dialog',{name:'Receipt reprint'});await receipt.waitFor();
-  assert.match(await receipt.innerText(),/SALE-PERSISTED-1/);assert.match(await receipt.innerText(),/70\.00/);assert.match(await receipt.innerText(),/BATCH-A/);
+  assert.match(await receipt.innerText(),/SALE-PERSISTED-1/);assert.match(await receipt.innerText(),/70\.00/);assert.doesNotMatch(await receipt.innerText(),/BATCH-A/);
   await receipt.getByRole('button',{name:'Print receipt'}).click();assert.equal(await page.evaluate(()=>window.__printed),true);
   await page.goto(base+'/customers');await page.getByText('Test Customer',{exact:true}).first().waitFor();
   assert.equal(await page.getByRole('button',{name:'Next',exact:true}).isEnabled(),true);
