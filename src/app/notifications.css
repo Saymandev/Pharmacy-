@@ -1,0 +1,36 @@
+.app-frame .admin-media-grid > .data-empty { grid-column:1/-1; width:100%; min-height:260px; padding:30px 16px; text-align:center; align-items:center; justify-content:center; box-sizing:border-box; }
+.app-frame .admin-media-grid > .data-empty :is(strong,span) { max-width:46ch; text-align:center; }
+.app-frame .notification-menu { position:relative; display:flex; align-items:center; flex-shrink:0; }
+.app-frame .notification-menu .notification-button { position:relative; display:inline-flex; align-items:center; justify-content:center; }
+.app-frame .notification-unread-badge { position:absolute; top:-4px; right:-5px; display:grid; place-items:center; min-width:17px; height:17px; padding:0 3px; border:2px solid var(--ux-surface); border-radius:20px; color:white; background:#bf4949; font-size:9px; line-height:1; font-weight:750; }
+.app-frame .notification-panel { position:absolute; right:0; top:calc(100% + 12px); z-index:250; display:flex; flex-direction:column; width:365px; max-width:calc(100vw - 24px); max-height:min(620px,calc(100dvh - 100px)); overflow:hidden; border:1px solid var(--ux-line); border-radius:14px; background:var(--ux-surface); color:var(--ux-text); box-shadow:0 18px 60px #071b2633; }
+.notification-panel > header { display:flex; align-items:center; gap:7px; padding:15px; border-bottom:1px solid var(--ux-line); flex-shrink:0; }
+.notification-panel > header > div { display:grid; gap:4px; margin-right:auto; }
+.notification-panel > header strong { color:var(--ux-text); font-size:15px; }
+.notification-panel > header small { color:var(--ux-muted); font-size:11px; }
+.app-frame .notification-panel button { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; padding:7px; min-height:32px; border:1px solid var(--ux-line); border-radius:8px; background:var(--ux-surface); color:var(--ux-text); cursor:pointer; font:inherit; font-size:11px; }
+.app-frame .notification-panel button:hover:not(:disabled) { color:var(--brand); background:var(--ux-soft); }
+.app-frame .notification-panel button:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+.app-frame .notification-panel button:disabled { opacity:.5; cursor:default; }
+.notification-panel-list { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+.notification-panel-list article { display:flex; gap:10px; padding:14px 15px; border-bottom:1px solid var(--ux-line); }
+.notification-panel-list article.unread { background:var(--brand-wash); border-left:3px solid var(--brand); padding-left:12px; }
+.notification-panel-list article > div { min-width:0; flex:1; }
+.notification-panel-list article strong { display:block; color:var(--ux-text); font-size:12px; line-height:1.5; overflow-wrap:anywhere; }
+.notification-panel-list article p { margin:5px 0 7px; color:var(--ux-muted); font-size:12px; line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere; }
+.notification-panel-list article time { color:var(--ux-muted); font-size:10px; }
+.notification-panel-list article > button { align-self:flex-start; color:var(--brand); }
+.notification-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; min-height:190px; margin:0; padding:22px; color:var(--ux-muted); font-size:12px; text-align:center; }
+.notification-empty strong { color:var(--ux-text); font-size:13px; }
+.notification-panel > footer { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; padding:11px 14px; border-top:1px solid var(--ux-line); flex-shrink:0; }
+.notification-error { display:flex; align-items:center; gap:8px; padding:12px; color:var(--ux-text); background:var(--ux-soft); font-size:12px; }
+.notification-error span { flex:1; }
+.notification-panel-pagination { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 14px; color:var(--ux-muted); font-size:11px; }
+@media(max-width:800px) {
+ .app-frame .notification-panel { position:fixed; top:76px; right:12px; left:12px; width:auto; max-width:none; max-height:calc(100dvh - 92px); }
+ .app-frame .notification-menu .notification-button { width:34px; height:34px; }
+}
+@media print { .notification-menu { display:none !important; } }
+
+.notification-realtime { display:flex; align-items:center; justify-content:space-between; gap:9px; padding:8px 14px; color:var(--ux-muted); border-bottom:1px solid var(--ux-line); font-size:10px; }
+.notification-realtime[data-connected=true] span { color:var(--brand); }

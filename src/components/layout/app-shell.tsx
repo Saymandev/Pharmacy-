@@ -1,6 +1,7 @@
 "use client";
 
 import { BrandLogo, BrandingProvider } from "@/components/providers/branding-provider";
+import { NotificationMenu } from "./notification-menu";
 import { DueCollectionProvider, DueCollectionTrigger, DueCollectionOverlay } from "@/features/sales/due-collection";
 import { DialogBehavior } from "@/components/ui/dialog-behavior";
 import { Select } from "@/components/ui/select";
@@ -205,7 +206,7 @@ export function AppShell() {
             <button className="icon-button theme-toggle" type="button" aria-label={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} title={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>{theme === "dark" ? <Sun size={18}/> : <Moon size={18}/>}</button>
             <button className="icon-button display-preferences-trigger" type="button" aria-label={t("Settings")} title={t("Settings")} onClick={()=>setPreferencesOpen(true)}><Settings2 size={18}/></button>
             {demoMode && <span className="demo-mode-badge"><span className="demo-badge-full">{t("DEMO DATA · Local only")}</span><span className="demo-badge-compact">{language === "bn" ? "ডেমো" : t("DEMO")}</span></span>}<span className="shortcut-hint"><Command size={12} /> K</span>
-            <button className="icon-button notification-button" type="button" aria-label={t("Notifications")}><Bell size={18} /><i /></button>
+            <NotificationMenu/>
             <div className="topbar-divider" />
             <div className="profile-menu-wrap" ref={profileMenuRef}>
               <button className="profile-trigger" type="button" aria-haspopup="menu" aria-expanded={profileOpen} aria-controls="profile-dropdown" onClick={() => setProfileOpen((open) => !open)}>
