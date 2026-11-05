@@ -18,7 +18,7 @@ const tabDescriptions: Record<string,string> = {
 };
 type View = "notifications" | "notices" | "media" | "settings" | "backups" | "audit" | "branches";
 const tabs: { id: View; label: string; icon: typeof Bell }[] = [{ id: "notifications", label: "Notifications", icon: Bell }, { id: "notices", label: "Notice board", icon: Megaphone }, { id: "media", label: "Media library", icon: FileImage }, { id: "settings", label: "Settings", icon: Settings2 }, { id: "backups", label: "Backups", icon: FileArchive }, { id: "audit", label: "Audit trail", icon: ListChecks }, { id: "branches", label: "Branches & locations", icon: Settings2 }];
-function rows(value: unknown): Row[] { if (Array.isArray(value)) return value as Row[]; if (value && typeof value === "object") { const item = value as Row; if (Array.isArray(item.data)) return item.data as Row[]; } return []; }
+function rows(value: unknown): Row[] { for (let depth=0;depth<6;depth++) { if (Array.isArray(value)) return value as Row[]; if (!value || typeof value!=="object") return []; const item=value as Row; if (Array.isArray(item.branches)) return item.branches as Row[]; if (!("data" in item)) return []; value=item.data; } return []; }
 function errorText(e: unknown) { return e instanceof ApiClientError ? e.message : "This request could not be completed."; }
 function formatDate(value: unknown,locale="en-GB") { if (!value) return "—"; const d = new Date(String(value)); return Number.isNaN(d.valueOf()) ? String(value) : d.toLocaleString(locale, { timeZone:"Asia/Dhaka", dateStyle: "medium", timeStyle: "short" }); }
 function stringValue(v: unknown) { return typeof v === "string" ? v : v == null ? "" : String(v); }

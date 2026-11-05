@@ -25,7 +25,7 @@ const fs = require('node:fs/promises');
     else if (endpoint === '/roles') data = [role];
     else if (endpoint === '/roles/permissions') data = { sale: permissions, customer: [{ id: 'p3', key: 'customer:read', action: 'read', module: 'customer', description: 'View customer accounts.' }] };
     else if (endpoint === '/roles/r1') data = role;
-    else if (endpoint === '/branches') data = [{ id: 'b1', name: 'Main Pharmacy', address: 'Dhaka city', email: 'branch@example.test', phone: '01700000000' }];
+    else if (endpoint === '/branches') data = { branches: [{ id: 'b1', name: 'Main Pharmacy', address: 'Dhaka city', email: 'branch@example.test', phone: '01700000000' }], pagination: { total: 1, page: 1, limit: 100, totalPages: 1 } };
     else if (endpoint === '/communication/notifications') { data = [{ id: 'n1', title: 'Stock needs attention', message: 'Review low-stock medicines before the next purchase.', createdAt: '2026-11-04T03:00:00Z', isRead: false }]; meta = { unreadCount: 1 }; }
     else if (endpoint === '/communication/notices') data = [{ id: 'n2', title: 'Opening hours update', content: 'The main pharmacy opens at 8 AM from Sunday.', postedBy: { fullName: 'Administrator' }, createdAt: '2026-11-04T03:00:00Z' }];
     else if (endpoint === '/media') data = [{ id: 'm1', fileName: 'Pharmacy product image.png', type: 'image', url: '/pharmacy-mark.svg', size: 24000 }];
@@ -76,6 +76,8 @@ const fs = require('node:fs/promises');
       await noOverflow(); await screenshot('admin-' + name.replaceAll(/[^a-z0-9]/gi, '-').toLowerCase() + '.png');
       await page.setViewportSize({ width: 390, height: 844 }); await noOverflow(); await page.setViewportSize({ width: 1440, height: 1000 });
     }
+    await adminNav.getByRole('button', { name: 'Branches & locations', exact: true }).click();await page.locator('.admin-page[data-view=branches] .hr-table tbody tr').waitFor();assert.match(await page.locator('.admin-page[data-view=branches] .hr-table').innerText(),/Main Pharmacy/);assert.match(await page.locator('.admin-section-count').innerText(),/1 on this page/);
+    await adminNav.getByRole('button', { name: 'Notice board', exact: true }).click();await page.getByRole('button',{name:'Publish notice',exact:true}).click();const noticeDialog=page.getByRole('dialog',{name:'Publish a notice',exact:true});await noticeDialog.getByRole('combobox',{name:'Branch audience',exact:true}).locator('option[value=b1]').waitFor({state:'attached'});assert.equal(await noticeDialog.getByRole('combobox',{name:'Branch audience',exact:true}).locator('option[value=b1]').textContent(),'Main Pharmacy');await noticeDialog.getByRole('button',{name:'Close',exact:true}).click();
     await adminNav.getByRole('button', { name: 'Settings', exact: true }).click();
     const editor = page.locator('.admin-setting:visible'); await editor.getByRole('textbox', { name: 'title', exact: true }).fill('Changed title'); await editor.getByText('Unsaved changes', { exact: true }).waitFor();
     await page.locator('.admin-settings-categories').getByRole('button', { name: /pharmacy/i }).click(); await editor.getByRole('spinbutton', { name: 'low Stock Threshold', exact: true }).waitFor();
