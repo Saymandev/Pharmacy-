@@ -1,4 +1,5 @@
 "use client";
+import { DataSkeleton } from "@/components/ui/skeleton";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, CreditCard, X } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api/client";
@@ -74,7 +75,7 @@ export function CollectDueDialog({ invoice, onClose, onBack, onSaved }: { invoic
         {onBack && <button className="due-back" type="button" disabled={saving} onClick={onBack}><ArrowLeft size={15}/>{t("Back to search")}</button>}
         {!allowed ? <p role="alert">{t("Your role cannot collect sale payments.")}</p> : <>
           <div className="due-invoice-balance"><span>{t("Outstanding due")}</span><strong>{money(sale.dueAmount)}</strong></div>
-          {loading && <p role="status">{t("Loading invoice and accounts…")}</p>}
+          {loading && <DataSkeleton rows={3}>{t("Loading invoice and accounts…")}</DataSkeleton>}
           {!loading && (due === null || due <= 0 || sale.status === "rejected") && <p role="status">{t("This invoice has no valid outstanding due. Refresh the invoice.")}</p>}
           <fieldset disabled={loading || saving} className="due-payment-fields">
             <div className="due-amount-row"><label>{t("Amount")}<input type="number" min="0.01" step="0.01" max={due ?? undefined} value={amount} onChange={event => setAmount(event.target.value)} placeholder="0.00"/></label><button ref={full} type="button" className="due-pay-full" disabled={payDisabled} onClick={() => setAmount(Number(sale.dueAmount).toFixed(2))}>{t("Pay full due")}</button></div>

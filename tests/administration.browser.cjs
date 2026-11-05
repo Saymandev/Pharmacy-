@@ -15,7 +15,8 @@ const fs = require('node:fs/promises');
   await page.route('**/api/backend/**', async route => {
     const request = route.request(), endpoint = new URL(request.url()).pathname.replace('/api/backend', '');
     let data = [], meta;
-    if (request.method() !== 'GET') {
+    if (endpoint === '/auth/socket-ticket') data = {};
+    else if (request.method() !== 'GET') {
       const body = request.postDataJSON(); writes.push({ endpoint, method: request.method(), body });
       if (endpoint === '/users/u1' && request.method() === 'PATCH') Object.assign(member, body);
       if (endpoint.startsWith('/settings/')) settings = settings.map(s => s.name === endpoint.split('/').at(-1) ? { ...s, configs: body.configs } : s);

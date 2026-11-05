@@ -1,4 +1,5 @@
 "use client";
+import { DataSkeleton } from "@/components/ui/skeleton";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, Check, Edit3, Plus, Search, Trash2, X } from "lucide-react";
@@ -177,7 +178,7 @@ export function CatalogSetupWorkspace() {
               </div></td>
             </tr>)}</tbody>
           </table>
-          {loading && <div className="data-loading">{t("Loading")} {t(activeTab.label)}…</div>}
+          {loading && <DataSkeleton variant="table">{t("Loading")} {t(activeTab.label)}…</DataSkeleton>}
           {!loading && !items.length && <div className="data-empty"><Search size={22}/><strong>{t("No matching catalog settings")}</strong><span>{t("Create an entry or adjust your search.")}</span></div>}
           {pagination.totalPages > 1 && <div className="data-pagination"><span>{t("Showing page")} {page} {t("of")} {pagination.totalPages} · {pagination.totalItems.toLocaleString("en-BD")} {t("records")}</span><div>
             <button type="button" disabled={loading || page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>{t("Previous")}</button>

@@ -1,4 +1,5 @@
 "use client";
+import { SessionSkeleton } from "@/components/ui/skeleton";
 
 import { BrandLogo, BrandingProvider } from "@/components/providers/branding-provider";
 import { NotificationMenu } from "./notification-menu";
@@ -152,7 +153,7 @@ export function AppShell() {
   }
 
   if (status !== "authenticated") {
-    return <main className="auth-loading"><span className="loading-mark"><Pill size={19} /></span><span>{t("Opening your workspace…")}</span></main>;
+    return <SessionSkeleton>{t("Opening your workspace…")}</SessionSkeleton>;
   }
 
   const initials = (user?.fullName ?? "Pharmacy User")

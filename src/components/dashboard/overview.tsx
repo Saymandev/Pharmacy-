@@ -1,4 +1,5 @@
 "use client";
+import { DataSkeleton, SkeletonBar } from "@/components/ui/skeleton";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -170,7 +171,7 @@ export function Overview() {
       )}
 
       <section className="metric-grid" aria-label={t("Today’s pharmacy metrics")}>
-        {metrics.map((metric) => <MetricCard key={metric.label} {...metric} value={loading ? "…" : metric.value} />)}
+        {loading ? <DataSkeleton variant="report" rows={4}>{t("Loading activity…")}</DataSkeleton> : metrics.map((metric) => <MetricCard key={metric.label} {...metric} value={metric.value} />)}
       </section>
 
       {quickActions.length > 0 && <section className="overview-quick-actions" aria-label={t("Common pharmacy tasks")}><div className="overview-quick-heading"><div><p className="eyebrow">{t("QUICK ACTIONS")}</p><h2>{t("Get work started")}</h2></div><span>{t("Common tasks for your role")}</span></div><div className="overview-quick-grid">{quickActions.map(({ label, detail, href, icon: Icon }) => <Link href={href} key={href}><span><Icon size={18}/></span><div><strong>{label}</strong><small>{detail}</small></div><ArrowUpRight size={15}/></Link>)}</div></section>}
@@ -181,15 +182,15 @@ export function Overview() {
             <div><h2>{t("Sales & purchases")}</h2><p>{t("Daily totals for the last 7 days")}</p></div>
             <span className="period-pill">{t("Last 7 days")}</span>
           </div>
-          {loading ? <div className="chart-empty">{t("Loading activity…")}</div> : graph?.length ? <SalesChart points={graph} locale={locale} t={t} /> : <div className="chart-empty">{canReadReports ? t("No activity to display yet.") : t("Report access is needed to display activity.")}</div>}
+          {loading ? <DataSkeleton variant="report" rows={3}>{t("Loading activity…")}</DataSkeleton> : graph?.length ? <SalesChart points={graph} locale={locale} t={t} /> : <div className="chart-empty">{canReadReports ? t("No activity to display yet.") : t("Report access is needed to display activity.")}</div>}
           <div className="chart-legend"><span><i className="legend-sales" /> {t("Sales")}</span><span><i className="legend-purchases" /> {t("Purchases today")}</span></div>
         </section>
 
         <section className="panel inventory-panel">
           <div className="panel-heading"><div><h2>{t("Inventory pulse")}</h2><p>{t("Stock health at a glance")}</p></div><Boxes size={19} className="panel-heading-icon" /></div>
-          <div className="inventory-stat"><span className="inventory-stat-icon inventory-good"><PackageCheck size={17} /></span><span>{t("Active medicines")}</span><strong>{loading ? "—" : formatCount(stats?.totalMedicines, locale)}</strong></div>
-          <div className="inventory-stat"><span className="inventory-stat-icon inventory-warning"><AlertTriangle size={17} /></span><span>{t("Low stock items")}</span><strong>{loading ? "—" : formatCount(stats?.lowStockCount, locale)}</strong></div>
-          <div className="inventory-stat"><span className="inventory-stat-icon inventory-danger"><Pill size={17} /></span><span>{t("Out of stock")}</span><strong>{loading ? "—" : formatCount(stats?.outOfStockCount, locale)}</strong></div>
+          <div className="inventory-stat"><span className="inventory-stat-icon inventory-good"><PackageCheck size={17} /></span><span>{t("Active medicines")}</span><strong>{loading ? <SkeletonBar className="skeleton-number"/> : formatCount(stats?.totalMedicines, locale)}</strong></div>
+          <div className="inventory-stat"><span className="inventory-stat-icon inventory-warning"><AlertTriangle size={17} /></span><span>{t("Low stock items")}</span><strong>{loading ? <SkeletonBar className="skeleton-number"/> : formatCount(stats?.lowStockCount, locale)}</strong></div>
+          <div className="inventory-stat"><span className="inventory-stat-icon inventory-danger"><Pill size={17} /></span><span>{t("Out of stock")}</span><strong>{loading ? <SkeletonBar className="skeleton-number"/> : formatCount(stats?.outOfStockCount, locale)}</strong></div>
           <div className="inventory-footnote">{t("Counts are loaded from the pharmacy inventory and expiry summary.")}</div>
         </section>
       </div>
@@ -197,7 +198,7 @@ export function Overview() {
       <section className="panel cash-panel">
         <div className="cash-icon"><Wallet size={20} /></div>
         <div className="cash-copy"><h2>{t("Cash in active registers")}</h2><p>{t("Closing balance recorded for open cash-register sessions")}</p></div>
-        <strong>{loading ? "—" : stats ? formatMoney(stats.totalCashInHand, locale) : "—"}</strong>
+        <strong>{loading ? <SkeletonBar className="skeleton-number"/> : stats ? formatMoney(stats.totalCashInHand, locale) : "—"}</strong>
         <ArrowUpRight className="cash-arrow" size={18} />
       </section>
     </div>

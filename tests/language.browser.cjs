@@ -17,7 +17,7 @@ for(const file of walk("src").filter(f=>f.endsWith(".tsx"))){const ast=ts.create
  page.on("pageerror",e=>errors.push(e.message));
  await page.addInitScript(()=>{if(!localStorage.getItem("pharmacy.language"))localStorage.setItem("pharmacy.language","bn");});
  await page.route("**/api/backend/**",async route=>{const req=route.request(),ep=new URL(req.url()).pathname.replace("/api/backend","");let data=[];
- if(req.method()!=="GET")writes.push(ep);
+ if(req.method()!=="GET"&&ep!=="/auth/socket-ticket")writes.push(ep);
  if(ep==="/auth/me")data={id:"a",fullName:"Test Admin",role:{name:"Super Admin",permissions:[{key:"*"}]}};
  if(ep==="/branches")data=[{id:"b1",name:"Test Branch"}];
  if(ep==="/setup/status")data={isSetupComplete:false};

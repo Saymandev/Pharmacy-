@@ -1,4 +1,5 @@
 "use client";
+import { DataSkeleton } from "@/components/ui/skeleton";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { Banknote, ChevronRight, Search, X } from "lucide-react";
 import { api } from "@/lib/api/client";
@@ -73,7 +74,7 @@ function DueSearch({ context }: { context: CollectionContext }) {
     <div className="due-search-input"><Search size={18}/><input aria-label={t("Search outstanding invoices")} placeholder={t("Invoice, customer name or phone…")} value={context.query} onChange={event => { setLoading(true); context.search(event.target.value); }} onKeyDown={event => { if (event.key === "Enter" && !loading && rows.length === 1) { event.preventDefault(); context.select(rows[0]); } }}/></div>
     {context.notice && <p role="status" className="due-success">{context.notice}</p>}
     <div className="due-search-results" aria-busy={loading}>
-      {loading ? <p role="status">{t("Searching outstanding invoices…")}</p> : error ? <><p role="alert">{t(error)}</p><button type="button" onClick={() => setRetry(value => value + 1)}>{t("Retry")}</button></> : !rows.length ? <p>{t("No outstanding invoices match this search.")}</p> : rows.map(invoice => <button type="button" className="due-search-row" key={invoice.id} onClick={() => context.select(invoice)}><span><strong>{invoice.invoiceNumber}</strong><small>{invoice.customer?.name || t("Customer")} {invoice.customer?.phone ? ` · ${invoice.customer.phone}` : ""}</small></span><b>{money(invoice.dueAmount)}</b><ChevronRight size={17}/></button>)}
+      {loading ? <DataSkeleton rows={3}>{t("Searching outstanding invoices…")}</DataSkeleton> : error ? <><p role="alert">{t(error)}</p><button type="button" onClick={() => setRetry(value => value + 1)}>{t("Retry")}</button></> : !rows.length ? <p>{t("No outstanding invoices match this search.")}</p> : rows.map(invoice => <button type="button" className="due-search-row" key={invoice.id} onClick={() => context.select(invoice)}><span><strong>{invoice.invoiceNumber}</strong><small>{invoice.customer?.name || t("Customer")} {invoice.customer?.phone ? ` · ${invoice.customer.phone}` : ""}</small></span><b>{money(invoice.dueAmount)}</b><ChevronRight size={17}/></button>)}
     </div>
     <footer className="due-dialog-footer"><small>{total} {t("outstanding invoices")} · {context.page}/{pages}</small><button type="button" disabled={loading || context.page <= 1} onClick={() => context.setPage(context.page - 1)}>{t("Previous")}</button><button type="button" disabled={loading || context.page >= pages} onClick={() => context.setPage(context.page + 1)}>{t("Next")}</button></footer>
   </section></div>;

@@ -1,4 +1,5 @@
 "use client";
+import { DataSkeleton } from "@/components/ui/skeleton";
 
 import { FilterPopover } from "@/components/ui/filter-popover";
 import { Select } from "@/components/ui/select";
@@ -71,7 +72,7 @@ export function StockHistoryPanel({ branchId }: { branchId: string }) {
     </form></FilterPopover>
     {invalidDates && <p role="alert">{t("Start date must be on or before end date.")}</p>}
     {error && <div className="data-alert" role="alert"><span>{t(error)}</span><button type="button" onClick={() => setRefresh(current => current + 1)}>{t("Retry")}</button></div>}
-    {!branchId ? <div className="data-empty">{t("Select a branch to view stock history.")}</div> : loading ? <div className="data-loading" role="status">{t("Loading stock history…")}</div> : !error && <>
+    {!branchId ? <div className="data-empty">{t("Select a branch to view stock history.")}</div> : loading ? <DataSkeleton variant="table">{t("Loading stock history…")}</DataSkeleton> : !error && <>
       <div className="data-table-scroll"><table className="data-table"><thead><tr>{["Date", "Medicine", "Batch number", "Movement type", "Quantity change", "Branch", "Other branch", "Note"].map(label => <th key={label}>{t(label)}</th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.id}>
         <td data-label={t("Date")}>{new Date(row.createdAt).toLocaleString(language === "bn" ? "bn-BD" : "en-GB", { timeZone: "Asia/Dhaka" })}</td>
         <td data-label={t("Medicine")}>{row.medicine?.name ?? "—"}</td><td data-label={t("Batch number")}>{row.stock?.batchNumber ?? "—"}</td>

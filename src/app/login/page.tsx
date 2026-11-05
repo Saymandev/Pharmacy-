@@ -1,4 +1,5 @@
 "use client";
+import { SessionSkeleton } from "@/components/ui/skeleton";
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -33,11 +34,11 @@ export default function LoginPage() {
   }, [status, router]);
 
   if (status === "checking" || (status === "anonymous" && setupChecking)) {
-    return <main className="auth-loading"><span className="loading-mark"><Pill size={19} /></span><span>{t("Checking your session…")}</span></main>;
+    return <SessionSkeleton>{t("Checking your session…")}</SessionSkeleton>;
   }
 
   if (status === "authenticated") {
-    return <main className="auth-loading"><span className="loading-mark"><Pill size={19} /></span><span>{t("Opening your workspace…")}</span></main>;
+    return <SessionSkeleton>{t("Opening your workspace…")}</SessionSkeleton>;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -52,6 +53,8 @@ export default function LoginPage() {
       setSubmitting(false);
     }
   }
+
+  if (submitting) return <SessionSkeleton>{t("Signing in…")}</SessionSkeleton>;
 
   return (
     <main className="login-page">
