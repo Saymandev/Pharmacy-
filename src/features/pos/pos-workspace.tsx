@@ -598,6 +598,7 @@ export function PosWorkspace() {
       const modal = document.querySelector("dialog[open]");
       if (saving || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || (modal && modal !== cartDialog.current) || calculatorOpen || opening || closing || historyOpen || customerQuickOpen || accountQuickOpen || document.querySelector(".ui-select-popup:popover-open")) return;
       if ((event.key === "F2" || event.key === "F1") && !checkoutOpen && !heldOpen && !receipt) { event.preventDefault(); focusSearch(); }
+      if (event.key === "F7") { event.preventDefault(); if (!checkoutOpen && !heldOpen && !receipt) setCartOpen(true); return; }
       if (event.key === "F6" && quickLine && !checkoutOpen && !heldOpen && !receipt) { event.preventDefault(); setCartOpen(false); requestQuantityFocus(value => value + 1); }
       if (event.key === "F9" && checkoutOpen && !heldOpen && !receipt) { event.preventDefault(); setCalculatorOpen(true); }
       if (event.key === "/" && !checkoutOpen && !heldOpen && !receipt && !(event.target instanceof HTMLElement && event.target.closest("input,textarea,select,[contenteditable=true]"))) { event.preventDefault(); focusSearch(); }
@@ -708,7 +709,7 @@ export function PosWorkspace() {
       </div>
 
     </div>
-    <button className="pos-mobile-cart-bar" onClick={() => setCartOpen(true)} aria-label={t("Open current sale")}><span className="pos-mobile-cart-icon"><ShoppingCart size={18}/><i>{totalUnits}</i></span><span><strong>{totalUnits} {t(totalUnits === 1 ? "item" : "items")}</strong><small>{t("Tap to review order")}</small></span><strong className="pos-mobile-cart-total">{money(total)}</strong><ChevronRight size={17}/></button>
+    <button className="pos-mobile-cart-bar" onClick={() => setCartOpen(true)} aria-keyshortcuts="F7" title={t("Open current sale")+" (F7)"} aria-label={t("Open current sale")}><span className="pos-mobile-cart-icon"><ShoppingCart size={18}/><i>{totalUnits}</i></span><span><strong>{totalUnits} {t(totalUnits === 1 ? "item" : "items")}</strong><small>{t("Tap to review order")}</small></span><strong className="pos-mobile-cart-total">{money(total)}</strong><kbd className="pos-cart-shortcut">F7</kbd><ChevronRight size={17}/></button>
     {cartOpen && <dialog ref={cartDialog} className="pos-cart-modal" aria-label={t("Current sale")} onCancel={() => setCartOpen(false)} onClick={(event) => { if (event.target === event.currentTarget) { const box = event.currentTarget.getBoundingClientRect(); if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) setCartOpen(false); } }}>{cartContent}</dialog>}
     {checkoutOpen && <div className="pos-checkout-backdrop" role="presentation" onClick={(event) => { if (!saving && event.target === event.currentTarget) setCheckoutOpen(false); }}><section className="pos-checkout-dialog pos-review-dialog" data-settlement={paymentAllocation.error ? "invalid" : due > 0 ? paid > 0 ? "partial" : "due" : "paid"} role="dialog" aria-modal="true" aria-labelledby="pos-checkout-title" onClick={(event) => event.stopPropagation()}>{checkoutContent}</section></div>}
     {checkoutOpen && calculatorOpen && <PosCalculator onClose={() => setCalculatorOpen(false)}/>}

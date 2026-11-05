@@ -115,3 +115,5 @@
  .app-frame .pos-page .pos-list-identity strong { font-size:12px; }
  .app-frame .pos-page .pos-list-price { font-size:12px; }
 }
+
+.app-frame .pos-page .pos-mobile-cart-bar .pos-cart-shortcut { flex-shrink:0; font-size:11px; line-height:1; padding:5px; border:1px solid var(--ux-line); border-radius:5px; color:var(--ux-muted); background:var(--ux-surface); }
