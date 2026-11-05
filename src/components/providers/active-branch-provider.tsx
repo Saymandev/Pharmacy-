@@ -63,6 +63,26 @@ export function ActiveBranchProvider({ children }: { children: ReactNode }) {
     return () => { active = false; };
   }, [refreshBranches, status]);
 
+  // localStorage is shared across tabs, but React state is not.
+  useEffect(() => {
+    if (status !== "authenticated" || branchesLoading) return;
+    function syncSavedBranch() {
+      const saved = readSavedBranch();
+      // An unknown/removed selection must stop branch-scoped work, never silently
+      // redirect a cashier to the first branch returned by the server.
+      setActiveBranchIdState(branches.some(branch => branch.id === saved) ? saved : "");
+    }
+    function onStorage(event: StorageEvent) {
+      if (event.storageArea === window.localStorage && (event.key === "pharmacy.active-branch" || event.key === null)) syncSavedBranch();
+    }
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", syncSavedBranch);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", syncSavedBranch);
+    };
+  }, [branches, branchesLoading, status]);
+
   const setActiveBranchId = useCallback((id: string) => {
     if (!branches.some(branch => branch.id === id)) return;
     setActiveBranchIdState(id);

@@ -174,7 +174,7 @@ export function PosWorkspace() {
   const [historyError, setHistoryError] = useState("");
   const [selectedHistory, setSelectedHistory] = useState<Row | null>(null);
 
-  useEffect(()=>{currentBranch.current=branchId;historyRequest.current++;sessionRequestId.current++;const timer=window.setTimeout(()=>{setHistoryOpen(false);setSelectedHistory(null);setClosing(false);setOpening(false);setSession(null);setScannerOpen(false);setScanPending(0);},0);return ()=>window.clearTimeout(timer);},[branchId]);
+  useEffect(()=>{currentBranch.current=branchId;historyRequest.current++;sessionRequestId.current++;const timer=window.setTimeout(()=>{setHistoryOpen(false);setSelectedHistory(null);setClosing(false);setOpening(false);setSession(null);setCheckoutOpen(false);setScannerOpen(false);setScanPending(0);},0);return ()=>window.clearTimeout(timer);},[branchId]);
 
   const selectionKey=JSON.stringify([branchId,query.trim(),categoryId,genericId,manufacturerId,groupId,unitId,formulation.trim(),strength.trim(),inStockOnly]);
   const selectionKeyRef=useRef(selectionKey);
@@ -507,7 +507,7 @@ export function PosWorkspace() {
     if (!canCreateSales) { setError(t("Your role cannot create sales.")); return; }
     setError(""); setNotice("");
     if (!branchId || cart.length === 0) { setError(t("Select a branch and add at least one medicine.")); return; }
-    if (status === "completed" && !session) { setRegisterBranch(branchId);setOpening(true); setError(t("Open the cash register before completing a sale.")); return; }
+    if (status === "completed" && (!session || (session.branchId && session.branchId !== branchId))) { setRegisterBranch(branchId);setOpening(true); setError(t("Open the cash register before completing a sale.")); return; }
     if (paymentAllocation.error) { setError(t(paymentAllocation.error)); return; }
     if (paymentLines.some((line) => !line.accountId && (numeric(line.amount) > 0 || (paymentLines.length === 1 && line.amount === "" && paid > 0)))) { setError(t("Choose an account for each payment method with an amount.")); return; }
     if (new Set(cart.map((line) => line.stock.id)).size !== cart.length || cart.some((line) => !sellableStocks([line.stock], branchId).length)) { setError(t("A selected batch is expired, unavailable or duplicated. Review the cart before checkout.")); return; }
@@ -515,6 +515,7 @@ export function PosWorkspace() {
     submissionLock.current = true;
     setSaving(true);
     const saleCustomer = customer ?? await resolveOpdCustomer();
+    if (currentBranch.current !== branchId) { submissionLock.current = false; setSaving(false); setError(t("The branch changed. Review the cart before checkout.")); return; }
     const saleDiscountPercent = saleEligible > 0 ? actualSaleDiscount / saleEligible * 100 : 0;
     const paymentPayload = paymentAllocation.payments;
     const payload = {

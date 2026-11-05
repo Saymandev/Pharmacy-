@@ -529,5 +529,6 @@ export const interfaceBangla: Record<string, string> = {
   "Payment recorded for {invoice}. Remaining due: {due}.": "{invoice}-এর পেমেন্ট রেকর্ড হয়েছে। বাকি ডিউ: {due}।",
   "Your role cannot collect sale payments.": "সেল পেমেন্ট কালেক্ট করার পারমিশন আপনার নেই।",
   "This invoice has no valid outstanding due. Refresh the invoice.": "এই ইনভয়েসে বৈধ ডিউ নেই। ইনভয়েস রিফ্রেশ করুন।",
-  "View invoice {invoice}": "ভিউ ইনভয়েস {invoice}"
+  "View invoice {invoice}": "ভিউ ইনভয়েস {invoice}",
+  "The branch changed. Review the cart before checkout.": "ব্রাঞ্চ বদলেছে। চেকআউটের আগে কার্ট চেক করুন।",
 };
