@@ -230,3 +230,10 @@
   .app-frame .admin-backup-config { padding:17px; grid-template-columns:1fr; }
   .app-frame .admin-notice-modal { padding:22px 18px; }
 }
+
+/* The role-details dialog and its launcher must never share layout classes. */
+.app-frame .access-role-permissions .access-view-permissions { display:inline-flex; flex-direction:row; align-items:center; justify-content:center; gap:7px; width:auto; max-width:100%; min-height:36px; margin:0; padding:8px 12px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink); font-size:12px; font-weight:650; line-height:1.4; white-space:normal; cursor:pointer; }
+.app-frame .access-view-permissions svg { flex-shrink:0; color:var(--brand); }
+.app-frame .access-view-permissions:hover:not(:disabled) { background:var(--brand-wash); border-color:var(--brand); }
+.app-frame .access-view-permissions:focus-visible { outline:2px solid var(--brand); outline-offset:3px; }
+.app-frame .access-view-permissions:disabled { opacity:.55; cursor:wait; }
