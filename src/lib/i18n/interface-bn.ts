@@ -531,4 +531,11 @@ export const interfaceBangla: Record<string, string> = {
   "This invoice has no valid outstanding due. Refresh the invoice.": "এই ইনভয়েসে বৈধ ডিউ নেই। ইনভয়েস রিফ্রেশ করুন।",
   "View invoice {invoice}": "ভিউ ইনভয়েস {invoice}",
   "The branch changed. Review the cart before checkout.": "ব্রাঞ্চ বদলেছে। চেকআউটের আগে কার্ট চেক করুন।",
+  "Report selection": "রিপোর্ট সিলেকশন",
+  "Quick period": "কুইক পিরিয়ড",
+  "How this report is calculated": "এই রিপোর্টের হিসাব যেভাবে হয়",
+  "No activity in this period": "এই পিরিয়ডে কোনো অ্যাক্টিভিটি নেই",
+  "These totals are for the selected dates and branch. Try a wider period to see older activity.": "এই টোটাল সিলেক্ট করা তারিখ ও ব্রাঞ্চের। আগের অ্যাক্টিভিটি দেখতে বড় পিরিয়ড সিলেক্ট করুন।",
+  "Show all dates": "সব তারিখ দেখুন",
+  "Report type": "রিপোর্ট টাইপ",
 };
