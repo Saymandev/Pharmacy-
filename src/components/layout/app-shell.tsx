@@ -1,5 +1,7 @@
 "use client";
 
+import { BrandLogo, BrandingProvider } from "@/components/providers/branding-provider";
+import { DueCollectionProvider, DueCollectionTrigger, DueCollectionOverlay } from "@/features/sales/due-collection";
 import { DialogBehavior } from "@/components/ui/dialog-behavior";
 import { Select } from "@/components/ui/select";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -162,12 +164,12 @@ export function AppShell() {
     : plannedModules.find(({ href }) => href === pathname)?.label ?? "Overview";
 
   return (
-    <ActiveBranchProvider><DialogBehavior/><div className={`app-frame${sidebarCollapsed ? " sidebar-collapsed" : ""}`} data-theme={theme}>
+    <ActiveBranchProvider><BrandingProvider><DueCollectionProvider><DialogBehavior/><div className={`app-frame${sidebarCollapsed ? " sidebar-collapsed" : ""}`} data-theme={theme}>
       {preferencesOpen&&<DisplayPreferences onClose={()=>setPreferencesOpen(false)}/>}
       {mobileSidebarOpen && <button type="button" className="sidebar-mobile-backdrop" aria-label={t("Close navigation")} onClick={() => setMobileSidebarOpen(false)} />}
       <aside ref={sidebarRef} onScroll={rememberSidebarScroll} className={`sidebar${mobileSidebarOpen ? " sidebar-mobile-open" : ""}`}>
         <Link scroll={false} onClick={navigateSidebar} className="brand" href={demoMode ? "/dashboard?demo=1" : "/dashboard"} aria-label={t("Home")}>
-          <span className="brand-mark"><Pill size={21} strokeWidth={2.1} /></span>
+          <span className="brand-mark"><BrandLogo className="application-logo"><Pill size={21} strokeWidth={2.1}/></BrandLogo></span>
           <span className="brand-copy"><strong>Pharmacy</strong><small>CARE · CONTROL · CLARITY</small></span>
         </Link>
         <button className="sidebar-mobile-close" type="button" aria-label={t("Close navigation")} onClick={() => setMobileSidebarOpen(false)}><X size={18}/></button>
@@ -198,7 +200,7 @@ export function AppShell() {
       <div className="main-column">
         <header className="topbar">
           <div className="topbar-leading"><button className="topbar-menu-button" type="button" aria-label={mobileSidebarOpen ? t("Close navigation") : t("Toggle sidebar")} aria-expanded={mobileSidebarOpen} onClick={() => { if (window.matchMedia("(max-width: 800px)").matches) setMobileSidebarOpen((open) => !open); else setSidebarCollapsed((collapsed) => !collapsed); }}>{mobileSidebarOpen ? <X size={19}/> : sidebarCollapsed ? <PanelLeftOpen size={19}/> : <PanelLeftClose size={19}/>}</button><div className="breadcrumb"><span>{t("Workspace")}</span><span className="breadcrumb-slash">/</span><strong>{t(currentPageName)}</strong></div></div>
-          <div className="topbar-actions">
+          <div className="topbar-actions"><DueCollectionTrigger/>
             <label className="language-switcher"><span className="sr-only">{t("Language")}</span><Select aria-label={t("Language")} value={language} onChange={(event) => setLanguage(event.target.value as "en" | "bn")}><option value="en">English</option><option value="bn">বাংলা</option></Select></label>
             <button className="icon-button theme-toggle" type="button" aria-label={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} title={theme === "dark" ? t("Switch to light mode") : t("Switch to dark mode")} onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>{theme === "dark" ? <Sun size={18}/> : <Moon size={18}/>}</button>
             <button className="icon-button display-preferences-trigger" type="button" aria-label={t("Settings")} title={t("Settings")} onClick={()=>setPreferencesOpen(true)}><Settings2 size={18}/></button>
@@ -226,6 +228,6 @@ export function AppShell() {
       </div>
       {passwordNotice && <div className="password-toast" role="status">{passwordNotice}</div>}
       {passwordDialog && <div className="pos-dialog-backdrop" role="presentation" onClick={() => !passwordSaving && setPasswordDialog(false)}><section className="password-dialog" role="dialog" aria-modal="true" aria-labelledby="password-dialog-title" onClick={(event) => event.stopPropagation()}><div className="password-dialog-heading"><span><KeyRound size={18}/></span><button className="pos-icon-action" type="button" onClick={() => setPasswordDialog(false)} aria-label={`${t("Close")} ${t("Change password")}`}><X size={16}/></button></div><h2 id="password-dialog-title">{t("Change your password")}</h2><p>{t("Confirm your current password, then choose a strong replacement.")}</p><form onSubmit={(event) => void changePassword(event)}><label>{t("Current password")}<input autoComplete="current-password" type="password" required value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)}/></label><label>{t("New password")}<input autoComplete="new-password" type="password" minLength={8} required value={newPassword} onChange={(event) => setNewPassword(event.target.value)}/><small>{t("At least 8 characters, including uppercase, lowercase and a number.")}</small></label><label>{t("Confirm new password")}<input autoComplete="new-password" type="password" minLength={8} required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)}/></label>{passwordError && <div className="pos-dialog-error" role="alert">{t(passwordError)}</div>}<button className="pos-complete-button" type="submit" disabled={passwordSaving}>{passwordSaving ? t("Updating password…") : t("Update password")}</button></form></section></div>}
-    </div></ActiveBranchProvider>
+    <DueCollectionOverlay/></div></DueCollectionProvider></BrandingProvider></ActiveBranchProvider>
   );
 }

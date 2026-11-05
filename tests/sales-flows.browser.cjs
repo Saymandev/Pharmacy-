@@ -39,7 +39,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
   await payment.getByLabel('Amount',{exact:true}).fill('75');changedDue=true;await payment.getByRole('button',{name:'Record payment',exact:true}).click();
   await payment.getByRole('alert').filter({hasText:'current outstanding due'}).waitFor();assert.equal(posts.length,0);
   await payment.getByRole('button',{name:'Pay full due',exact:true}).click();assert.equal(await payment.getByLabel('Amount',{exact:true}).inputValue(),'50.00');
-  await payment.getByLabel('Payment note',{exact:true}).fill('Counter collection');
+  await payment.getByText('Optional payment note',{exact:true}).click();await payment.getByLabel('Payment note',{exact:true}).fill('Counter collection');
   await payment.locator('form').evaluate(form=>{form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));});
   await payment.waitFor({state:'hidden'});assert.equal(posts.length,1);assert.equal(posts[0].body.amount,50);assert.equal(posts[0].body.note,'Counter collection');assert.equal(posts[0].body.accountId,'cash-a');
   await page.getByRole('button',{name:'View invoice SALE-FLOW-1',exact:true}).click();
