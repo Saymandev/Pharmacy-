@@ -1,5 +1,6 @@
 import type { ApiEnvelope } from "@/types/api";
 import { demoRequest, isDemoMode } from "@/lib/api/demo-data";
+import { sessionBoundary } from "@/lib/api/session-boundary";
 
 const API_PREFIX = "/api/backend";
 
@@ -23,6 +24,7 @@ export async function apiRequest<T>(
   options: RequestOptions = {},
 ): Promise<T> {
   const { body, headers, includeMeta, ...requestOptions } = options;
+  const session = sessionBoundary.capture();
   const requestHeaders = new Headers(headers);
   requestHeaders.set("Accept", "application/json");
 
@@ -39,6 +41,7 @@ export async function apiRequest<T>(
       body: body === undefined ? undefined : isMultipart ? body as FormData : JSON.stringify(body),
       cache: "no-store",
       credentials: "same-origin",
+      signal: requestOptions.signal ? AbortSignal.any([requestOptions.signal, session.signal]) : session.signal,
     });
   } catch {
     throw new ApiClientError(
@@ -47,12 +50,15 @@ export async function apiRequest<T>(
     );
   }
 
+  if (!session.isCurrent()) throw new ApiClientError("Your session changed. Please try again.", 409);
   if (response.status === 204) return undefined as T;
 
   const payload = (await response.json().catch(() => null)) as
     | ApiEnvelope<T>
     | { message?: string; error?: string }
     | null;
+
+  if (!session.isCurrent()) throw new ApiClientError("Your session changed. Please try again.", 409);
 
   if (!response.ok) {
     const message = payload?.message ?? "The request could not be completed.";
