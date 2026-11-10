@@ -1,5 +1,21 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "Your shops": "আপনার শপগুলো",
+  "Choose a shop to review your access.": "অ্যাক্সেস দেখতে একটি শপ সিলেক্ট করুন।",
+  "Shop access preview. Sales and other shop tools are not available here yet.": "শপ অ্যাক্সেস প্রিভিউ। এখানে সেলস ও শপের অন্য টুলগুলো এখনও চালু হয়নি।",
+  "Access verified": "অ্যাক্সেস ভেরিফাই হয়েছে",
+  "All shop branches": "শপের সব ব্রাঞ্চ",
+  "Assigned branches": "অ্যাসাইন করা ব্রাঞ্চ",
+  "Available shops": "শপ লিস্ট",
+  "Last selected on this tab": "এই ট্যাবে শেষ সিলেক্ট করা",
+  "Checking…": "চেক হচ্ছে…",
+  "Loading shops…": "শপ লোড হচ্ছে…",
+  "No shops available": "কোনো শপ পাওয়া যায়নি",
+  "Contact your administrator to check your shop access.": "শপ অ্যাক্সেস চেক করতে অ্যাডমিনের সাথে যোগাযোগ করুন।",
+  "Reload shops": "শপ রিলোড করুন",
+  "Load more shops": "আরও শপ দেখুন",
+  "Shops could not be loaded. Please try again.": "শপ লোড হয়নি। আবার চেষ্টা করুন।",
+  "Shop access could not be verified. Please try again.": "শপ অ্যাক্সেস ভেরিফাই হয়নি। আবার চেষ্টা করুন।",
   "Unknown direction": "দিক উল্লেখ নেই",
 
   "Set a new login password for this team member.": "এই সদস্যের লগইনের জন্য নতুন পাসওয়ার্ড দিন।",

@@ -2,6 +2,7 @@ import { backendApiBase } from "@/lib/server/backend-url";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { isSameOriginRequest } from "@/lib/server/request-security";
+import { tenantSessionRouteAllowed } from "@/lib/server/tenant-session-gate";
 
 type RouteContext = { params: Promise<{ path: string[] }> };
 
@@ -13,6 +14,9 @@ async function proxy(request: Request, context: RouteContext) {
   }
 
   const { path } = await context.params;
+  if (path[0] === "tenant-session" && !tenantSessionRouteAllowed(path,request.method)) {
+    return NextResponse.json({ success:false,message:"Shop selection is not available." },{status:404,headers:{"Cache-Control":"no-store"}});
+  }
   const safePath = path.map((segment) => encodeURIComponent(segment)).join("/");
   const url = new URL(request.url);
   const backendOrigin = backendApiBase();

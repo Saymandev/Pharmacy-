@@ -37,8 +37,9 @@ Verified on 2026-11-07: two request-boundary unit checks, both browser fixtures,
 TypeScript `--noEmit`, and ESLint for all changed TypeScript components/modules.
 Browser data is mocked; live tenant switching has not been verified or enabled.
 
-Next: implement and verify the authenticated membership discovery/session contract
-in the backend, then add a gated shop selector, tenant/user/branch storage scope,
+Update 2026-11-10: the authenticated discovery contract and gated shop access
+preview are implemented; see [shop access preview](saas-shop-access-preview.md).
+Next: tenant/user/branch storage scope,
 tenant permission/bootstrap adapter, authenticated media and tenant socket adapter.
 Only enable tenant routes after backend release gates, full frontend integration
 and cross-tenant acceptance tests. This change alone is not a SaaS release.
