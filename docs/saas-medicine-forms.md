@@ -73,5 +73,9 @@ contract review; this is not a system-wide immutable version scheme.
   are checked before push. Browser fixtures use fake identities/local upstreams;
   native DB fixtures are disposable and no live database is contacted.
 
-Opening stock, stock adjustments/transfer/history/import, reference-master editing,
+Update: opening stock and adjustment now have separate permission-scoped forms
+under the existing write gate; see [stock forms](saas-stock-forms.md). No additional
+stock gate is introduced, and live configuration remains unchanged.
+
+Stock transfer/history/import, reference-master editing,
 POS/payment/receipt and the remaining tenant UI/rollout/UAT are still pending.

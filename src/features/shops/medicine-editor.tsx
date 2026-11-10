@@ -41,7 +41,7 @@ export function MedicineEditor({context,branchId,id,onClose,onSaved}:{context:Sh
   }finally{submitting.current=false;if(alive.current)setSaving(false);}
  }
  return <dialog ref={dialog} className="tenant-editor workspace-branch-dialog" aria-labelledby="tenant-editor-title" onCancel={event=>{event.preventDefault();close();}} onClose={()=>{if(!dialog.current?.open&&!submitting.current&&!uncertain)onClose();}} onClick={event=>{if(event.target!==event.currentTarget)return;const r=event.currentTarget.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)close();}}>
-  <form onSubmit={save}><header><div><h2 id="tenant-editor-title">{t(id?'Edit medicine':'Add medicine')}</h2><p>{t('Medicine changes apply across this shop. Stock is managed separately.')}</p></div><button type="button" disabled={saving||uncertain} aria-label={t('Close medicine form')} onClick={close}><X size={18}/></button></header>
+  <form onSubmit={save} onChange={()=>{if(!conflict&&!uncertain)setError('');}}><header><div><h2 id="tenant-editor-title">{t(id?'Edit medicine':'Add medicine')}</h2><p>{t('Medicine changes apply across this shop. Stock is managed separately.')}</p></div><button type="button" disabled={saving||uncertain} aria-label={t('Close medicine form')} onClick={close}><X size={18}/></button></header>
    {error&&<div role="alert" className="shop-access-error">{t(error)}</div>}
    {uncertain&&<p role="status">{t('Save status is unknown. Retry the same details to check; do not create another medicine.')}</p>}
    {conflict&&<button type="button" onClick={()=>setReload(value=>value+1)}>{t('Reload medicine')}</button>}

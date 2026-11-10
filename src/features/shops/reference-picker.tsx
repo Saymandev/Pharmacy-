@@ -4,24 +4,24 @@ import { ChevronDown,Check,Search } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/language-provider';
 import { sessionBoundary } from '@/lib/api/session-boundary';
 import { createWorkspaceClient,WorkspaceError } from './workspace-client';
-import { validCatalogPage } from './catalog-contract';
+import { validCatalogPage,validCatalogMedicine } from './catalog-contract';
 import { type ReferenceOption,validReference } from './medicine-form-policy';
 
-export function ReferencePicker({tenantId,kind,label,value,onChange,currentLabel,canRead,disabled=false}:{tenantId:string;kind:string;label:string;value:string;onChange:(id:string)=>void;currentLabel?:string;canRead:boolean;disabled?:boolean}){
+export function ReferencePicker({tenantId,kind,label,value,onChange,currentLabel,canRead,disabled=false,branchId}:{tenantId:string;kind:string;label:string;value:string;onChange:(id:string)=>void;currentLabel?:string;canRead:boolean;disabled?:boolean;branchId?:string}){
  const {t}=useLanguage(),id=useId(),popup=useRef<HTMLDivElement>(null),search=useRef<HTMLInputElement>(null),revision=useRef(0);
  const [open,setOpen]=useState(false),[query,setQuery]=useState({search:'',page:1}),[rows,setRows]=useState<ReferenceOption[]>([]),[more,setMore]=useState(false),[loading,setLoading]=useState(false),[error,setError]=useState(''),[chosen,setChosen]=useState<ReferenceOption|null>(null),[retry,setRetry]=useState(0);
  const shown=value?(rows.find(row=>row.id===value)?.name??(chosen?.id===value?chosen.name:currentLabel??t('Assigned reference'))):t('None');
  useEffect(()=>{
   if(!open||!canRead)return;const client=createWorkspaceClient(tenantId,sessionBoundary.capture().signal),current=++revision.current;let active=true;
   const timer=setTimeout(()=>{setLoading(true);setError('');if(query.page===1)setRows([]);
-   void client.references(kind,query.page,query.search).then(result=>{
+   void (kind==='stock-medicines'?client.stockMedicines(branchId??'',query.page,query.search):client.references(kind,query.page,query.search)).then(result=>{
     if(!active||current!==revision.current)return;
-    if(!validCatalogPage(result,query.page,(row):row is ReferenceOption=>validReference(row,tenantId)))throw new Error('Invalid reference response');
+    if(!validCatalogPage(result,query.page,(row):row is ReferenceOption=>validReference(row,tenantId)&&(kind!=='stock-medicines'||validCatalogMedicine(row,tenantId,branchId??''))))throw new Error('Invalid reference response');
     setRows(old=>query.page===1?result.data:[...old,...result.data.filter(row=>!old.some(item=>item.id===row.id))]);setMore(result.meta.hasNextPage);
    }).catch(cause=>{if(active&&current===revision.current){setRows([]);setMore(false);setError(cause instanceof WorkspaceError?cause.message:t('References could not be loaded. Please try again.'));}}).finally(()=>{if(active&&current===revision.current)setLoading(false);});
   },query.search?250:0);
   return()=>{active=false;clearTimeout(timer);client.dispose();};
- },[open,canRead,tenantId,kind,query,retry,t]);
+ },[open,canRead,tenantId,kind,query,retry,t,branchId]);
  return <div className="tenant-reference-picker"><button type="button" className="tenant-reference-trigger" popoverTarget={id} aria-label={t(label)} aria-haspopup="listbox" aria-expanded={open} disabled={disabled||!canRead} onClick={()=>setQuery({search:'',page:1})}><span>{shown}</span><ChevronDown size={16}/></button>
   {!canRead&&<small>{t('Reference list permission is not assigned.')}</small>}
   <div id={id} ref={popup} popover="auto" className="tenant-reference-popup" onToggle={event=>{setOpen(event.newState==='open');if(event.newState==='open')queueMicrotask(()=>search.current?.focus());}} onKeyDown={event=>{if(event.key==='Enter'&&event.target===search.current){event.preventDefault();event.stopPropagation();}if(event.key==='Escape'){event.preventDefault();event.stopPropagation();popup.current?.hidePopover();}if(event.key==='ArrowDown'||event.key==='ArrowUp'){const options=Array.from(popup.current?.querySelectorAll<HTMLButtonElement>('[role="option"]')??[]);if(!options.length)return;event.preventDefault();const index=options.indexOf(document.activeElement as HTMLButtonElement);options[(index+(event.key==='ArrowDown'?1:-1)+options.length)%options.length]?.focus();}}}>

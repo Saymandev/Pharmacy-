@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { tenantWorkspaceTarget,validMedicineProxyBody } from '@/lib/server/tenant-workspace-policy';
+import { tenantWorkspaceTarget,validMedicineProxyBody,validStockProxyBody } from '@/lib/server/tenant-workspace-policy';
 import { isSameOriginRequest } from '@/lib/server/request-security';
 
 type Context={params:Promise<{tenantId:string;path:string[]}>};
@@ -17,8 +17,8 @@ async function proxy(request:Request,context:Context){
     const key=request.headers.get('idempotency-key');
     if(!key||!/^[A-Za-z0-9_-]{16,128}$/.test(key)||new URL(request.url).search||request.headers.get('content-type')?.split(';')[0].trim()!=='application/json')return Response.json({success:false,message:'A JSON body and valid save key are required.'},{status:422,headers:noStore});
     if(Number(request.headers.get('content-length')??0)>32768)return Response.json({success:false,message:'Medicine form is too large.'},{status:413,headers:noStore});
-    try{body=await request.text();if(new TextEncoder().encode(body).byteLength>32768)return Response.json({success:false,message:'Medicine form is too large.'},{status:413,headers:noStore});if(!validMedicineProxyBody(JSON.parse(body),request.method))throw new Error('Invalid fields');}
-    catch{return Response.json({success:false,message:'Invalid medicine form fields.'},{status:422,headers:noStore});}
+    try{body=await request.text();if(new TextEncoder().encode(body).byteLength>32768)return Response.json({success:false,message:'Form is too large.'},{status:413,headers:noStore});const value=JSON.parse(body);if(!(path[1]==='stocks'?validStockProxyBody(value,path[2]):validMedicineProxyBody(value,request.method)))throw new Error('Invalid fields');}
+    catch{return Response.json({success:false,message:'Invalid form fields.'},{status:422,headers:noStore});}
     headers['Content-Type']='application/json';headers['Idempotency-Key']=key;
   }
   try{
