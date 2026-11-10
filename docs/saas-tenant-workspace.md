@@ -70,7 +70,12 @@ independently enforce current context and branch access.
 - The 390px dark screenshot was inspected without horizontal overflow. The
   fixture stops its created Next process tree and HTTP server in cleanup.
 
-Remaining: tenant catalog/inventory/POS/report/finance adapters, authenticated
+Update 2026-11-10: Catalog/Inventory list, search, core filters and medicine details
+are connected read-only. See [catalog integration](saas-tenant-catalog.md). The BFF
+now permits those fixed GET resource routes in addition to bootstrap/branch reads;
+all writes and other resource paths remain blocked.
+
+Remaining: catalog/inventory reference filters and write workflows, POS/report/finance adapters, authenticated
 media and tenant socket lifecycle, full tenant login/navigation, production role
 and migration rehearsal, real two-shop UAT. The preview remains opt-in and is not
 a complete tenant-isolated SaaS release.

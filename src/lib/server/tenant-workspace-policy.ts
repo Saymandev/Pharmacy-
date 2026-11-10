@@ -4,7 +4,9 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
   if(config.session!=='true'||config.workspace!=='true'||method!=='GET'||!config.base)return null;
   if(!/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(tenantId))return null;
   const allowed=path.length===2&&path[0]==='workspace'&&path[1]==='bootstrap'||
-    path.length===3&&path[0]==='workspace'&&path[1]==='branches'&&/^[0-9a-f-]{36}$/i.test(path[2]);
+    path.length===3&&path[0]==='workspace'&&path[1]==='branches'&&/^[0-9a-f-]{36}$/i.test(path[2])||
+    path.length===2&&path[0]==='pharmacy'&&['medicines','stocks'].includes(path[1])||
+    path.length===3&&path[0]==='pharmacy'&&path[1]==='medicines'&&/^[0-9a-f-]{36}$/i.test(path[2]);
   if(!allowed)return null;
   try{
     const base=new URL(config.base);

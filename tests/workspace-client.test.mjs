@@ -6,7 +6,7 @@ test('tenant transport requires both gates and an explicit separate upstream; on
  assert.deepEqual(tenantWorkspaceTarget('a',['workspace','bootstrap'],'GET',config),{tenantId:'a',url:config.base+'/workspace/bootstrap'});
  for(const value of [{...config,session:'false'},{...config,workspace:'false'},{...config,base:''},{...config,base:'http://user:password@localhost'},{...config,base:'file:///tmp'}])assert.equal(tenantWorkspaceTarget('a',['workspace','bootstrap'],'GET',value),null);
  for(const method of ['POST','PUT','PATCH','DELETE'])assert.equal(tenantWorkspaceTarget('a',['workspace','bootstrap'],method,config),null);
- for(const path of [['pharmacy','medicines'],['workspace','bootstrap','extra'],['workspace','branches','../foreign']])assert.equal(tenantWorkspaceTarget('a',path,'GET',config),null);
+ for(const path of [['pharmacy','medicines','import'],['workspace','bootstrap','extra'],['workspace','branches','../foreign']])assert.equal(tenantWorkspaceTarget('a',path,'GET',config),null);
  assert.equal(tenantWorkspaceTarget('../b',['workspace','bootstrap'],'GET',config),null);
 });
 test('shop transport binds URL, never sends caller-selected auth/header, and disables caching',async()=>{
