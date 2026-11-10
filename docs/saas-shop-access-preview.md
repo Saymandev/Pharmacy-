@@ -43,7 +43,11 @@ PostgreSQL/Prisma/HTTP checks including seven new membership cases; no live DB i
 Run a staging dev server with the flag true, then `npm run test:shops` (installed
 Microsoft Edge; optional `TEST_BASE_URL`). Keep real credentials out of fixtures.
 
-Remaining SaaS-014: tenant business API/proxy adapter, per-tenant branch and cache
-scope, tenant permission bootstrap, media/blob and socket adapters, tenant-only
+Update 2026-11-10: read-only workspace bootstrap, isolated tenant transport,
+permission projection and Settings branch picker are now implemented behind a
+second gate; see [tenant workspace](saas-tenant-workspace.md). The preview still
+cannot perform sales or other business operations.
+
+Remaining SaaS-014: resource business API adapters, media/blob and socket adapters, tenant-only
 navigation/login lifecycle, complete settings/POS/report integration, real two-shop
 acceptance. Keep main/live unchanged until these and backend rollout gates pass.
