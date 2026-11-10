@@ -9,15 +9,19 @@ import { type ShopContext } from './shop-contract';
 import { type WorkspaceBranch } from './workspace-contract';
 import { createWorkspaceClient,WorkspaceError } from './workspace-client';
 import { type CatalogMedicine,type InventoryStock,type CatalogMeta,validCatalogMedicine,validInventoryStock,validCatalogPage } from './catalog-contract';
+import { MedicineEditor } from './medicine-editor';
+import { ReferencePicker } from './reference-picker';
+import { medicineReferences } from './medicine-form-policy';
 
 type Tab='medicines'|'stocks';type Client=ReturnType<typeof createWorkspaceClient>;
 const formatMoney=(value:number|string)=>`BDT ${Number(value).toFixed(2)}`;
-export function TenantCatalog({context,branch}:{context:ShopContext;branch:WorkspaceBranch}){
+export function TenantCatalog({context,branch,writesEnabled=false}:{context:ShopContext;branch:WorkspaceBranch;writesEnabled?:boolean}){
  const {t}=useLanguage();const defaultTab=context.permissions.includes('medicine:read')?'medicines':'stocks';
  const [tab,setTab]=useState<Tab>(defaultTab),[search,setSearch]=useState(''),[draft,setDraft]=useState<Record<string,string>>({});
  const [query,setQuery]=useState<{page:number;filters:Record<string,string>}>({page:1,filters:{}}),[retry,setRetry]=useState(0);
  const [medicines,setMedicines]=useState<CatalogMedicine[]>([]),[stocks,setStocks]=useState<InventoryStock[]>([]),[meta,setMeta]=useState<CatalogMeta|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState('');
  const [detail,setDetail]=useState<CatalogMedicine|null>(null),[detailLoading,setDetailLoading]=useState(false);
+ const [editor,setEditor]=useState<{id:string|null}|null>(null),[notice,setNotice]=useState('');
  const client=useRef<Client|null>(null),revision=useRef(0),detailRevision=useRef(0),filter=useRef<HTMLDivElement>(null),filterId=useId();
  const invalidate=useCallback(()=>{revision.current++;detailRevision.current++;},[]);
  useEffect(()=>{
@@ -49,9 +53,12 @@ export function TenantCatalog({context,branch}:{context:ShopContext;branch:Works
  if(!available.length)return null;
  return <section className="tenant-catalog" aria-label={t('Shop medicines and inventory')}>
   <div className="tenant-catalog-tabs" role="tablist" aria-label={t('Pharmacy views')}>{available.map(value=><button type="button" role="tab" aria-selected={tab===value} aria-controls={`${filterId}-results`} id={`${filterId}-${value}`} key={value} onClick={()=>changeTab(value)}>{t(value==='medicines'?'Medicine catalog':'Inventory')}</button>)}</div>
+  {writesEnabled&&context.permissions.includes('medicine:create')&&<button type="button" className="tenant-catalog-add" onClick={()=>{setNotice('');setEditor({id:null});}}>{t('Add medicine')}</button>}
+  {notice&&<p role="status" className="tenant-save-notice">{t(notice)}</p>}
   <form onSubmit={apply} className="tenant-catalog-search"><label><Search size={17}/><input aria-label={t('Search shop medicines')} value={search} onChange={event=>setSearch(event.target.value)} maxLength={200} placeholder={t('Search name or generic…')}/></label><button type="submit">{t('Search')}</button><button type="button" popoverTarget={filterId}><Filter size={16}/>{t('Filters')}</button></form>
   <div ref={filter} popover="auto" id={filterId} className="tenant-catalog-filter" role="dialog" aria-label={t('Medicine filters')}><form onSubmit={apply}><header><strong>{t('Filters')}</strong><button type="button" aria-label={t('Close filters')} onClick={()=>filter.current?.hidePopover()}><X size={17}/></button></header>
    {fields.map(([key,label])=><label key={key}><span>{t(label)}</span><input value={draft[key]??''} onChange={event=>setDraft(value=>({...value,[key]:event.target.value}))} maxLength={200}/></label>)}
+   <div className="tenant-reference-filters">{medicineReferences.filter(ref=>tab==='medicines'||ref.key==='medicineManufacturerId').map(ref=><div className="tenant-editor-reference" key={ref.key}><span>{t(ref.label)}</span><ReferencePicker tenantId={context.tenant.id} kind={ref.kind} label={ref.label} value={draft[ref.key]??''} canRead={context.permissions.includes(ref.permission)} onChange={id=>setDraft(value=>({...value,[ref.key]:id}))}/></div>)}</div>
    {tab==='medicines'?<><label><span>{t('Status')}</span><Select aria-label={t('Medicine status')} value={draft.isActive??''} onChange={event=>setDraft(value=>({...value,isActive:event.target.value}))}><option value="">{t('All')}</option><option value="true">{t('Active')}</option><option value="false">{t('Inactive')}</option></Select></label><label><span>{t('Stock')}</span><Select aria-label={t('Medicine stock')} value={draft.hasStock??''} onChange={event=>setDraft(value=>({...value,hasStock:event.target.value}))}><option value="">{t('All registered')}</option><option value="true">{t('In stock')}</option><option value="false">{t('No stock')}</option></Select></label></>:<>{[['expiryStartDate','Expiry from'],['expiryEndDate','Expiry to']].map(([key,label])=><label key={key}><span>{t(label)}</span><input type="date" value={draft[key]??''} onChange={event=>setDraft(value=>({...value,[key]:event.target.value}))}/></label>)}</>}
    <button type="submit">{t('Apply filters')}</button><button type="button" onClick={()=>{setDraft({});setSearch('');setQuery({page:1,filters:{}});filter.current?.hidePopover();}}>{t('Clear filters')}</button></form></div>
   <p className="tenant-catalog-context">{branch.name} · {t('Recorded stock includes expired batches; verify expiry before sale.')}</p>
@@ -64,11 +71,12 @@ export function TenantCatalog({context,branch}:{context:ShopContext;branch:Works
    </>}
   </div>
   {detailLoading&&<p role="status">{t('Loading medicine details…')}</p>}
-  {detail&&<MedicineDetails medicine={detail} onClose={()=>{detailRevision.current++;setDetail(null);}}/>}
+  {detail&&<MedicineDetails medicine={detail} onEdit={writesEnabled&&context.permissions.includes('medicine:update')?()=>{setDetail(null);setEditor({id:detail.id});}:undefined} onClose={()=>{detailRevision.current++;setDetail(null);}}/>}
+  {editor&&<MedicineEditor context={context} branchId={branch.id} id={editor.id} onClose={()=>setEditor(null)} onSaved={created=>{setEditor(null);setDetail(null);setNotice(created?'Medicine saved. Register opening stock separately to show it in this branch.':'Medicine changes saved.');setRetry(value=>value+1);}}/>}
  </section>;
 }
-function MedicineDetails({medicine,onClose}:{medicine:CatalogMedicine;onClose:()=>void}){
+function MedicineDetails({medicine,onClose,onEdit}:{medicine:CatalogMedicine;onClose:()=>void;onEdit?:()=>void}){
  const {t}=useLanguage(),dialog=useRef<HTMLDialogElement>(null);
  useEffect(()=>{const node=dialog.current;node?.showModal();return()=>node?.close();},[]);
- return <dialog className="tenant-medicine-dialog workspace-branch-dialog" ref={dialog} aria-labelledby="tenant-medicine-title" onCancel={onClose} onClose={()=>{if(!dialog.current?.open)onClose();}} onClick={event=>{if(event.target!==event.currentTarget)return;const r=event.currentTarget.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)onClose();}}><header><h2 id="tenant-medicine-title">{medicine.name}</h2><button type="button" onClick={onClose} aria-label={t('Close medicine details')}><X size={18}/></button></header><dl><dt>{t('Generic')}</dt><dd>{medicine.genericName||'—'}</dd><dt>{t('Barcode')}</dt><dd>{medicine.barcode||'—'}</dd><dt>{t('Sale price')}</dt><dd>{formatMoney(medicine.salePrice)}</dd></dl><h3>{t('Branch batches')}</h3>{medicine.stocks.map(row=><div className="tenant-medicine-batch" key={row.id}><strong>{row.batchNumber}</strong><span>{row.quantity} {row.unit} · {row.expiryDate.slice(0,10)}</span></div>)}{!medicine.stocks.length&&<p>{t('No stock')}</p>}</dialog>;
+ return <dialog className="tenant-medicine-dialog workspace-branch-dialog" ref={dialog} aria-labelledby="tenant-medicine-title" onCancel={onClose} onClose={()=>{if(!dialog.current?.open)onClose();}} onClick={event=>{if(event.target!==event.currentTarget)return;const r=event.currentTarget.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)onClose();}}><header><h2 id="tenant-medicine-title">{medicine.name}</h2><button type="button" onClick={onClose} aria-label={t('Close medicine details')}><X size={18}/></button></header><dl><dt>{t('Generic')}</dt><dd>{medicine.genericName||'—'}</dd><dt>{t('Barcode')}</dt><dd>{medicine.barcode||'—'}</dd><dt>{t('Sale price')}</dt><dd>{formatMoney(medicine.salePrice)}</dd></dl>{onEdit&&<button type="button" onClick={onEdit}>{t('Edit medicine')}</button>}<h3>{t('Branch batches')}</h3>{medicine.stocks.map(row=><div className="tenant-medicine-batch" key={row.id}><strong>{row.batchNumber}</strong><span>{row.quantity} {row.unit} · {row.expiryDate.slice(0,10)}</span></div>)}{!medicine.stocks.length&&<p>{t('No stock')}</p>}</dialog>;
 }

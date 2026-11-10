@@ -12,7 +12,7 @@ import { TenantCatalog } from './tenant-catalog';
 
 const accessLabels=[['medicine:read','Medicine catalog'],['stock:read','Inventory'],['sale:read','Sales history'],['report:read','Reports'],['account:read','Finance']] as const;
 type Client=ReturnType<typeof createWorkspaceClient>;
-export function TenantWorkspace({selected}:{selected:ShopContext}){
+export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopContext;writesEnabled?:boolean}){
  const {t}=useLanguage();
  const [context,setContext]=useState<WorkspaceBootstrap|null>(null),[branches,setBranches]=useState<WorkspaceBranch[]>([]),[cursor,setCursor]=useState<string|null>(null);
  const [branch,setBranch]=useState<WorkspaceBranch|null>(null),[busy,setBusy]=useState(true),[error,setError]=useState(''),[settings,setSettings]=useState(false);
@@ -65,7 +65,7 @@ export function TenantWorkspace({selected}:{selected:ShopContext}){
   {error&&!settings&&<div role="alert" className="shop-access-error"><p>{error}</p><button type="button" disabled={busy} onClick={()=>{if(client.current)void load(client.current);}}>{t('Retry')}</button></div>}
   {busy&&<DataSkeleton variant="form" rows={2}>{t('Loading workspace…')}</DataSkeleton>}
   {!busy&&context&&<><div className="workspace-current-branch"><span>{t('Working branch')}</span><strong>{branch?.name??t('Choose a branch in workspace settings')}</strong></div><div className="workspace-access"><h3>{t('Available access')}</h3><ul>{accessLabels.filter(([key])=>context.permissions.includes(key)).map(([key,label])=><li key={key}>{t(label)}</li>)}</ul>{!accessLabels.some(([key])=>context.permissions.includes(key))&&<p>{t('No operation permissions assigned.')}</p>}</div></>}
-  {!busy&&context&&branch&&(context.permissions.includes('medicine:read')||context.permissions.includes('stock:read'))&&<TenantCatalog key={`${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch}/>}
+  {!busy&&context&&branch&&(context.permissions.includes('medicine:read')||context.permissions.includes('stock:read'))&&<TenantCatalog key={`${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={writesEnabled}/>}
   {settings&&<BranchSettings error={error} branches={branches} branch={branch} busy={busy} hasMore={!!cursor} canChoose={!!context} onChoose={choose} onMore={()=>{if(client.current&&cursor)void load(client.current,cursor);}} onClose={()=>setSettings(false)}/>}
  </section>;
 }

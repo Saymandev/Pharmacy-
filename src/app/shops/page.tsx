@@ -6,5 +6,5 @@ import "./shops.css";
 export default async function ShopsPage() {
   await connection();
   if(process.env.TENANT_SESSION_PREVIEW_ENABLED!=="true")notFound();
-  return <ShopAccess workspaceEnabled={process.env.TENANT_WORKSPACE_PREVIEW_ENABLED==='true'}/>;
+  return <ShopAccess workspaceEnabled={process.env.TENANT_WORKSPACE_PREVIEW_ENABLED==='true'} writesEnabled={process.env.TENANT_CATALOG_WRITES_ENABLED==='true'}/>;
 }

@@ -5,22 +5,37 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));return server.address().port;}
 (async()=>{
  const catalogMode=process.env.TENANT_CATALOG_TEST==='1';
+ const formMode=process.env.TENANT_MEDICINE_FORM_TEST==='1';
+ const referenceId='55555555-5555-4555-8555-555555555555',medicineId='44444444-4444-4444-8444-444444444444';
+ let savedName='',savedVersion='2026-11-10T00:00:00.000Z',forceConflict=false,creates=0,updates=0;const savedKeys=new Map();
  let browser,child,logs='',revoked=false,late=false,release,releaseCatalog,denyCatalog=false,foreignCatalog=false;const upstream=[];
- const shop=id=>({tenant:{id,name:id==='a'?'Main Pharmacy':'Second Pharmacy',slug:id},membershipId:'member-'+id,userId:'u',role:{id:'role-'+id,name:id==='a'?'Manager':'Cashier'},permissions:id==='a'?['sale:read','report:read',...(catalogMode?['medicine:read','stock:read']:[])]:['stock:read'],allBranches:id==='a',branchIds:id==='a'?[]:[b1],homeBranchId:id==='a'?a1:null});
+ const shop=id=>({tenant:{id,name:id==='a'?'Main Pharmacy':'Second Pharmacy',slug:id},membershipId:'member-'+id,userId:'u',role:{id:'role-'+id,name:id==='a'?'Manager':'Cashier'},permissions:id==='a'?['sale:read','report:read',...(catalogMode?['medicine:read','stock:read']:[]),...(formMode?['medicine:create','medicine:update',...['category','generic','group','manufacturer','unit'].map(name=>`medicine-${name}:read`)]:[])]:['stock:read'],allBranches:id==='a',branchIds:id==='a'?[]:[b1],homeBranchId:id==='a'?a1:null});
  const row=(tenant,id,name)=>({id,tenantId:tenant,name,isActive:true});
  const branches={a:[row('a',a1,'Main counter'),row('a',a2,'Rear counter')],b:[row('b',b1,'Second counter')]};
- const stub=http.createServer((req,res)=>{
-  const url=new URL(req.url,'http://fixture'),tenant=req.headers['x-tenant-id'];upstream.push({path:url.pathname,query:Object.fromEntries(url.searchParams),tenant,authorization:req.headers.authorization,method:req.method});
+ const stub=http.createServer(async(req,res)=>{
+  const chunks=[];for await(const chunk of req)chunks.push(chunk);const body=chunks.length?JSON.parse(Buffer.concat(chunks).toString()):undefined;
+  const url=new URL(req.url,'http://fixture'),tenant=req.headers['x-tenant-id'],key=req.headers['idempotency-key'];upstream.push({path:url.pathname,query:Object.fromEntries(url.searchParams),tenant,authorization:req.headers.authorization,method:req.method,body,key});
+  if(req.method==='POST'||req.method==='PATCH'){
+   const respond=(status,data,message)=>{res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify({success:status<400,data,message}));};
+   if(savedKeys.has(key)){respond(200,savedKeys.get(key));return;}
+   if(req.method==='PATCH'&&(forceConflict||body.expectedUpdatedAt!==savedVersion)){forceConflict=false;savedVersion='2026-11-10T00:00:01.000Z';respond(409,null,'Medicine was changed by another user. Reload before editing.');return;}
+   const result={...body,id:medicineId,tenantId:tenant,updatedAt:'2026-11-10T00:00:02.000Z'};savedKeys.set(key,result);
+   if(req.method==='POST'){creates++;respond(503,null,'Save status uncertain in test. Retry the same details.');return;}
+   updates++;savedName=body.name;savedVersion=result.updatedAt;respond(200,result);return;
+  }
   function respond(){
    if(res.writableEnded||res.destroyed)return;
    if(revoked&&tenant==='b'){res.writeHead(403,{'content-type':'application/json'});res.end(JSON.stringify({success:false,message:'Tenant access denied'}));return;}
    let data,meta;if(url.pathname==='/api/v1/workspace/bootstrap')data={...shop(tenant),branches:{items:branches[tenant]??[],nextCursor:null}};
    else if(url.pathname.startsWith('/api/v1/workspace/branches/'))data=(branches[tenant]??[]).find(item=>item.id===url.pathname.split('/').at(-1));
+   else if(['/api/v1/pharmacy/categories','/api/v1/pharmacy/generics','/api/v1/pharmacy/groups','/api/v1/pharmacy/manufacturers','/api/v1/pharmacy/units'].includes(url.pathname)){
+    data=[{id:referenceId,tenantId:tenant,name:url.searchParams.get('search')?'Server reference':'Own reference'}];meta={page:Number(url.searchParams.get('page')||1),pageSize:20,totalItems:1,totalPages:1,hasNextPage:false,hasPreviousPage:false};
+   }
    else if(url.pathname.startsWith('/api/v1/pharmacy/')){
     if(denyCatalog){res.writeHead(403,{'content-type':'application/json'});res.end(JSON.stringify({success:false,message:'Insufficient tenant permissions'}));return;}
     const branchId=url.searchParams.get('branchId'),page=Number(url.searchParams.get('page')||1),medicineId='44444444-4444-4444-8444-444444444444';
     const stock={id:'stock-'+tenant,tenantId:tenant,branchId,quantity:5,batchNumber:tenant+'-BATCH',unit:'Pcs',mrp:'20.00',expiryDate:'2030-01-01T00:00:00Z',rackNumber:'R1'};
-    const medicine={id:medicineId,tenantId:foreignCatalog?'foreign':tenant,name:page===2?'Next medicine':branchId===a2?'Rear medicine':tenant==='a'?'Main medicine':'Second medicine',genericName:'Sample generic',barcode:'00123',unit:'Pcs',salePrice:'15.00',isActive:true,stocks:[stock]};
+    const medicine={id:medicineId,tenantId:foreignCatalog?'foreign':tenant,name:page===2?'Next medicine':branchId===a2?'Rear medicine':tenant==='a'?(savedName||'Main medicine'):'Second medicine',genericName:'Sample generic',barcode:'00123',unit:'Pcs',salePrice:'15.00',isActive:true,stocks:[stock],nameBangla:null,genericNameBangla:null,dosageForm:null,strength:null,purchasePrice:'10.00',mrp:'20.00',reorderLevel:10,categoryId:null,genericId:null,groupId:null,medicineUnitId:null,medicineManufacturerId:null,updatedAt:savedVersion};
     if(url.pathname==='/api/v1/pharmacy/medicines')data=url.searchParams.get('search')==='none'?[]:[medicine];
     else if(url.pathname.startsWith('/api/v1/pharmacy/medicines/'))data=medicine;
     else if(url.pathname==='/api/v1/pharmacy/stocks')data=catalogMode?[{...stock,medicine:{id:medicineId,tenantId:tenant,name:medicine.name},branch:{id:branchId,tenantId:tenant,name:'Working counter'}}]:[];
@@ -35,7 +50,7 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
  try{
   const upstreamPort=await listen(stub),probe=http.createServer(),port=await listen(probe);await new Promise(resolve=>probe.close(resolve));
   const base=`http://localhost:${port}`;
-  child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--port',String(port)],{cwd:path.resolve(__dirname,'..'),windowsHide:true,env:{...process.env,TENANT_SESSION_PREVIEW_ENABLED:'true',TENANT_WORKSPACE_PREVIEW_ENABLED:'true',TENANT_BACKEND_API_URL:`http://127.0.0.1:${upstreamPort}/api/v1`},stdio:['ignore','pipe','pipe']});
+  child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--port',String(port)],{cwd:path.resolve(__dirname,'..'),windowsHide:true,env:{...process.env,TENANT_SESSION_PREVIEW_ENABLED:'true',TENANT_WORKSPACE_PREVIEW_ENABLED:'true',TENANT_CATALOG_WRITES_ENABLED:formMode?'true':'false',TENANT_BACKEND_API_URL:`http://127.0.0.1:${upstreamPort}/api/v1`},stdio:['ignore','pipe','pipe']});
   child.stdout.on('data',value=>{logs=(logs+value).slice(-5000);});child.stderr.on('data',value=>{logs=(logs+value).slice(-5000);});
   let ready=false;for(let i=0;i<90;i++){if(child.exitCode!==null)throw new Error('Next exited: '+logs);try{if((await fetch(base+'/shops',{signal:AbortSignal.timeout(1000)})).ok){ready=true;break;}}catch{}await sleep(1000);}assert.ok(ready,'Staging fixture did not start: '+logs);
   browser=await chromium.launch({headless:true,executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'});
@@ -74,6 +89,38 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
    await catalog.getByRole('button',{name:'Filters',exact:true}).click();await page.getByRole('dialog',{name:'Medicine filters'}).getByLabel('Batch number',{exact:true}).fill('a-BATCH');await page.getByRole('button',{name:'Apply filters',exact:true}).click();await catalog.getByRole('cell',{name:'a-BATCH',exact:true}).waitFor();
    assert.ok(upstream.some(call=>call.query.batchNumber==='a-BATCH'&&call.query.branchId===a1));
    await catalog.getByRole('tab',{name:'Medicine catalog',exact:true}).click();await catalog.getByRole('button',{name:/Main medicine/}).waitFor();
+   if(formMode){
+    await catalog.getByRole('button',{name:'Filters',exact:true}).click();
+    await page.getByRole('dialog',{name:'Medicine filters'}).getByRole('button',{name:'Category',exact:true}).click();
+    await page.getByRole('combobox',{name:'Search Category',exact:true}).fill('server');await page.getByRole('combobox',{name:'Search Category',exact:true}).press('Enter');await page.getByRole('option',{name:'Server reference',exact:true}).click();
+    await page.getByRole('button',{name:'Apply filters',exact:true}).click();await catalog.getByRole('button',{name:/Main medicine/}).waitFor();
+    assert.ok(upstream.some(call=>call.query.categoryId===referenceId));assert.ok(upstream.some(call=>call.path.endsWith('/categories')&&call.query.search==='server'));
+    await catalog.getByRole('button',{name:'Add medicine',exact:true}).click();const create=page.getByRole('dialog',{name:'Add medicine',exact:true});
+    await create.getByLabel('Medicine name *',{exact:true}).fill('New medicine');await create.getByLabel('Sale price',{exact:true}).fill('-1');
+    await create.getByRole('button',{name:'Save medicine',exact:true}).click();await create.getByRole('alert').getByText('Prices must be non-negative amounts with at most two decimals.').waitFor();assert.equal(creates,0);
+    await create.getByLabel('Sale price',{exact:true}).fill('12.50');await create.getByRole('button',{name:'Category',exact:true}).click();
+    assert.equal(await create.getByLabel('Medicine form status',{exact:true}).evaluate(node=>getComputedStyle(node).opacity),'0');
+    await page.getByRole('combobox',{name:'Search Category',exact:true}).fill('server');await page.getByRole('combobox',{name:'Search Category',exact:true}).press('Enter');await page.getByRole('option',{name:'Server reference',exact:true}).click();
+    await create.evaluate(node=>node.scrollTop=0);await page.screenshot({path:path.resolve('../outputs/tenant-medicine-form-desktop.png'),fullPage:false});
+    await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await create.evaluate(node=>node.scrollTop=0);await page.screenshot({path:path.resolve('../outputs/tenant-medicine-form-mobile.png'),fullPage:false});
+    await create.locator('form').evaluate(form=>{form.requestSubmit();form.requestSubmit();});
+    await create.getByRole('button',{name:'Retry save',exact:true}).waitFor();assert.equal(creates,1);assert.equal(await create.getByLabel('Medicine name *',{exact:true}).isDisabled(),true);
+    await create.getByRole('button',{name:'Retry save',exact:true}).click();await catalog.getByText('Medicine saved. Register opening stock separately to show it in this branch.').waitFor();
+    const attempts=upstream.filter(call=>call.method==='POST');assert.equal(attempts.length,2);assert.equal(attempts[0].key,attempts[1].key);assert.deepEqual(attempts[0].body,attempts[1].body);assert.equal(attempts[0].body.categoryId,referenceId);assert.equal(attempts[0].body.branchId,undefined);assert.equal(attempts[0].body.openingStock,undefined);
+    await page.setViewportSize({width:1280,height:900});await catalog.getByRole('button',{name:/Main medicine/}).click();await page.getByRole('button',{name:'Edit medicine',exact:true}).click();const edit=page.getByRole('dialog',{name:'Edit medicine',exact:true});
+    await edit.getByLabel('Medicine name *',{exact:true}).fill('Edited medicine');forceConflict=true;
+    await edit.getByRole('button',{name:'Save medicine',exact:true}).click();await edit.getByRole('button',{name:'Reload medicine',exact:true}).waitFor();assert.equal(updates,0);
+    await edit.getByRole('button',{name:'Reload medicine',exact:true}).click();await edit.getByLabel('Medicine name *',{exact:true}).fill('Edited medicine');await edit.getByLabel('Sale price',{exact:true}).fill('18.50');
+    await edit.getByRole('button',{name:'Save medicine',exact:true}).click();await catalog.getByRole('button',{name:/Edited medicine/}).waitFor();assert.equal(updates,1);
+    assert.equal(upstream.filter(call=>call.method==='PATCH').at(-1).body.expectedUpdatedAt,'2026-11-10T00:00:01.000Z');
+    savedName='';await catalog.getByRole('button',{name:'Search',exact:true}).click();await catalog.getByRole('button',{name:/Main medicine/}).waitFor();
+    const count=upstream.length,writeUrl=base+'/api/backend/tenant-workspace/a/pharmacy/medicines';
+    assert.equal((await context.request.post(writeUrl,{headers:{Origin:'https://foreign.example','Idempotency-Key':'fixture-key-123456'},data:{name:'Blocked'}})).status(),403);
+    assert.equal((await context.request.post(writeUrl,{headers:{Origin:base,'Idempotency-Key':'fixture-key-123456'},data:{name:'Blocked',openingStock:5}})).status(),422);
+    assert.equal((await context.request.post(writeUrl,{headers:{Origin:base},data:{name:'Blocked'}})).status(),422);
+    assert.equal(upstream.length,count);
+    console.log('PASS medicine forms: own server-searched reference filters, native validation, duplicate-submit guard, uncertain create retry with identical key/body, explicit concurrent-edit conflict/reload, list refresh, scoped proxy write/CSRF/stock-field restrictions.');
+   }
    await catalog.getByRole('textbox',{name:'Search shop medicines'}).fill('slow');await catalog.getByRole('button',{name:'Search',exact:true}).click();
    for(let i=0;i<50&&!releaseCatalog;i++)await sleep(50);assert.ok(releaseCatalog);
   }
@@ -104,11 +151,11 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
   const forged=await context.request.get(base+'/api/backend/tenant-workspace/a/workspace/bootstrap',{headers:{'X-Tenant-Id':'b',Authorization:'Bearer forged'}});assert.equal(forged.status(),200);assert.equal((await forged.json()).data.tenant.id,'a');
   assert.equal(upstream.at(-1).authorization,'Bearer fixture-http-only');
   const before=upstream.length;
-  assert.equal((await context.request.post(base+'/api/backend/tenant-workspace/a/workspace/bootstrap')).status(),405);
+  assert.equal((await context.request.post(base+'/api/backend/tenant-workspace/a/workspace/bootstrap')).status(),403);
   assert.equal((await context.request.get(base+'/api/backend/tenant-workspace/a/pharmacy/stocks/adjust')).status(),404);
   const anonymous=await browser.newContext();assert.equal((await anonymous.request.get(base+'/api/backend/tenant-workspace/a/workspace/bootstrap')).status(),401);await anonymous.close();
-  assert.equal(upstream.length,before);assert.ok(upstream.every(item=>item.method==='GET'&&['a','b'].includes(item.tenant)&&(item.path.startsWith('/api/v1/workspace/')||item.path.startsWith('/api/v1/pharmacy/'))));assert.deepEqual(errors,[]);
-  if(catalogMode)console.log('PASS tenant catalog/inventory: actual Next proxy, server search/filter/pagination, details, popover dismiss, scoped quantities, denied/foreign response rejection, branch-change late response disposal, no write operations.');
+  assert.equal(upstream.length,before);assert.ok(upstream.every(item=>(item.method==='GET'||formMode&&['POST','PATCH'].includes(item.method))&&['a','b'].includes(item.tenant)&&(item.path.startsWith('/api/v1/workspace/')||item.path.startsWith('/api/v1/pharmacy/'))));assert.deepEqual(errors,[]);
+  if(catalogMode)console.log('PASS tenant catalog/inventory: actual Next proxy, server search/filter/pagination, details, popover dismiss, scoped quantities, denied/foreign response rejection, branch-change late response disposal, read scope checks.');
   console.log('PASS tenant workspace: real Next proxy + isolated HTTP upstream; HttpOnly cookie, route-bound tenant vs forged header, allowlist/method/anonymous denial, shop/permission/branch isolation, saved scope, late response, revocation, mobile dark. No real database.');
  }catch(error){console.error(logs);throw error;}
  finally{if(release)release();if(releaseCatalog)releaseCatalog();if(browser)await browser.close();if(child&&child.exitCode===null){if(process.platform==='win32'){try{execFileSync('taskkill',['/pid',String(child.pid),'/t','/f'],{windowsHide:true,stdio:'ignore'});}catch{}}else child.kill('SIGTERM');}stub.closeAllConnections();await new Promise(resolve=>stub.close(resolve));}

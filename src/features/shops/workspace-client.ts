@@ -2,28 +2,31 @@ export class WorkspaceError extends Error{
   readonly status:number;
   constructor(message:string,status:number){super(message);this.name='WorkspaceError';this.status=status;}
 }
-/** One short-lived read-only transport per mounted shop. Never falls back to the
+/** One short-lived, allowlisted transport per mounted shop. Never falls back to the
  * legacy API or accepts caller-provided tenant/auth headers. */
 export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,fetcher:typeof fetch=fetch){
   if(!/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(tenantId))throw new WorkspaceError('Invalid shop.',400);
   const controller=new AbortController();let disposed=false;
-  async function get(path:string,withMeta=false){
+  async function request(path:string,withMeta=false,mutation?:{method:'POST'|'PATCH';body:unknown;key:string}){
     if(disposed||sessionSignal.aborted)throw new WorkspaceError('Shop selection changed.',409);
     const response=await fetcher(`/api/backend/tenant-workspace/${encodeURIComponent(tenantId)}/${path}`,{
-      method:'GET',credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'},signal:AbortSignal.any([controller.signal,sessionSignal]),
+      method:mutation?.method??'GET',body:mutation?JSON.stringify(mutation.body):undefined,credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json',...(mutation?{'Content-Type':'application/json','Idempotency-Key':mutation.key}:{})},signal:AbortSignal.any([controller.signal,sessionSignal]),
     });
     const payload=await response.json();
     if(disposed||sessionSignal.aborted)throw new WorkspaceError('Shop selection changed.',409);
-    if(!response.ok)throw new WorkspaceError(typeof payload?.message==='string'?payload.message:'Shop access could not be verified.',response.status);
+    if(!response.ok){const validation=Array.isArray(payload?.errors)?payload.errors.filter((row:unknown):row is {message:string}=>!!row&&typeof row==='object'&&'message'in row&&typeof row.message==='string').map((row:{message:string})=>row.message).join('; '):'';throw new WorkspaceError((typeof payload?.message==='string'?payload.message:'Shop access could not be verified.')+(validation?` ${validation}`:''),response.status);}
     if(payload?.success!==true||!('data' in payload))throw new WorkspaceError('Invalid shop response.',502);
     return (withMeta?payload:payload.data) as unknown;
   }
+  const get=(path:string,withMeta=false)=>request(path,withMeta);
   return {
     bootstrap:(after?:string)=>get(`workspace/bootstrap${after?`?after=${encodeURIComponent(after)}`:''}`),
     branch:(id:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid branch.',400);return get(`workspace/branches/${encodeURIComponent(id)}`);},
-    medicines:(branchId:string,page:number,filters:Record<string,string>={})=>get(`pharmacy/medicines?${resourceQuery(branchId,page,filters,['search','isActive','hasStock','barcode','unit','dosageForm','strength'])}`,true),
-    stocks:(branchId:string,page:number,filters:Record<string,string>={})=>get(`pharmacy/stocks?${resourceQuery(branchId,page,filters,['search','batchNumber','rackNumber','unit','expiryStartDate','expiryEndDate'])}`,true),
+    medicines:(branchId:string,page:number,filters:Record<string,string>={})=>get(`pharmacy/medicines?${resourceQuery(branchId,page,filters,['search','isActive','hasStock','barcode','unit','dosageForm','strength','categoryId','genericId','groupId','medicineManufacturerId','medicineUnitId'])}`,true),
+    stocks:(branchId:string,page:number,filters:Record<string,string>={})=>get(`pharmacy/stocks?${resourceQuery(branchId,page,filters,['search','batchNumber','rackNumber','unit','expiryStartDate','expiryEndDate','medicineManufacturerId'])}`,true),
     medicine:(id:string,branchId:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid medicine.',400);const query=new URLSearchParams(resourceQuery(branchId,1,{},[]));query.delete('page');query.delete('limit');return get(`pharmacy/medicines/${id}?${query}`);},
+    references:(kind:string,page:number,search:string)=>{if(!['categories','generics','groups','manufacturers','units'].includes(kind)||!Number.isInteger(page)||page<1)throw new WorkspaceError('Invalid reference query.',400);return get(`pharmacy/${kind}?${new URLSearchParams({page:String(page),limit:'20',search})}`,true);},
+    saveMedicine:(id:string|null,body:unknown,key:string)=>{if(id&&!/^[0-9a-f-]{36}$/i.test(id)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid medicine save request.',400);return request(`pharmacy/medicines${id?`/${id}`:''}`,false,{method:id?'PATCH':'POST',body,key});},
     dispose(){disposed=true;controller.abort();},
   };
 }

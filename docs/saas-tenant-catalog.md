@@ -64,10 +64,11 @@ calendar-day bounds; shop-timezone expiry semantics remain separate work.
 
 ## Still open in this module
 
-Reference dropdown filters (category/generic/group/manufacturer/unit masters),
-medicine add/edit/deactivate, opening/adjustment/transfer/import/bulk prices, stock
+Update: reference dropdown filters and medicine add/edit/status controls are now
+implemented behind a third write gate; see [medicine forms](saas-medicine-forms.md).
+Opening/adjustment/transfer/import/bulk prices, stock
 history, related export actions and complete keyboard accessibility review.
 Resource mutations require their own reviewed BFF allowlist, validation and replay
-keys; none are exposed by this read-only phase. POS/checkout, purchases/returns,
+keys; only the separately gated medicine POST/PATCH are now exposed. POS/checkout, purchases/returns,
 customer/advance/due, finance/reports, HR/admin/media/socket adapters and final
 tenant-only navigation/release acceptance remain separate work.
