@@ -20,6 +20,7 @@ export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,
   }
   const get=(path:string,withMeta=false)=>request(path,withMeta);
   return {
+    createSale:(body:unknown,key:string)=>{if(!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid sale key.',400);return request('sales',false,{method:'POST',body,key});},
     activeRegister:(branchId:string)=>get(`pharmacy/cash-register/active?${new URLSearchParams({branchId})}`),
     registerSessions:(branchId:string,page:number,filters:Record<string,string>={})=>get(`pharmacy/cash-register?${resourceQuery(branchId,page,filters,['search','status','startDate','endDate'])}`,true),
     registerMovements:(id:string,branchId:string,page:number)=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid register.',400);return get(`pharmacy/cash-register/${id}/movements?${resourceQuery(branchId,page,{},[])}`,true);},

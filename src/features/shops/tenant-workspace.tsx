@@ -10,6 +10,7 @@ import { createWorkspaceClient,WorkspaceError } from './workspace-client';
 import { type WorkspaceBootstrap,type WorkspaceBranch,validWorkspaceBootstrap,validWorkspaceBranch,workspaceBranchKey } from './workspace-contract';
 import { TenantCatalog } from './tenant-catalog';
 import {RegisterWorkspace} from './register-workspace';
+import {TenantPos} from './tenant-pos';
 
 const accessLabels=[['medicine:read','Medicine catalog'],['stock:read','Inventory'],['sale:read','Sales history'],['report:read','Reports'],['account:read','Finance']] as const;
 type Client=ReturnType<typeof createWorkspaceClient>;
@@ -17,7 +18,7 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
  const {t}=useLanguage();
  const [context,setContext]=useState<WorkspaceBootstrap|null>(null),[branches,setBranches]=useState<WorkspaceBranch[]>([]),[cursor,setCursor]=useState<string|null>(null);
  const [branch,setBranch]=useState<WorkspaceBranch|null>(null),[busy,setBusy]=useState(true),[error,setError]=useState(''),[settings,setSettings]=useState(false);
- const client=useRef<Client|null>(null),revision=useRef(0);
+ const client=useRef<Client|null>(null),revision=useRef(0),posOpen=useRef(false);
  const invalidate=useCallback(()=>{revision.current++;},[]);
  const forget=useCallback(()=>{try{sessionStorage.removeItem(workspaceBranchKey(selected));}catch{}},[selected]);
  const load=useCallback(async(transport:Client,after?:string)=>{
@@ -47,7 +48,7 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
  useEffect(()=>{
   const transport=createWorkspaceClient(selected.tenant.id,sessionBoundary.capture().signal);client.current=transport;
   let active=true;queueMicrotask(()=>{if(active)void load(transport);});
-  const refresh=()=>{void load(transport);};window.addEventListener('focus',refresh);
+  const refresh=()=>{if(!posOpen.current)void load(transport);};window.addEventListener('focus',refresh);
   return()=>{active=false;invalidate();transport.dispose();client.current=null;window.removeEventListener('focus',refresh);};
  },[selected,load,invalidate]);
  async function choose(id:string){
@@ -67,6 +68,7 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
   {busy&&<DataSkeleton variant="form" rows={2}>{t('Loading workspace…')}</DataSkeleton>}
   {!busy&&context&&<><div className="workspace-current-branch"><span>{t('Working branch')}</span><strong>{branch?.name??t('Choose a branch in workspace settings')}</strong></div><div className="workspace-access"><h3>{t('Available access')}</h3><ul>{accessLabels.filter(([key])=>context.permissions.includes(key)).map(([key,label])=><li key={key}>{t(label)}</li>)}</ul>{!accessLabels.some(([key])=>context.permissions.includes(key))&&<p>{t('No operation permissions assigned.')}</p>}</div></>}
   {!busy&&context&&branch&&(context.permissions.includes('medicine:read')||context.permissions.includes('stock:read'))&&<TenantCatalog key={`${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={writesEnabled}/>}
+  {!busy&&context&&branch&&<TenantPos key={`pos:${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={writesEnabled} onOpenChange={open=>{posOpen.current=open;}}/>}
   {!busy&&context&&branch&&context.permissions.includes('cash-register:read')&&<RegisterWorkspace key={`register:${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={writesEnabled}/>}
   {settings&&<BranchSettings error={error} branches={branches} branch={branch} busy={busy} hasMore={!!cursor} canChoose={!!context} onChoose={choose} onMore={()=>{if(client.current&&cursor)void load(client.current,cursor);}} onClose={()=>setSettings(false)}/>}
  </section>;
