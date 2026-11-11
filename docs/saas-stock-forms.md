@@ -88,5 +88,8 @@ precondition is optional for existing staged clients; this new proxy requires it
 Update: Stock History and Branch Transfer UI are implemented under the existing
 scope/gates; see [history and transfer](saas-history-transfer.md).
 
-Remaining: import/bulk price workflows, durable offline
+Update: CSV import and batch price updates are implemented; see
+[bulk workflows](saas-bulk-import.md).
+
+Remaining: XLSX frontend/master mapping, durable offline
 operation reconciliation, remaining resource adapters and final tenant release UAT.

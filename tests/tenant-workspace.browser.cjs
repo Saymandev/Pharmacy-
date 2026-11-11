@@ -5,6 +5,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));return server.address().port;}
 (async()=>{
  const catalogMode=process.env.TENANT_CATALOG_TEST==='1';
+ const bulkMode=process.env.TENANT_BULK_TEST==='1';let bulkImports=0,priceWrites=0,batchCost=10,batchMrp=20,priceConflict=false;
  const formMode=process.env.TENANT_MEDICINE_FORM_TEST==='1';
  const stockMode=process.env.TENANT_STOCK_FORM_TEST==='1',stockIdA='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',freshMedicineId='77777777-7777-4777-8777-777777777777';
  const transferMode=process.env.TENANT_TRANSFER_TEST==='1';let targetQuantity=0,transferWrites=0,forceTransferConflict=false,foreignHistory=false,denyHistory=false;const transferMovements=[];
@@ -12,12 +13,20 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
  const referenceId='55555555-5555-4555-8555-555555555555',medicineId='44444444-4444-4444-8444-444444444444';
  let savedName='',savedVersion='2026-11-10T00:00:00.000Z',forceConflict=false,creates=0,updates=0;const savedKeys=new Map();
  let browser,child,logs='',revoked=false,late=false,release,releaseCatalog,denyCatalog=false,foreignCatalog=false;const upstream=[];
- const shop=id=>({tenant:{id,name:id==='a'?'Main Pharmacy':'Second Pharmacy',slug:id},membershipId:'member-'+id,userId:'u',role:{id:'role-'+id,name:id==='a'?'Manager':'Cashier'},permissions:id==='a'?['sale:read','report:read',...(catalogMode?['medicine:read','stock:read']:[]),...(stockMode||transferMode?['stock:create','stock:update']:[]),...(formMode?['medicine:create','medicine:update',...['category','generic','group','manufacturer','unit'].map(name=>`medicine-${name}:read`)]:[])]:['stock:read'],allBranches:id==='a',branchIds:id==='a'?[]:[b1],homeBranchId:id==='a'?a1:null});
+ const shop=id=>({tenant:{id,name:id==='a'?'Main Pharmacy':'Second Pharmacy',slug:id},membershipId:'member-'+id,userId:'u',role:{id:'role-'+id,name:id==='a'?'Manager':'Cashier'},permissions:id==='a'?['sale:read','report:read',...(catalogMode?['medicine:read','stock:read']:[]),...(stockMode||transferMode?['stock:create','stock:update']:[]),...(formMode||bulkMode?['medicine:create','medicine:update',...['category','generic','group','manufacturer','unit'].map(name=>`medicine-${name}:read`)]:[])]:['stock:read'],allBranches:id==='a',branchIds:id==='a'?[]:[b1],homeBranchId:id==='a'?a1:null});
  const row=(tenant,id,name)=>({id,tenantId:tenant,name,isActive:true});
  const branches={a:[row('a',a1,'Main counter'),row('a',a2,'Rear counter')],b:[row('b',b1,'Second counter')]};
  const stub=http.createServer(async(req,res)=>{
   const chunks=[];for await(const chunk of req)chunks.push(chunk);const body=chunks.length?JSON.parse(Buffer.concat(chunks).toString()):undefined;
   const url=new URL(req.url,'http://fixture'),tenant=req.headers['x-tenant-id'],key=req.headers['idempotency-key'];upstream.push({path:url.pathname,query:Object.fromEntries(url.searchParams),tenant,authorization:req.headers.authorization,method:req.method,body,key});
+  if(bulkMode&&(url.pathname.endsWith('/medicines/import')||url.pathname.endsWith('/bulk-price-update'))&&['POST','PATCH'].includes(req.method)){
+   const respond=(status,data,message)=>{res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify({success:status<400,data,message}));};
+   if(tenant!=='a'){respond(403,null,'Insufficient tenant permissions');return;}
+   if(savedKeys.has(key)){respond(200,savedKeys.get(key));return;}
+   if(req.method==='POST'){bulkImports++;const result={total:body.rows.length,success:body.rows.length,failed:0,ids:body.rows.map(()=>freshMedicineId)};savedKeys.set(key,result);respond(503,null,'Import response uncertain.');return;}
+   if(priceConflict||body[0].expectedUnitPrice!==batchCost){priceConflict=false;batchCost=11;respond(409,null,'Prices changed. Reload the batch before updating.');return;}
+   batchCost=body[0].unitPrice;batchMrp=body[0].mrp;priceWrites++;const result={updated:1,stocks:[{id:stockIdA,sku:stockIdA,tenantId:tenant,medicineId,branchId:a1,quantity:stockQuantityA,batchNumber:'a-BATCH',unit:'Pcs',unitPrice:batchCost,mrp:batchMrp,expiryDate:'2030-01-01T00:00:00Z'}]};savedKeys.set(key,result);respond(503,null,'Price response uncertain.');return;
+  }
   if(req.method==='POST'&&url.pathname.startsWith('/api/v1/pharmacy/stocks/')){
    const respond=(status,data,message)=>{res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify({success:status<400,data,message}));};
    if(tenant!=='a'){respond(403,null,'Insufficient tenant permissions');return;}
@@ -61,7 +70,7 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
    else if(url.pathname.startsWith('/api/v1/pharmacy/')){
     if(denyCatalog){res.writeHead(403,{'content-type':'application/json'});res.end(JSON.stringify({success:false,message:'Insufficient tenant permissions'}));return;}
     const branchId=url.searchParams.get('branchId'),page=Number(url.searchParams.get('page')||1),medicineId='44444444-4444-4444-8444-444444444444';
-    const stock={id:branchId===a2?'cccccccc-cccc-4ccc-8ccc-cccccccccccc':tenant==='a'?stockIdA:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',tenantId:tenant,medicineId,branchId,quantity:branchId===a1?stockQuantityA:branchId===a2&&transferMode?targetQuantity:5,batchNumber:tenant+'-BATCH',unit:'Pcs',mrp:'20.00',expiryDate:'2030-01-01T00:00:00Z',rackNumber:'R1'};
+    const stock={id:branchId===a2?'cccccccc-cccc-4ccc-8ccc-cccccccccccc':tenant==='a'?stockIdA:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',tenantId:tenant,medicineId,branchId,quantity:branchId===a1?stockQuantityA:branchId===a2&&transferMode?targetQuantity:5,batchNumber:tenant+'-BATCH',unit:'Pcs',sku:stockIdA,unitPrice:String(batchCost),mrp:String(batchMrp),expiryDate:'2030-01-01T00:00:00Z',rackNumber:'R1'};
     const medicine={id:medicineId,tenantId:foreignCatalog?'foreign':tenant,name:page===2?'Next medicine':branchId===a2?'Rear medicine':tenant==='a'?(savedName||'Main medicine'):'Second medicine',genericName:'Sample generic',barcode:'00123',unit:'Pcs',salePrice:'15.00',isActive:true,stocks:[stock],nameBangla:null,genericNameBangla:null,dosageForm:null,strength:null,purchasePrice:'10.00',mrp:'20.00',reorderLevel:10,categoryId:null,genericId:null,groupId:null,medicineUnitId:null,medicineManufacturerId:null,updatedAt:savedVersion};
     const fresh={...medicine,id:freshMedicineId,name:'Fresh medicine',stocks:openingRows.filter(row=>row.medicineId===freshMedicineId&&row.branchId===branchId)};
     if(url.pathname==='/api/v1/pharmacy/medicines')data=url.searchParams.get('search')==='none'?[]:[medicine];
@@ -88,7 +97,7 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
  try{
   const upstreamPort=await listen(stub),probe=http.createServer(),port=await listen(probe);await new Promise(resolve=>probe.close(resolve));
   const base=`http://localhost:${port}`;
-  child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--port',String(port)],{cwd:path.resolve(__dirname,'..'),windowsHide:true,env:{...process.env,TENANT_SESSION_PREVIEW_ENABLED:'true',TENANT_WORKSPACE_PREVIEW_ENABLED:'true',TENANT_CATALOG_WRITES_ENABLED:formMode||stockMode||transferMode?'true':'false',TENANT_BACKEND_API_URL:`http://127.0.0.1:${upstreamPort}/api/v1`},stdio:['ignore','pipe','pipe']});
+  child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--port',String(port)],{cwd:path.resolve(__dirname,'..'),windowsHide:true,env:{...process.env,TENANT_SESSION_PREVIEW_ENABLED:'true',TENANT_WORKSPACE_PREVIEW_ENABLED:'true',TENANT_CATALOG_WRITES_ENABLED:formMode||stockMode||transferMode||bulkMode?'true':'false',TENANT_BACKEND_API_URL:`http://127.0.0.1:${upstreamPort}/api/v1`},stdio:['ignore','pipe','pipe']});
   child.stdout.on('data',value=>{logs=(logs+value).slice(-5000);});child.stderr.on('data',value=>{logs=(logs+value).slice(-5000);});
   let ready=false;for(let i=0;i<90;i++){if(child.exitCode!==null)throw new Error('Next exited: '+logs);try{if((await fetch(base+'/shops',{signal:AbortSignal.timeout(1000)})).ok){ready=true;break;}}catch{}await sleep(1000);}assert.ok(ready,'Staging fixture did not start: '+logs);
   browser=await chromium.launch({headless:true,executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'});
@@ -127,6 +136,26 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
    await catalog.getByRole('button',{name:'Filters',exact:true}).click();await page.getByRole('dialog',{name:'Medicine filters'}).getByLabel('Batch number',{exact:true}).fill('a-BATCH');await page.getByRole('button',{name:'Apply filters',exact:true}).click();await catalog.getByRole('cell',{name:'a-BATCH',exact:true}).waitFor();
    assert.ok(upstream.some(call=>call.query.batchNumber==='a-BATCH'&&call.query.branchId===a1));
    await catalog.getByRole('tab',{name:'Medicine catalog',exact:true}).click();await catalog.getByRole('button',{name:/Main medicine/}).waitFor();
+   if(bulkMode){
+    await catalog.getByRole('button',{name:'Import medicines',exact:true}).click();let modal=page.getByRole('dialog',{name:'Import medicines',exact:true});
+    await modal.getByLabel('Choose CSV',{exact:true}).setInputFiles({name:'invalid.csv',mimeType:'text/csv',buffer:Buffer.from('name,tenantId\nBad,b')});await modal.getByRole('alert').waitFor();assert.equal(bulkImports,0);
+    await modal.getByLabel('Choose CSV',{exact:true}).setInputFiles({name:'valid.csv',mimeType:'text/csv',buffer:Buffer.from('name,barcode,salePrice\nImported test,00123,12.50')});await modal.getByText('1 medicines ready for review').waitFor();await modal.getByText('Review all imported fields',{exact:true}).click();await modal.locator('.tenant-import-details').getByText('12.5',{exact:true}).waitFor();await modal.getByText('Review all imported fields',{exact:true}).click();
+    await page.setViewportSize({width:390,height:844});await modal.evaluate(node=>node.scrollTop=0);await page.screenshot({path:path.resolve('../outputs/tenant-import-mobile.png')});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await modal.locator('form').evaluate(form=>{form.requestSubmit();form.requestSubmit();});await modal.getByRole('button',{name:'Retry same save',exact:true}).waitFor();assert.equal(bulkImports,1);assert.equal(await modal.getByLabel('Choose CSV',{exact:true}).isDisabled(),true);
+    await modal.getByRole('button',{name:'Retry same save',exact:true}).click();await catalog.getByText('Import confirmed. Register opening stock separately to show medicines in this branch.').waitFor();assert.equal(bulkImports,1);
+    const imports=upstream.filter(call=>call.path.endsWith('/medicines/import'));assert.equal(imports.length,2);assert.equal(imports[0].key,imports[1].key);assert.deepEqual(imports[0].body,imports[1].body);assert.equal(imports[0].body.rows[0].branchId,undefined);
+    await catalog.getByRole('button',{name:'Bulk price update',exact:true}).click();modal=page.getByRole('dialog',{name:'Bulk price update',exact:true});await modal.getByText('a-BATCH · 5 Pcs').waitFor();
+    assert.equal(await modal.getByRole('checkbox').isChecked(),false);await modal.getByRole('checkbox').check();await modal.getByLabel('New unit cost Main medicine a-BATCH',{exact:true}).fill('12');priceConflict=true;
+    await modal.getByRole('button',{name:'Confirm price updates',exact:true}).click();await modal.getByRole('alert').getByText('Prices changed. Reload the batch before updating.').waitFor();assert.equal(priceWrites,0);
+    await modal.getByRole('button',{name:'Reload batch prices',exact:true}).click();await modal.getByText('Current: 11',{exact:true}).waitFor();assert.equal(await modal.getByRole('checkbox').isChecked(),false);
+    await modal.getByRole('checkbox').check();await modal.getByLabel('New unit cost Main medicine a-BATCH',{exact:true}).fill('12');await modal.getByLabel('New MRP Main medicine a-BATCH',{exact:true}).fill('24');
+    await modal.evaluate(node=>node.scrollTop=0);await page.screenshot({path:path.resolve('../outputs/tenant-bulk-prices-mobile.png')});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await modal.locator('form').last().evaluate(form=>{form.requestSubmit();form.requestSubmit();});await modal.getByRole('button',{name:'Retry same save',exact:true}).waitFor();assert.equal(priceWrites,1);await modal.getByRole('button',{name:'Retry same save',exact:true}).click();await catalog.getByText('Batch price updates confirmed.').waitFor();assert.equal(priceWrites,1);assert.equal(stockQuantityA,5);
+    const prices=upstream.filter(call=>call.path.endsWith('/bulk-price-update'));assert.equal(prices.at(-1).key,prices.at(-2).key);assert.deepEqual(prices.at(-1).body,prices.at(-2).body);assert.equal(prices.at(-1).body[0].expectedUnitPrice,11);
+    await page.getByRole('button',{name:'Switch to dark mode'}).click();await catalog.getByRole('button',{name:'Bulk price update',exact:true}).click();modal=page.getByRole('dialog',{name:'Bulk price update',exact:true});await modal.getByRole('checkbox').waitFor();await modal.getByRole('checkbox').check();await modal.getByLabel('Search batches',{exact:true}).fill('Main');await modal.getByRole('button',{name:'Search',exact:true}).click();await modal.getByRole('checkbox').waitFor();assert.equal(await modal.getByRole('checkbox').isChecked(),false);assert.ok(upstream.some(call=>call.path.endsWith('/stocks')&&call.query.search==='Main'&&call.query.branchId===a1));await modal.evaluate(node=>node.scrollTop=0);await page.screenshot({path:path.resolve('../outputs/tenant-bulk-prices-mobile-dark.png')});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await modal.getByRole('button',{name:'Close bulk form'}).click();await page.getByRole('button',{name:'Switch to light mode'}).click();
+    const count=upstream.length;assert.equal((await context.request.post(base+'/api/backend/tenant-workspace/a/pharmacy/medicines/import',{headers:{Origin:base,'Idempotency-Key':'forged-import-123456'},data:{rows:[{name:'Bad',tenantId:'b'}]}})).status(),422);assert.equal(upstream.length,count);
+    await page.setViewportSize({width:1280,height:900});console.log('PASS import + bulk prices: preview, bad CSV, real proxy guards, immutable unknown retry, double submit, stale conflict/reload, owned source scope, quantity unchanged, mobile.');
+   }
    if(formMode){
     await catalog.getByRole('button',{name:'Filters',exact:true}).click();
     await page.getByRole('dialog',{name:'Medicine filters'}).getByRole('button',{name:'Category',exact:true}).click();
@@ -253,7 +282,7 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
   assert.equal((await context.request.post(base+'/api/backend/tenant-workspace/a/workspace/bootstrap')).status(),403);
   assert.equal((await context.request.get(base+'/api/backend/tenant-workspace/a/pharmacy/stocks/adjust')).status(),404);
   const anonymous=await browser.newContext();assert.equal((await anonymous.request.get(base+'/api/backend/tenant-workspace/a/workspace/bootstrap')).status(),401);await anonymous.close();
-  assert.equal(upstream.length,before);assert.ok(upstream.every(item=>(item.method==='GET'||(formMode||stockMode||transferMode)&&['POST','PATCH'].includes(item.method))&&['a','b'].includes(item.tenant)&&(item.path.startsWith('/api/v1/workspace/')||item.path.startsWith('/api/v1/pharmacy/'))));assert.deepEqual(errors,[]);
+  assert.equal(upstream.length,before);assert.ok(upstream.every(item=>(item.method==='GET'||(formMode||stockMode||transferMode||bulkMode)&&['POST','PATCH'].includes(item.method))&&['a','b'].includes(item.tenant)&&(item.path.startsWith('/api/v1/workspace/')||item.path.startsWith('/api/v1/pharmacy/'))));assert.deepEqual(errors,[]);
   if(catalogMode)console.log('PASS tenant catalog/inventory: actual Next proxy, server search/filter/pagination, details, popover dismiss, scoped quantities, denied/foreign response rejection, branch-change late response disposal, read scope checks.');
   console.log('PASS tenant workspace: real Next proxy + isolated HTTP upstream; HttpOnly cookie, route-bound tenant vs forged header, allowlist/method/anonymous denial, shop/permission/branch isolation, saved scope, late response, revocation, mobile dark. No real database.');
  }catch(error){console.error(logs);throw error;}

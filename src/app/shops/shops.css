@@ -38,3 +38,24 @@
 .tenant-catalog-tabs{max-width:100%;overflow-x:auto}.tenant-catalog-tabs button{flex-shrink:0;white-space:nowrap}.tenant-stock-actions{display:flex;gap:6px;flex-wrap:wrap;min-width:150px}.tenant-history-focus{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px;background:var(--canvas)}.tenant-movement-in,.tenant-movement-out{display:inline-block;font-size:12px;font-weight:700;padding:5px 8px;border-radius:7px;white-space:nowrap}.tenant-movement-in{background:var(--brand-wash);color:var(--brand-dark)}.tenant-movement-out{background:color-mix(in srgb,#df8b35 15%,var(--surface));color:var(--ink)}.tenant-history-dialog dl{display:grid;grid-template-columns:minmax(90px,1fr) minmax(0,1.6fr);gap:12px;font-size:13px}.tenant-history-dialog dt{color:var(--ink-soft)}.tenant-history-dialog dd{margin:0;overflow-wrap:anywhere;text-align:end}.tenant-history-dialog h3{font-size:17px;margin:8px 0 22px}.tenant-destination{padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--canvas);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:20px}.tenant-destination label{display:flex;flex-direction:column;gap:8px;font-size:13px;font-weight:650;min-width:0}.tenant-destination input{width:100%;min-width:0;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:44px;font:inherit}.tenant-destination p,.tenant-destination>div[role=alert]{grid-column:1/-1;margin:0;font-size:13px;color:var(--ink-soft)}@media(max-width:560px){.tenant-destination{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:560px){.tenant-catalog-search{flex-wrap:wrap}.tenant-catalog-search label{flex-basis:100%}.tenant-medicine-batch{flex-direction:column;gap:6px}}
 @media(max-width:560px){.shop-access{padding:16px}.shop-access-top{align-items:start}.shop-access-top>div{flex-wrap:wrap;justify-content:end;gap:6px}.shop-access-top button{padding:8px;font-size:12px}.shop-access-brand{font-size:16px}.shop-access-list{grid-template-columns:minmax(0,1fr)}.shop-access-heading{margin-top:22px}.shop-access h1{font-size:25px}}
+.tenant-bulk-editor { width: min(58rem, calc(100vw - 2rem)); padding:20px; }
+.tenant-bulk-editor>p { color:var(--ink-soft); font-size:13px; line-height:1.6; }
+.tenant-bulk-editor input:not([type=checkbox]) { background:var(--canvas); color:var(--ink); border:1px solid var(--line); border-radius:10px; min-height:44px; padding:10px 12px; font:inherit; }
+.tenant-bulk-editor form>footer { flex-wrap:wrap; padding:16px 0 0; }
+.tenant-bulk-editor footer p { flex-basis:100%; margin:0; color:var(--ink-soft); font-size:12px; line-height:1.5; }
+.tenant-bulk-toolbar { display:flex; flex-wrap:wrap; gap:.75rem; align-items:end; margin-block:1rem; }
+.tenant-bulk-toolbar label { display:grid; gap:.4rem; flex:1; min-width:0; }
+.tenant-bulk-editor input:not([type=checkbox]) { width:100%; min-width:0; }
+.tenant-bulk-batches { display:grid; gap:.65rem; }
+.tenant-import-details { margin-top:12px; font-size:13px; }
+.tenant-import-details summary { cursor:pointer; padding-block:10px; font-weight:650; }
+.tenant-import-details dl { padding:12px; border:1px solid var(--line); border-radius:10px; }
+.tenant-import-details dl>div { margin-top:8px; }
+.tenant-import-details dt { color:var(--ink-soft); }
+.tenant-import-details dd { margin:3px 0 0; overflow-wrap:anywhere; white-space:pre-wrap; }
+.tenant-bulk-batch { display:grid; grid-template-columns:minmax(0,1.7fr) repeat(2,minmax(0,1fr)); gap:.75rem; padding:.85rem; border:1px solid var(--line); border-radius:.8rem; }
+.tenant-bulk-batch label { display:grid; gap:.35rem; min-width:0; }
+.tenant-bulk-batch small,.tenant-bulk-editor td small { display:block; color:var(--ink-soft); overflow-wrap:anywhere; }
+.tenant-bulk-batch .tenant-bulk-select { display:flex; align-items:center; gap:.65rem; overflow-wrap:anywhere; }
+.tenant-bulk-select input { width:1.1rem; height:1.1rem; flex-shrink:0; accent-color:var(--brand); }
+@media(max-width:600px) { .tenant-bulk-batch { grid-template-columns:repeat(2,minmax(0,1fr)); } .tenant-bulk-select { grid-column:1/-1; } }

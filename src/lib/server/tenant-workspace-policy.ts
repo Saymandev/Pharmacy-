@@ -1,3 +1,4 @@
+import {validateImportRows,validPriceRows} from '../../features/shops/bulk-policy.ts';
 export function tenantWorkspaceTarget(tenantId:string,path:string[],method:string,config={
   session:process.env.TENANT_SESSION_PREVIEW_ENABLED,workspace:process.env.TENANT_WORKSPACE_PREVIEW_ENABLED,base:process.env.TENANT_BACKEND_API_URL,
   writes:process.env.TENANT_CATALOG_WRITES_ENABLED,
@@ -12,12 +13,17 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
     path.length===3&&path[0]==='pharmacy'&&path[1]==='stocks'&&path[2]==='history'||
     path.length===2&&path[0]==='pharmacy'&&['categories','generics','groups','manufacturers','units'].includes(path[1]);
   const write=config.writes==='true'&&path[0]==='pharmacy'&&(path[1]==='medicines'&&(method==='POST'&&path.length===2||method==='PATCH'&&path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))||path[1]==='stocks'&&method==='POST'&&path.length===3&&['opening','adjust','transfer'].includes(path[2]));
-  if(!(method==='GET'&&read)&&!write)return null;
+  const bulk=config.writes==='true'&&path.length===3&&path[0]==='pharmacy'&&(path[1]==='medicines'&&path[2]==='import'&&method==='POST'||path[1]==='stocks'&&path[2]==='bulk-price-update'&&method==='PATCH');
+  if(!(method==='GET'&&read)&&!write&&!bulk)return null;
   try{
     const base=new URL(config.base);
     if(!['https:','http:'].includes(base.protocol)||base.username||base.password||base.search||base.hash)return null;
     return {url:`${base.toString().replace(/\/$/,'')}/${path.map(encodeURIComponent).join('/')}`,tenantId};
   }catch{return null;}
+}
+export function validBulkProxyBody(value:unknown,kind:string):boolean{
+ if(kind==='bulk-price-update')return validPriceRows(value);
+ return kind==='import'&&!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===1&&'rows'in value&&validateImportRows(value.rows);
 }
 export function validStockProxyBody(value:unknown,kind:string):boolean{
   if(!value||typeof value!=='object'||Array.isArray(value))return false;

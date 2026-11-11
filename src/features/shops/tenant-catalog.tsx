@@ -15,12 +15,14 @@ import { medicineReferences } from './medicine-form-policy';
 import { StockEditor } from './stock-editor';
 import { type StockMovement,validStockMovement,movementLabels } from './history-contract';
 import { HistoryDetail } from './history-detail';
+import { BulkEditor } from './bulk-editor';
 
 type Tab='medicines'|'stocks'|'history';type Client=ReturnType<typeof createWorkspaceClient>;
 const formatMoney=(value:number|string)=>`BDT ${Number(value).toFixed(2)}`;
 export function TenantCatalog({context,branch,writesEnabled=false}:{context:ShopContext;branch:WorkspaceBranch;writesEnabled?:boolean}){
  const {t,language}=useLanguage();const defaultTab=context.permissions.includes('medicine:read')?'medicines':'stocks';
  const [tab,setTab]=useState<Tab>(defaultTab),[search,setSearch]=useState(''),[draft,setDraft]=useState<Record<string,string>>({});
+ const [bulk,setBulk]=useState<'import'|'prices'|null>(null);
  const [query,setQuery]=useState<{page:number;filters:Record<string,string>}>({page:1,filters:{}}),[retry,setRetry]=useState(0);
  const [medicines,setMedicines]=useState<CatalogMedicine[]>([]),[stocks,setStocks]=useState<InventoryStock[]>([]),[meta,setMeta]=useState<CatalogMeta|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState('');
  const [detail,setDetail]=useState<CatalogMedicine|null>(null),[detailLoading,setDetailLoading]=useState(false);
@@ -61,6 +63,8 @@ export function TenantCatalog({context,branch,writesEnabled=false}:{context:Shop
  return <section className="tenant-catalog" aria-label={t('Shop medicines and inventory')}>
   <div className="tenant-catalog-tabs" role="tablist" aria-label={t('Pharmacy views')}>{available.map(value=><button type="button" role="tab" aria-selected={tab===value} aria-controls={`${filterId}-results`} id={`${filterId}-${value}`} key={value} onClick={()=>changeTab(value)}>{t(value==='medicines'?'Medicine catalog':value==='history'?'Stock history':'Inventory')}</button>)}</div>
   {writesEnabled&&context.permissions.includes('medicine:create')&&<button type="button" className="tenant-catalog-add" onClick={()=>{setNotice('');setEditor({id:null});}}>{t('Add medicine')}</button>}
+  {writesEnabled&&context.permissions.includes('medicine:create')&&<button type="button" className="tenant-catalog-add" onClick={()=>{setNotice('');setBulk('import');}}>{t('Import medicines')}</button>}
+  {writesEnabled&&context.permissions.includes('medicine:update')&&context.permissions.includes('stock:read')&&<button type="button" className="tenant-catalog-add" onClick={()=>{setNotice('');setBulk('prices');}}>{t('Bulk price update')}</button>}
   {writesEnabled&&context.permissions.includes('stock:create')&&context.permissions.includes('medicine:read')&&<button type="button" className="tenant-catalog-add" onClick={()=>{setNotice('');setStockEditor({});}}>{t('Opening stock')}</button>}
   {notice&&<p role="status" className="tenant-save-notice">{t(notice)}</p>}
   <form onSubmit={apply} className="tenant-catalog-search"><label><Search size={17}/><input aria-label={t('Search shop medicines')} value={search} onChange={event=>setSearch(event.target.value)} maxLength={tab==='history'?100:200} placeholder={t('Search name or generic…')}/></label><button type="submit">{t('Search')}</button><button type="button" popoverTarget={filterId}><Filter size={16}/>{t('Filters')}</button></form>
@@ -85,6 +89,7 @@ export function TenantCatalog({context,branch,writesEnabled=false}:{context:Shop
   {editor&&<MedicineEditor context={context} branchId={branch.id} id={editor.id} onClose={()=>setEditor(null)} onSaved={created=>{setEditor(null);setDetail(null);setNotice(created?'Medicine saved. Register opening stock separately to show it in this branch.':'Medicine changes saved.');setRetry(value=>value+1);}}/>}
   {stockEditor&&<StockEditor context={context} branch={branch} stockId={stockEditor.stockId} initialMedicineId={stockEditor.medicineId} transfer={stockEditor.transfer} onClose={()=>setStockEditor(null)} onSaved={()=>{setStockEditor(null);setDetail(null);setNotice(stockEditor.transfer?'Transfer confirmed.':'Stock save confirmed.');setRetry(value=>value+1);}}/>}
   {movement&&<HistoryDetail row={movement} context={context} branch={branch} onClose={()=>setMovement(null)}/>}
+  {bulk&&<BulkEditor mode={bulk} context={context} branch={branch} onClose={()=>setBulk(null)} onSaved={()=>{setNotice(bulk==='import'?'Import confirmed. Register opening stock separately to show medicines in this branch.':'Batch price updates confirmed.');setBulk(null);setRetry(value=>value+1);}}/>}
  </section>;
 }
 function InventoryTable({rows,t,onHistory,onAdjust,onTransfer}:{rows:InventoryStock[];t:(key:string)=>string;onHistory:(row:InventoryStock)=>void;onAdjust?: (row:InventoryStock)=>void;onTransfer?:(row:InventoryStock)=>void}){
