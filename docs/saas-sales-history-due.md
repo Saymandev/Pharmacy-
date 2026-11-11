@@ -35,8 +35,8 @@ Receipt preview/isolated print is shared with checkout. It shows current settlem
 advance usage and return adjustments with a returned-invoice label when relevant,
 plus the red DUE stamp if money remains. It contains neither batch labels nor
 collection forms/journal controls. Pending/rejected invoices cannot be printed as
-completed receipts or collect payments through this UI. Status mutation is not
-exposed in this BFF increment.
+completed receipts or collect payments through this UI. Existing pending invoices
+now have a separate [completion/rejection flow](saas-pending-sales.md).
 
 Verification: 5 dedicated policy/transport tests plus actual Next BFF + local
 upstream Edge flow verify server search/date filters, clickable rows, quick-due
@@ -48,6 +48,6 @@ projection privacy, return due reconciliation and archived record denial. Change
 code lint, TypeScript and production build pass.
 
 Feature branches only; no live writes, merge, SQL deployment or gate changes.
-Global due access across the final tenant navigation shell, pending-sale actions,
+Global due access across the final tenant navigation shell, POS draft creation,
 sale-return/refund screens, export and release UAT remain separate work. This
 preview's Collect due entry is scoped to the selected shop workspace.

@@ -3,6 +3,7 @@ import { tenantWorkspaceTarget,validMedicineProxyBody,validStockProxyBody,validB
 import { isSameOriginRequest } from '@/lib/server/request-security';
 import {validRegisterBody} from '@/features/shops/register-policy';
 import {validPosBody} from '@/features/shops/tenant-pos-policy';
+import {validPendingSaleBody} from '@/features/shops/pending-sale-policy';
 import {validCustomerProfile,validAdvanceBody} from '@/features/shops/customer-policy';
 
 type Context={params:Promise<{tenantId:string;path:string[]}>};
@@ -31,7 +32,7 @@ async function proxy(request:Request,context:Context){
       catch{return Response.json({success:false,message:'Invalid customer fields.'},{status:422,headers:noStore});}
       headers['Content-Type']='application/json';headers['Idempotency-Key']=key;
     }else if(path[0]==='sales'){
-      try{body=await request.text();if(new TextEncoder().encode(body).byteLength>limit||!(path.length===3?validSupplierPayment(JSON.parse(body)):validPosBody(JSON.parse(body))))throw new Error('Invalid sale');}
+      try{body=await request.text();if(new TextEncoder().encode(body).byteLength>limit||!(path[2]==='status'?validPendingSaleBody(JSON.parse(body)):path.length===3?validSupplierPayment(JSON.parse(body)):validPosBody(JSON.parse(body))))throw new Error('Invalid sale');}
       catch{return Response.json({success:false,message:'Invalid sale fields.'},{status:422,headers:noStore});}
       headers['Content-Type']='application/json';headers['Idempotency-Key']=key;
     }else{

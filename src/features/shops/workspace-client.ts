@@ -20,6 +20,7 @@ export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,
   }
   const get=(path:string,withMeta=false)=>request(path,withMeta);
   return {
+    pendingSaleStatus:(id:string,body:unknown,key:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid pending sale.',400);return request(`sales/${id}/status`,false,{method:'PATCH',body,key});},
     sales:(branchId:string,page:number,filters:Record<string,string>={})=>get(`sales?${resourceQuery(branchId,page,filters,['search','status','paymentStatus','hasDue','invoiceNumber','customerId','startDate','endDate'])}`,true),
     sale:(id:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid invoice.',400);return get(`sales/${id}`);},
     collectDue:(id:string,body:unknown,key:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid collection request.',400);return request(`sales/${id}/payments`,false,{method:'POST',body,key});},
