@@ -24,6 +24,7 @@ export function BulkEditor({mode,context,branch,onClose,onSaved}:{mode:'import'|
  const [rows,setRows]=useState<ImportRow[]>([]),[masters,setMasters]=useState<Record<string,string>>({}),[batches,setBatches]=useState<Batch[]>([]),[edits,setEdits]=useState<Record<string,Edit>>({}),[search,setSearch]=useState(''),[query,setQuery]=useState({search:'',page:1}),[meta,setMeta]=useState<CatalogMeta|null>(null),[reload,setReload]=useState(0),[loading,setLoading]=useState(mode==='prices'),[saving,setSaving]=useState(false),[uncertain,setUncertain]=useState(false),[conflict,setConflict]=useState(false),[error,setError]=useState('');
  const allowed=context.permissions.includes(mode==='import'?'medicine:create':'medicine:update')&&(mode==='import'||context.permissions.includes('stock:read'));
  const [rowMapping,setRowMapping]=useState<Record<number,Record<string,string>>>({});
+ const [mappingBlocked,setMappingBlocked]=useState(false);
  useEffect(()=>{const node=dialog.current;node?.showModal();return()=>node?.close();},[]);
  useEffect(()=>{const cancelUploads=()=>{fileVersion.current++;};const transport=createWorkspaceClient(context.tenant.id,sessionBoundary.capture().signal);client.current=transport;live.current=true;return()=>{live.current=false;cancelUploads();transport.dispose();client.current=null;};},[context]);
  useEffect(()=>{
@@ -37,7 +38,7 @@ export function BulkEditor({mode,context,branch,onClose,onSaved}:{mode:'import'|
  },[allowed,mode,branch.id,context.tenant.id,query,reload]);
  function close(){if(!submitting.current&&!uncertain)onClose();}
  async function fileChanged(file?:File){
-  const version=++fileVersion.current;setRows([]);setMasters({});setRowMapping({});setError('');attempt.current=null;if(!file)return;
+  const version=++fileVersion.current;setRows([]);setMasters({});setRowMapping({});setMappingBlocked(false);setError('');attempt.current=null;if(!file)return;
   setLoading(true);try{const preview=await client.current?.previewImport(file);if(!preview||typeof preview!=='object'||!('rows'in preview)||!validateImportRows(preview.rows))throw new Error('Import preview could not be verified.');if(live.current&&version===fileVersion.current)setRows(preview.rows);}
   catch(cause){if(live.current&&version===fileVersion.current)setError(cause instanceof Error?cause.message:'Import file could not be read.');}
   finally{if(live.current&&version===fileVersion.current)setLoading(false);}
@@ -47,7 +48,7 @@ export function BulkEditor({mode,context,branch,onClose,onSaved}:{mode:'import'|
   event.preventDefault();if(submitting.current||!client.current||!allowed||loading||conflict)return;
   let body:unknown;
   try{if(uncertain&&attempt.current)body=attempt.current.body;
-   else if(mode==='import'){const mapped=rows.map((row,index)=>({...row,...Object.fromEntries(Object.entries(masters).filter(([,id])=>id)),...Object.fromEntries(Object.entries(rowMapping[index]??{}).filter(([,id])=>id))}));if(!mapped.length||!validateImportRows(mapped))throw new Error('Choose a valid file and mapping before import.');body={rows:mapped};}
+   else if(mode==='import'){if(mappingBlocked)throw new Error('Resolve master matches before importing.');const mapped=rows.map((row,index)=>({...row,...Object.fromEntries(Object.entries(masters).filter(([,id])=>id)),...Object.fromEntries(Object.entries(rowMapping[index]??{}).filter(([,id])=>id))}));if(!mapped.length||!validateImportRows(mapped))throw new Error('Choose a valid file and mapping before import.');body={rows:mapped};}
    else{const selected:PriceRow[]=batches.filter(row=>edits[row.id]?.selected).map(row=>({medicineId:row.medicine.id,sku:row.sku,unitPrice:priceNumber(edits[row.id].cost),mrp:priceNumber(edits[row.id].mrp),expectedUnitPrice:priceNumber(row.unitPrice),expectedMrp:priceNumber(row.mrp)}));if(!validPriceRows(selected))throw new Error('Select at least one batch and enter valid prices.');if(selected.every(row=>row.unitPrice===row.expectedUnitPrice&&row.mrp===row.expectedMrp))throw new Error('Change at least one selected price.');body=selected;}
    if(!attempt.current||JSON.stringify(attempt.current.body)!==JSON.stringify(body))attempt.current={body,key:crypto.randomUUID()};
   }catch(cause){setError(cause instanceof Error?cause.message:'Invalid bulk form.');return;}
@@ -74,7 +75,7 @@ export function BulkEditor({mode,context,branch,onClose,onSaved}:{mode:'import'|
    <p>{t('Selection applies to this page only. Search or page changes clear selection.')}</p><button type="button" disabled={locked} onClick={()=>setReload(value=>value+1)}>{t('Reload batch prices')}</button>
   </>}
   {loading&&<DataSkeleton variant="form" rows={3}>{t('Loading…')}</DataSkeleton>}
-  {mode==='import'&&!!rows.length&&<ImportRowMapping rows={rows} context={context} disabled={locked} onChange={value=>{attempt.current=null;setRowMapping(value);}}/>}
+  {mode==='import'&&!!rows.length&&<ImportRowMapping rows={rows} context={context} disabled={locked} onBlocked={setMappingBlocked} onChange={value=>{attempt.current=null;setRowMapping(value);}}/>}
   <form onSubmit={save}><footer><p>{t('All rows save together. Any invalid row cancels the whole batch.')}</p><button type="submit" disabled={!allowed||saving||loading||conflict||mode==='import'&&!rows.length}>{t(saving?'Saving…':uncertain?'Retry same save':mode==='import'?'Confirm import':'Confirm price updates')}</button><button type="button" disabled={locked} onClick={close}>{t('Cancel')}</button></footer></form>
  </dialog>;
 }

@@ -1,6 +1,14 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
   "Import medicines": "মেডিসিন ইমপোর্ট",
+  "Master name": "মাস্টারের নাম",
+  "Match name": "নাম মিলিয়ে দেখুন",
+  "Resolve master matches before importing.": "ইমপোর্টের আগে মাস্টারের ম্যাচ ঠিক করুন।",
+  "Matching…": "নাম মেলানো হচ্ছে…",
+  "Exact match found. Review before confirming import.": "একটি সঠিক ম্যাচ পাওয়া গেছে। ইমপোর্ট কনফার্ম করার আগে রিভিউ করুন।",
+  "No exact match. Select an existing master.": "সঠিক ম্যাচ পাওয়া যায়নি। বিদ্যমান মাস্টার সিলেক্ট করুন।",
+  "Multiple exact matches. Select the correct master.": "একাধিক সঠিক ম্যাচ আছে। সঠিক মাস্টার সিলেক্ট করুন।",
+  "Too many search results. Select the correct master.": "অনেক সার্চ রেজাল্ট আছে। সঠিক মাস্টার সিলেক্ট করুন।",
   "Map individual medicine rows": "আলাদা মেডিসিন রো ম্যাপ করুন",
   "Row selections override the file and all-row defaults. Clear a selection to use the default.": "রোতে সিলেক্ট করা মান ফাইল ও সব রোর ডিফল্টের বদলে ব্যবহার হবে। ডিফল্ট নিতে সিলেকশন ক্লিয়ার করুন।",
   "Review all imported fields": "সব ইমপোর্ট ফিল্ড রিভিউ করুন",

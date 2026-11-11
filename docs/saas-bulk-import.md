@@ -62,6 +62,15 @@ file IDs. Clearing an override restores that fallback. Mapping is frozen during
 uncertain retries and reset when a new file is selected. Browser verification
 checks a row manufacturer alongside an all-row category and identical retry data.
 
-Remaining: automatic name-to-master matching/conflict detection, durable retry recovery across
+Row master pickers now offer Match name (genericName seeds the generic search).
+Only a unique exact English/Bangla name match is selected, after all search pages
+are inspected. Partial names, duplicate exact matches, missing/foreign/malformed
+results or truncated searches cannot silently choose a master. Started unresolved
+matches block final import until matched or manually selected. Search is bounded
+to 50 pages; no master is auto-created. Two focused matcher tests cover later-page
+ambiguity, Bangla aliases, foreign scope and bounds; browser checks blocked import
+and resolution before retry. Matching is explicitly started per field.
+
+Remaining: file-column name mapping beyond genericName, durable retry recovery across
 reloads, remaining resource adapters, tenant migration/route composition and
 real two-shop acceptance. Default-off gates do not disable legacy live writes.
