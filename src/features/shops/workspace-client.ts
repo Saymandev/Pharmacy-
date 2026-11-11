@@ -20,6 +20,8 @@ export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,
   }
   const get=(path:string,withMeta=false)=>request(path,withMeta);
   return {
+    posCustomers:(page:number,search:string)=>{if(!Number.isInteger(page)||page<1||page>1000000||search.length>200)throw new WorkspaceError('Invalid customer search.',400);return get(`customers?${new URLSearchParams({page:String(page),limit:'20',search})}`,true);},
+    posCustomer:(id:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid customer.',400);return get(`customers/${id}`);},
     createSale:(body:unknown,key:string)=>{if(!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid sale key.',400);return request('sales',false,{method:'POST',body,key});},
     activeRegister:(branchId:string)=>get(`pharmacy/cash-register/active?${new URLSearchParams({branchId})}`),
     registerSessions:(branchId:string,page:number,filters:Record<string,string>={})=>get(`pharmacy/cash-register?${resourceQuery(branchId,page,filters,['search','status','startDate','endDate'])}`,true),

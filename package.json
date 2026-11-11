@@ -11,7 +11,7 @@
     "test:session": "node --test tests/session-boundary.test.mjs && node tests/session-boundary.browser.cjs && node tests/branch-consistency.browser.cjs",
     "test:shops": "node --test tests/shop-contract.test.mjs && node tests/shop-access.browser.cjs",
     "test:tenant-registers": "node --test tests/tenant-register.test.mjs && node tests/run-tenant-register-browser.cjs",
-    "test:tenant-pos": "node --test tests/tenant-pos.test.mjs && node tests/run-tenant-pos-browser.cjs",
+    "test:tenant-pos": "node --test tests/tenant-pos.test.mjs && node tests/run-tenant-pos-browser.cjs && node tests/run-tenant-pos-credit-browser.cjs",
     "test:tenant-workspace": "node --test tests/workspace-client.test.mjs && node tests/tenant-workspace.browser.cjs",
     "test:tenant-catalog": "node --test tests/tenant-catalog.test.mjs tests/workspace-client.test.mjs && node tests/run-tenant-catalog-browser.cjs",
     "test:tenant-medicine-form": "node --test tests/medicine-form.test.mjs tests/tenant-catalog.test.mjs tests/workspace-client.test.mjs && node tests/run-tenant-medicine-form-browser.cjs",
