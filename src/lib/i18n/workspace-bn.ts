@@ -1,6 +1,14 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
   "Import medicines": "মেডিসিন ইমপোর্ট",
+  "Shop suppliers": "শপ সাপ্লায়ার",
+  "Close suppliers": "সাপ্লায়ার বন্ধ করুন",
+  "Search suppliers": "সাপ্লায়ার সার্চ",
+  "Supplier name": "সাপ্লায়ারের নাম",
+  "Supplier saved.": "সাপ্লায়ার সেভ হয়েছে।",
+  "Supplier deleted.": "সাপ্লায়ার ডিলিট হয়েছে।",
+  "Suppliers linked to purchases cannot be deleted.": "পারচেজের সঙ্গে লিংক করা সাপ্লায়ার ডিলিট করা যাবে না।",
+  "Supplier create status is unknown. Retry the same details.": "সাপ্লায়ার তৈরির স্ট্যাটাস নিশ্চিত নয়। একই ডিটেইলস দিয়ে রিট্রাই করুন।",
   "Catalog master data": "ক্যাটালগ মাস্টার ডেটা",
   "Close master data": "মাস্টার ডেটা বন্ধ করুন",
   "Master types": "মাস্টারের ধরন",

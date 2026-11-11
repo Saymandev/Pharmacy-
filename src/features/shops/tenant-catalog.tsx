@@ -17,6 +17,7 @@ import { type StockMovement,validStockMovement,movementLabels } from './history-
 import { HistoryDetail } from './history-detail';
 import { BulkEditor } from './bulk-editor';
 import {MasterManager} from './master-manager';
+import {SupplierManager} from './supplier-manager';
 
 type Tab='medicines'|'stocks'|'history';type Client=ReturnType<typeof createWorkspaceClient>;
 const formatMoney=(value:number|string)=>`BDT ${Number(value).toFixed(2)}`;
@@ -25,6 +26,7 @@ export function TenantCatalog({context,branch,writesEnabled=false}:{context:Shop
  const [tab,setTab]=useState<Tab>(defaultTab),[search,setSearch]=useState(''),[draft,setDraft]=useState<Record<string,string>>({});
  const [bulk,setBulk]=useState<'import'|'prices'|null>(null);
  const [mastersOpen,setMastersOpen]=useState(false);
+ const [suppliersOpen,setSuppliersOpen]=useState(false);
  const [query,setQuery]=useState<{page:number;filters:Record<string,string>}>({page:1,filters:{}}),[retry,setRetry]=useState(0);
  const [medicines,setMedicines]=useState<CatalogMedicine[]>([]),[stocks,setStocks]=useState<InventoryStock[]>([]),[meta,setMeta]=useState<CatalogMeta|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState('');
  const [detail,setDetail]=useState<CatalogMedicine|null>(null),[detailLoading,setDetailLoading]=useState(false);
@@ -93,6 +95,8 @@ export function TenantCatalog({context,branch,writesEnabled=false}:{context:Shop
   {movement&&<HistoryDetail row={movement} context={context} branch={branch} onClose={()=>setMovement(null)}/>}
   {medicineReferences.some(ref=>context.permissions.includes(ref.permission))&&<button type="button" onClick={()=>setMastersOpen(true)}>{t('Catalog master data')}</button>}
   {mastersOpen&&<MasterManager context={context} writesEnabled={writesEnabled} onClose={()=>setMastersOpen(false)}/>}
+  {context.permissions.includes('supplier:read')&&<button type="button" onClick={()=>setSuppliersOpen(true)}>{t('Shop suppliers')}</button>}
+  {suppliersOpen&&<SupplierManager context={context} writesEnabled={writesEnabled} onClose={()=>setSuppliersOpen(false)}/>}
   {bulk&&<BulkEditor mode={bulk} context={context} branch={branch} onClose={()=>setBulk(null)} onSaved={()=>{setNotice(bulk==='import'?'Import confirmed. Register opening stock separately to show medicines in this branch.':'Batch price updates confirmed.');setBulk(null);setRetry(value=>value+1);}}/>}
  </section>;
 }

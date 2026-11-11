@@ -15,12 +15,19 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
   const write=config.writes==='true'&&path[0]==='pharmacy'&&(path[1]==='medicines'&&(method==='POST'&&path.length===2||method==='PATCH'&&path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))||path[1]==='stocks'&&method==='POST'&&path.length===3&&['opening','adjust','transfer'].includes(path[2]));
   const bulk=config.writes==='true'&&path.length===3&&path[0]==='pharmacy'&&(path[1]==='medicines'&&['import','import-preview'].includes(path[2])&&method==='POST'||path[1]==='stocks'&&path[2]==='bulk-price-update'&&method==='PATCH');
   const master=config.writes==='true'&&path[0]==='pharmacy'&&['categories','generics','groups','manufacturers','units'].includes(path[1])&&(path.length===2&&method==='POST'||path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2])&&['PATCH','DELETE'].includes(method));
-  if(!(method==='GET'&&read)&&!write&&!bulk&&!master)return null;
+  const supplier=path[0]==='pharmacy'&&path[1]==='suppliers'&&(path.length===2||path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))&&(method==='GET'||config.writes==='true'&&(path.length===2&&method==='POST'||path.length===3&&['PATCH','DELETE'].includes(method)));
+  if(!(method==='GET'&&read)&&!write&&!bulk&&!master&&!supplier)return null;
   try{
     const base=new URL(config.base);
     if(!['https:','http:'].includes(base.protocol)||base.username||base.password||base.search||base.hash)return null;
     return {url:`${base.toString().replace(/\/$/,'')}/${path.map(encodeURIComponent).join('/')}`,tenantId};
   }catch{return null;}
+}
+export function validSupplierBody(value:unknown,method:string):boolean{
+ if(!value||typeof value!=='object'||Array.isArray(value))return false;
+ if(method==='DELETE')return Object.keys(value).length===0;
+ const row=value as Record<string,unknown>;
+ return Object.keys(row).every(key=>['name','nameBangla','address','phone','email'].includes(key))&&[['name',200],['address',500],['phone',30]].every(([key,max])=>typeof row[key]==='string'&&!!(row[key] as string).trim()&&(row[key] as string).trim().length<=Number(max))&&(!('nameBangla'in row)||row.nameBangla===null||typeof row.nameBangla==='string'&&row.nameBangla.length<=300)&&(!('email'in row)||row.email===null||typeof row.email==='string'&&(row.email===''||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)));
 }
 export function validMasterBody(value:unknown,method:string):boolean{
  if(!value||typeof value!=='object'||Array.isArray(value))return false;

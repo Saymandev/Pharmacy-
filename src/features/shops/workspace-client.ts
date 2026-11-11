@@ -43,6 +43,8 @@ export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,
     },
     updatePrices:(body:unknown,key:string)=>{if(!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid save key.',400);return request('pharmacy/stocks/bulk-price-update',false,{method:'PATCH',body,key});},
     dispose(){disposed=true;controller.abort();},
+    suppliers:(page:number,search:string)=>{if(!Number.isInteger(page)||page<1||page>1000000||search.length>200)throw new WorkspaceError('Invalid supplier search.',400);return get(`pharmacy/suppliers?${new URLSearchParams({page:String(page),limit:'20',search})}`,true);},
+    saveSupplier:(id:string|null,body:unknown,key:string,remove=false)=>{if(id&&!/^[0-9a-f-]{36}$/i.test(id)||remove&&!id||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid supplier request.',400);return request(`pharmacy/suppliers${id?`/${id}`:''}`,false,{method:remove?'DELETE':id?'PATCH':'POST',body,key});},
     saveMaster:(kind:string,id:string|null,body:unknown,remove=false)=>{if(!['categories','generics','groups','manufacturers','units'].includes(kind)||id&&!/^[0-9a-f-]{36}$/i.test(id)||remove&&!id)throw new WorkspaceError('Invalid master selection.',400);return request(`pharmacy/${kind}${id?`/${id}`:''}`,false,{method:remove?'DELETE':id?'PATCH':'POST',body,key:crypto.randomUUID()});},
   };
 }
