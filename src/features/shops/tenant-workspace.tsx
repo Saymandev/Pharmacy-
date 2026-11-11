@@ -11,6 +11,7 @@ import { type WorkspaceBootstrap,type WorkspaceBranch,validWorkspaceBootstrap,va
 import { TenantCatalog } from './tenant-catalog';
 import {RegisterWorkspace} from './register-workspace';
 import {TenantPos} from './tenant-pos';
+import {CustomerWorkspace} from './customer-workspace';
 
 const accessLabels=[['medicine:read','Medicine catalog'],['stock:read','Inventory'],['sale:read','Sales history'],['report:read','Reports'],['account:read','Finance']] as const;
 type Client=ReturnType<typeof createWorkspaceClient>;
@@ -69,6 +70,7 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
   {!busy&&context&&<><div className="workspace-current-branch"><span>{t('Working branch')}</span><strong>{branch?.name??t('Choose a branch in workspace settings')}</strong></div><div className="workspace-access"><h3>{t('Available access')}</h3><ul>{accessLabels.filter(([key])=>context.permissions.includes(key)).map(([key,label])=><li key={key}>{t(label)}</li>)}</ul>{!accessLabels.some(([key])=>context.permissions.includes(key))&&<p>{t('No operation permissions assigned.')}</p>}</div></>}
   {!busy&&context&&branch&&(context.permissions.includes('medicine:read')||context.permissions.includes('stock:read'))&&<TenantCatalog key={`${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={writesEnabled}/>}
   {!busy&&context&&branch&&<TenantPos key={`pos:${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={writesEnabled} onOpenChange={open=>{posOpen.current=open;}}/>}
+  {!busy&&context&&branch&&context.permissions.includes('customer:read')&&<CustomerWorkspace key={`customers:${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={writesEnabled} onOpenChange={open=>{posOpen.current=open;}}/>}
   {!busy&&context&&branch&&context.permissions.includes('cash-register:read')&&<RegisterWorkspace key={`register:${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={writesEnabled}/>}
   {settings&&<BranchSettings error={error} branches={branches} branch={branch} busy={busy} hasMore={!!cursor} canChoose={!!context} onChoose={choose} onMore={()=>{if(client.current&&cursor)void load(client.current,cursor);}} onClose={()=>setSettings(false)}/>}
  </section>;

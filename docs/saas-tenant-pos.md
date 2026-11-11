@@ -11,9 +11,9 @@ Supports **fully paid walk-in sales** and **registered-customer full, partial or
 fully due sales**, with one payment account plus optional existing customer
 advance. Server-paginated customer search/detail requires `customer:read`;
 applying advance additionally requires `customer:update`. Customer creation,
-advance deposits/refunds and a ledger screen, mixed payment accounts, pending
-sales, historical receipts and sale returns remain separate increments. The BFF
-exposes only customer list/detail reads and sale creation for this workflow.
+advance deposits/refunds and ledger now have a separate [customer workspace](saas-customer-advance.md).
+Mixed payment accounts, pending sales, historical receipts and sale returns remain
+separate increments. POS itself uses customer list/detail reads and sale creation.
 
 The compact catalog uses server name/generic/barcode search and pagination, card
 and list modes, active owned branch stock, expiry screening and FEFO default

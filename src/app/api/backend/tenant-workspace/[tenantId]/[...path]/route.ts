@@ -3,6 +3,7 @@ import { tenantWorkspaceTarget,validMedicineProxyBody,validStockProxyBody,validB
 import { isSameOriginRequest } from '@/lib/server/request-security';
 import {validRegisterBody} from '@/features/shops/register-policy';
 import {validPosBody} from '@/features/shops/tenant-pos-policy';
+import {validCustomerProfile,validAdvanceBody} from '@/features/shops/customer-policy';
 
 type Context={params:Promise<{tenantId:string;path:string[]}>};
 const noStore={'Cache-Control':'no-store'};
@@ -25,7 +26,11 @@ async function proxy(request:Request,context:Context){
     const key=request.headers.get('idempotency-key');
     if(!key||!/^[A-Za-z0-9_-]{16,128}$/.test(key)||new URL(request.url).search||request.headers.get('content-type')?.split(';')[0].trim()!=='application/json')return Response.json({success:false,message:'A JSON body and valid save key are required.'},{status:422,headers:noStore});
     const bulk=['import','bulk-price-update'].includes(path[2]),limit=bulk?262144:32768;
-    if(path[0]==='sales'){
+    if(path[0]==='customers'){
+      try{body=await request.text();if(new TextEncoder().encode(body).byteLength>limit||!(path.length===3?validAdvanceBody(JSON.parse(body)):validCustomerProfile(JSON.parse(body),request.method==='PATCH')))throw new Error('Invalid customer');}
+      catch{return Response.json({success:false,message:'Invalid customer fields.'},{status:422,headers:noStore});}
+      headers['Content-Type']='application/json';headers['Idempotency-Key']=key;
+    }else if(path[0]==='sales'){
       try{body=await request.text();if(new TextEncoder().encode(body).byteLength>limit||!validPosBody(JSON.parse(body)))throw new Error('Invalid sale');}
       catch{return Response.json({success:false,message:'Invalid sale fields.'},{status:422,headers:noStore});}
       headers['Content-Type']='application/json';headers['Idempotency-Key']=key;

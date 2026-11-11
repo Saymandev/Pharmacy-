@@ -5,9 +5,9 @@ const uuid=(v:unknown):v is string=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 export type PosLine={medicine:CatalogMedicine;stock:CatalogStock;quantity:number};
 export type PosBody={branchId:string;customerId?:string;type:'pos';status:'completed';discountAmount:number;taxPercentage:number;note:string;advanceAmount:number;saleItems:{stockId:string;quantity:number;price:number}[];payments:{accountId:string;amount:number;paymentMethod:string;note:string}[]};
-export type PosCustomer={id:string;tenantId:string;name:string;phone:string;customerNumber:string;balance:number|string;isWalkIn:boolean};
+export type PosCustomer={id:string;tenantId:string;name:string;phone:string;customerNumber:string|null;balance:number|string;isWalkIn:boolean};
 export function validPosCustomer(value:unknown,tenantId:string):value is PosCustomer{
- if(!object(value)||!uuid(value.id)||value.tenantId!==tenantId||typeof value.name!=='string'||typeof value.phone!=='string'||typeof value.customerNumber!=='string'||typeof value.isWalkIn!=='boolean')return false;
+ if(!object(value)||!uuid(value.id)||value.tenantId!==tenantId||typeof value.name!=='string'||typeof value.phone!=='string'||!(value.customerNumber===null||typeof value.customerNumber==='string')||typeof value.isWalkIn!=='boolean')return false;
  try{return (typeof value.balance==='number'||typeof value.balance==='string'&&value.balance.trim()!=='')&&purchaseCents(Number(value.balance))>=BigInt(0);}catch{return false;}
 }
 export function posFunding(total:number,customer:PosCustomer|null,payment:number|null,advance:number,canAdvance:boolean){
