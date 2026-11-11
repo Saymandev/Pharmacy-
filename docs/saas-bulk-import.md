@@ -56,6 +56,12 @@ retry, stale reload, server search, selection reset, scope guards and mobile
 light/dark). Changed-module ESLint, TypeScript and production build passed
 before push. Fixtures use no real database or live API.
 
-Remaining: per-row name-to-master matching/conflict resolution, durable retry recovery across
+Individual rows now expose searchable, permission-scoped master pickers. Explicit
+row selections take precedence over all-row defaults, which take precedence over
+file IDs. Clearing an override restores that fallback. Mapping is frozen during
+uncertain retries and reset when a new file is selected. Browser verification
+checks a row manufacturer alongside an all-row category and identical retry data.
+
+Remaining: automatic name-to-master matching/conflict detection, durable retry recovery across
 reloads, remaining resource adapters, tenant migration/route composition and
 real two-shop acceptance. Default-off gates do not disable legacy live writes.

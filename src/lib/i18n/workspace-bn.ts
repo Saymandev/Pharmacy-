@@ -1,6 +1,8 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
   "Import medicines": "মেডিসিন ইমপোর্ট",
+  "Map individual medicine rows": "আলাদা মেডিসিন রো ম্যাপ করুন",
+  "Row selections override the file and all-row defaults. Clear a selection to use the default.": "রোতে সিলেক্ট করা মান ফাইল ও সব রোর ডিফল্টের বদলে ব্যবহার হবে। ডিফল্ট নিতে সিলেকশন ক্লিয়ার করুন।",
   "Review all imported fields": "সব ইমপোর্ট ফিল্ড রিভিউ করুন",
   "Bulk price update": "বাল্ক প্রাইস আপডেট",
   "Close bulk form": "বাল্ক ফর্ম বন্ধ করুন",
