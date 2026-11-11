@@ -50,6 +50,10 @@
 .tenant-purchase-line { border:1px solid var(--line); border-radius:12px; padding:14px; margin:14px 0; background:var(--canvas); }
 .tenant-purchase-line h3 { margin:0 0 12px; font-size:15px; }
 .tenant-purchase-detail h3 { margin:20px 0 10px; font-size:17px; font-weight:700; }
+.tenant-supplier-payment { border:1px solid var(--line); border-radius:12px; margin-top:18px; padding:14px; background:var(--canvas); }
+.tenant-supplier-payment label { display:grid; gap:7px; margin-block:10px; font-size:13px; font-weight:650; min-width:0; }
+.tenant-supplier-payment p { color:var(--ink-soft); font-size:13px; line-height:1.5; }
+.tenant-supplier-payment fieldset { padding:12px; }
 [aria-labelledby="tenant-purchases-title"] .tenant-stock-table :is(th,td,button) { white-space:nowrap; }
 @media(max-width:560px) { [aria-labelledby="tenant-purchases-title"] .tenant-bulk-toolbar label { flex-basis:100%; } }
 .tenant-bulk-editor .tenant-purchase-line .tenant-editor-grid { padding:0; margin-block:12px; }

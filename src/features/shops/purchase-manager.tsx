@@ -11,12 +11,15 @@ import {createWorkspaceClient,WorkspaceError} from './workspace-client';
 import {validCatalogPage,type CatalogMeta} from './catalog-contract';
 import {validPurchaseRecord,validPurchaseDetail,type PurchaseRecord,type PurchaseDetail} from './purchase-read-policy';
 import {ReferencePicker} from './reference-picker';
+import {SupplierPaymentForm} from './supplier-payment';
+import {purchasePaymentTransactions} from './purchase-payment-policy';
 type Client=ReturnType<typeof createWorkspaceClient>;
 const money=(value:number|string)=>`BDT ${Number(value).toFixed(2)}`;
 export function PurchaseManager({context,branch,writesEnabled,onClose}:{context:ShopContext;branch:WorkspaceBranch;writesEnabled:boolean;onClose:()=>void}){
  const {t,language}=useLanguage(),filterId=useId(),dialog=useRef<HTMLDialogElement>(null),filter=useRef<HTMLDivElement>(null),client=useRef<Client|null>(null),active=useRef(false),submitting=useRef(false),revision=useRef(0),attempt=useRef<{id:string;body:{status:'completed'|'rejected';note?:string};key:string}|null>(null);
  const [rows,setRows]=useState<PurchaseRecord[]>([]),[meta,setMeta]=useState<CatalogMeta|null>(null),[search,setSearch]=useState(''),[draft,setDraft]=useState<Record<string,string>>({}),[query,setQuery]=useState({page:1,filters:{} as Record<string,string>}),[reload,setReload]=useState(0),[loading,setLoading]=useState(true),[detailLoading,setDetailLoading]=useState(false),[detail,setDetail]=useState<PurchaseDetail|null>(null),[supplierName,setSupplierName]=useState(''),[command,setCommand]=useState<'completed'|'rejected'|null>(null),[note,setNote]=useState(''),[saving,setSaving]=useState(false),[uncertain,setUncertain]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
- const canUpdate=writesEnabled&&context.permissions.includes('purchase:update'),locked=saving||uncertain;
+ const [paymentOpen,setPaymentOpen]=useState(false);
+ const canUpdate=writesEnabled&&context.permissions.includes('purchase:update'),locked=saving||uncertain||paymentOpen;
  useEffect(()=>{const node=dialog.current;node?.showModal();return()=>node?.close();},[]);
  useEffect(()=>{const invalidate=()=>{revision.current++;};const transport=createWorkspaceClient(context.tenant.id,sessionBoundary.capture().signal);client.current=transport;active.current=true;return()=>{active.current=false;invalidate();transport.dispose();};},[context]);
  useEffect(()=>{let current=true;queueMicrotask(()=>{if(!current)return;setLoading(true);setRows([]);setMeta(null);setError('');void client.current?.purchases(branch.id,query.page,query.filters).then(value=>{if(!current)return;if(!validCatalogPage(value,query.page,(row):row is PurchaseRecord=>validPurchaseRecord(row,context.tenant.id,branch.id)))throw new Error('Purchase list could not be verified.');setRows(value.data);setMeta(value.meta);}).catch(cause=>{if(current){setError(cause instanceof Error?cause.message:'Purchases could not be loaded.');setDetail(null);}}).finally(()=>{if(current)setLoading(false);});});return()=>{current=false;};},[context.tenant.id,branch.id,query,reload]);
@@ -32,7 +35,7 @@ export function PurchaseManager({context,branch,writesEnabled,onClose}:{context:
   catch(cause){if(!active.current)return;const unknown=!(cause instanceof WorkspaceError)||cause.status>=500;setUncertain(unknown);setError(cause instanceof Error?t(cause.message):t('Purchase status could not be updated.'));if(!unknown){attempt.current=null;setCommand(null);setDetail(null);setReload(value=>value+1);setNotice(t('Reloaded purchases. Open the record again to check its current status.'));}}
   finally{submitting.current=false;if(active.current)setSaving(false);}
  }
- function close(){if(!submitting.current&&!uncertain)onClose();}
+ function close(){if(!submitting.current&&!locked)onClose();}
  return <dialog ref={dialog} className="tenant-editor tenant-bulk-editor workspace-branch-dialog" aria-labelledby="tenant-purchases-title" onCancel={event=>{event.preventDefault();close();}} onClick={event=>{if(event.target!==event.currentTarget)return;const box=event.currentTarget.getBoundingClientRect();if(event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)close();}}>
   <header><div><h2 id="tenant-purchases-title">{t('Branch purchases')}</h2><p>{context.tenant.name} · {branch.name}</p></div><button type="button" aria-label={t('Close purchases')} disabled={locked} onClick={close}><X size={18}/></button></header>
   {error&&<div role="alert" className="shop-access-error">{error}</div>}{notice&&<p role="status">{notice}</p>}{uncertain&&<p role="status">{t('Purchase status is unknown. Retry the same action.')}</p>}
@@ -50,7 +53,15 @@ export function PurchaseManager({context,branch,writesEnabled,onClose}:{context:
   {detailLoading&&<DataSkeleton variant="form" rows={3}>{t('Loading purchase details…')}</DataSkeleton>}
   {detail&&<section className="tenant-purchase-detail"><h3>{detail.poNumber}</h3><p>{supplierName} · {t(detail.status==='pending'?'Pending':detail.status==='completed'?'Completed':'Rejected')}</p><p>{detail.note}</p><div className="tenant-stock-summary"><strong>{t('Net payable')}: {money(Number(detail.totalPrice)-Number(detail.discountAmount))}</strong><span>{t('Paid')}: {money(detail.paidAmount)}</span><strong>{t('Outstanding due')}: {money(detail.dueAmount)}</strong></div>{detail.purchaseItems.map(item=><article className="tenant-purchase-line" key={item.id}><strong>{item.itemName}</strong><p>{item.batchNumber} · {item.expiryDate.slice(0,10)}</p><span>{item.quantity} {item.unit} × {money(item.price)} · {t('Line total')}: {money(item.totalPrice)}</span></article>)}
    {canUpdate&&detail.status==='pending'&&!command&&<div className="tenant-stock-actions"><button type="button" onClick={()=>{setNote('');setCommand('completed');}}>{t('Complete purchase')}</button><button type="button" onClick={()=>{setNote('');setCommand('rejected');}}>{t('Reject purchase')}</button></div>}
+   <PurchasePayments purchase={detail}/>
+   {canUpdate&&context.permissions.includes('account:read')&&detail.status==='completed'&&Number(detail.dueAmount)>0&&!paymentOpen&&<button type="button" onClick={()=>setPaymentOpen(true)}>{t('Pay supplier')}</button>}
+   {paymentOpen&&<SupplierPaymentForm context={context} branch={branch} purchaseId={detail.id} onClose={()=>setPaymentOpen(false)} onSaved={value=>{setPaymentOpen(false);setDetail(value);setNotice(t('Supplier payment recorded.'));setReload(value=>value+1);}}/>}
    {command&&<form className="tenant-import-masters" onSubmit={save}><h3>{t(command==='completed'?'Confirm stock receipt':'Confirm purchase rejection')}</h3><p>{t(command==='completed'?'Completing receives all purchase batches into this branch. This action is final.':'Rejecting this pending purchase is final and adds no stock.')}</p><label><span>{t('Status note (optional)')}</span><input disabled={locked} maxLength={2000} value={note} onChange={event=>setNote(event.target.value)}/></label><button type="submit" disabled={saving}>{t(saving?'Saving…':uncertain?'Retry same save':'Confirm status change')}</button><button type="button" disabled={locked} onClick={()=>{attempt.current=null;setCommand(null);}}>{t('Cancel')}</button></form>}
   </section>}
  </dialog>;
+}
+function PurchasePayments({purchase}:{purchase:PurchaseDetail}){
+ const {t,language}=useLanguage();let rows;
+ try{rows=purchasePaymentTransactions(purchase);}catch{return <p>{t('Payment history could not be verified.')}</p>;}
+ return <section aria-label={t('Supplier payment history')}><h4>{t('Supplier payment history')}</h4>{!rows.length?<p>{t('No supplier payments recorded.')}</p>:<div className="tenant-stock-table"><table><thead><tr>{['Reference','Payment method','Out','Date'].map(label=><th key={label}>{t(label)}</th>)}</tr></thead><tbody>{rows.map(row=><tr key={row.id}><td>{row.txnId}</td><td>{t(row.paymentMethod)}</td><td>{money(row.amount)}</td><td>{new Date(row.createdAt).toLocaleString(language==='bn'?'bn-BD':'en-GB',{timeZone:'Asia/Dhaka'})}</td></tr>)}</tbody></table></div>}</section>;
 }
