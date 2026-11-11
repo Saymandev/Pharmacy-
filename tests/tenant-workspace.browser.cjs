@@ -5,6 +5,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));return server.address().port;}
 (async()=>{
  const catalogMode=process.env.TENANT_CATALOG_TEST==='1';
+ const registerMode=process.env.TENANT_REGISTER_TEST==='1';let register=null,registerWrites=0,foreignRegister=false;const registers=[];
  const bulkMode=process.env.TENANT_BULK_TEST==='1';let bulkImports=0,priceWrites=0,batchCost=10,batchMrp=20,priceConflict=false;
  let masterName='',masterBangla='',deleteConflict=true;
  let supplierRow=null,supplierCreates=0,supplierDeleteConflict=true;
@@ -22,11 +23,19 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
  let browser,child,logs='',revoked=false,late=false,release,releaseCatalog,denyCatalog=false,foreignCatalog=false;const upstream=[];
  const shop=id=>({tenant:{id,name:id==='a'?'Main Pharmacy':'Second Pharmacy',slug:id},membershipId:'member-'+id,userId:'u',role:{id:'role-'+id,name:id==='a'?'Manager':'Cashier'},permissions:id==='a'?['sale:read','report:read',...(catalogMode?['medicine:read','stock:read']:[]),...(stockMode||transferMode?['stock:create','stock:update']:[]),...(bulkMode?['medicine-category:create','medicine-category:update','medicine-category:delete']:[]),...(formMode||bulkMode?['medicine:create','medicine:update',...['category','generic','group','manufacturer','unit'].map(name=>`medicine-${name}:read`)]:[])]:['stock:read'],allBranches:id==='a',branchIds:id==='a'?[]:[b1],homeBranchId:id==='a'?a1:null});
  const row=(tenant,id,name)=>({id,tenantId:tenant,name,isActive:true});
- const supplierContext=id=>{const value=shop(id);if(bulkMode&&id==='a')value.permissions.push('supplier:read','supplier:create','supplier:update','supplier:delete','purchase:create','purchase:read','purchase:update','account:read');return value;};
+ const supplierContext=id=>{const value=shop(id);if(registerMode&&id==='a')value.permissions.push('cash-register:read','cash-register:create','cash-register:update');if(bulkMode&&id==='a')value.permissions.push('supplier:read','supplier:create','supplier:update','supplier:delete','purchase:create','purchase:read','purchase:update','account:read');return value;};
  const branches={a:[row('a',a1,'Main counter'),row('a',a2,'Rear counter')],b:[row('b',b1,'Second counter')]};
  const stub=http.createServer(async(req,res)=>{
   const chunks=[];for await(const chunk of req)chunks.push(chunk);const raw=Buffer.concat(chunks),multipart=String(req.headers['content-type']??'').startsWith('multipart/form-data'),body=raw.length&&!multipart?JSON.parse(raw.toString()):undefined;
   const url=new URL(req.url,'http://fixture'),tenant=req.headers['x-tenant-id'],key=req.headers['idempotency-key'];upstream.push({path:url.pathname,query:Object.fromEntries(url.searchParams),tenant,authorization:req.headers.authorization,method:req.method,body,key});
+  if(registerMode&&url.pathname.startsWith('/api/v1/pharmacy/cash-register')){
+   const respond=(status,data,meta)=>{res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify({success:status<400,data,...(meta?{meta}:{}),message:status>=400?'Response lost after commit':undefined}));};
+   const meta={page:1,pageSize:20,totalItems:registers.length,totalPages:registers.length?1:0,hasNextPage:false,hasPreviousPage:false};
+   if(req.method==='POST'){if(savedKeys.has(key)){respond(200,savedKeys.get(key));return;}registerWrites++;if(url.pathname.endsWith('/open')){register={id:referenceId,tenantId:tenant,branchId:body.branchId,userId:'u',status:'open',openingBalance:body.openingBalance,closingBalance:body.openingBalance,actualBalance:null,difference:null,openingNote:body.openingNote,closingNote:null,openedAt:'2026-11-11T01:00:00Z',closedAt:'2026-11-11T01:00:00Z'};registers.unshift(register);}else{register={...register,status:'closed',actualBalance:body.actualBalance,difference:body.actualBalance-register.closingBalance,closingNote:body.closingNote};registers[0]=register;}savedKeys.set(key,register);respond(503,null);return;}
+   if(url.pathname.endsWith('/active')){respond(200,{tenantId:tenant,branchId:url.searchParams.get('branchId'),userId:'u',session:foreignRegister?{...register,userId:'other'}:register?.status==='open'?register:null});return;}
+   if(url.pathname.endsWith('/movements')){respond(200,[],{...meta,totalItems:0,totalPages:0});return;}
+   respond(200,registers,meta);return;
+  }
   if(bulkMode&&url.pathname.endsWith('/returnable-items')){
    const purchase=purchaseRecords.get(url.pathname.split('/')[5]);const items=purchase.purchaseItems.map(item=>{const returns=[...returnRecords.values()].filter(row=>row.purchaseId===purchase.id),completed=returns.filter(row=>row.status==='completed').flatMap(row=>row.purchaseReturnItems).filter(row=>row.purchaseItemId===item.id).reduce((sum,row)=>sum+Number(row.quantity),0),reserved=returns.filter(row=>row.status==='pending').flatMap(row=>row.purchaseReturnItems).filter(row=>row.purchaseItemId===item.id).reduce((sum,row)=>sum+Number(row.quantity),0);return {...item,quantity:String(item.quantity),stockId:stockIdA,availableStock:Number(item.quantity)-completed,remainingAllowance:Number(item.quantity)-completed-reserved};});res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({success:true,data:{purchaseId:purchase.id,branchId:purchase.branchId,supplierId:purchase.supplierId,items}}));return;
   }
@@ -167,7 +176,7 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
  try{
   const upstreamPort=await listen(stub),probe=http.createServer(),port=await listen(probe);await new Promise(resolve=>probe.close(resolve));
   const base=`http://localhost:${port}`;
-  child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--port',String(port)],{cwd:path.resolve(__dirname,'..'),windowsHide:true,env:{...process.env,TENANT_SESSION_PREVIEW_ENABLED:'true',TENANT_WORKSPACE_PREVIEW_ENABLED:'true',TENANT_CATALOG_WRITES_ENABLED:formMode||stockMode||transferMode||bulkMode?'true':'false',TENANT_BACKEND_API_URL:`http://127.0.0.1:${upstreamPort}/api/v1`},stdio:['ignore','pipe','pipe']});
+  child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--port',String(port)],{cwd:path.resolve(__dirname,'..'),windowsHide:true,env:{...process.env,TENANT_SESSION_PREVIEW_ENABLED:'true',TENANT_WORKSPACE_PREVIEW_ENABLED:'true',TENANT_CATALOG_WRITES_ENABLED:registerMode||formMode||stockMode||transferMode||bulkMode?'true':'false',TENANT_BACKEND_API_URL:`http://127.0.0.1:${upstreamPort}/api/v1`},stdio:['ignore','pipe','pipe']});
   child.stdout.on('data',value=>{logs=(logs+value).slice(-5000);});child.stderr.on('data',value=>{logs=(logs+value).slice(-5000);});
   let ready=false;for(let i=0;i<90;i++){if(child.exitCode!==null)throw new Error('Next exited: '+logs);try{if((await fetch(base+'/shops',{signal:AbortSignal.timeout(1000)})).ok){ready=true;break;}}catch{}await sleep(1000);}assert.ok(ready,'Staging fixture did not start: '+logs);
   browser=await chromium.launch({headless:true,executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'});
@@ -185,6 +194,18 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
   await page.goto(base+'/shops');await page.getByRole('button',{name:/Main Pharmacy/}).click();
   const workspace=page.getByRole('region',{name:'Shop workspace'});
   await workspace.locator('.workspace-current-branch').getByText('Main counter',{exact:true}).waitFor();
+  if(registerMode){
+   await workspace.getByRole('button',{name:'My cash register',exact:true}).click();const modal=page.getByRole('dialog',{name:'My cash register'});
+   await modal.getByRole('button',{name:'Open register',exact:true}).click();await modal.getByLabel('Counted cash',{exact:true}).fill('100');await modal.getByRole('button',{name:'Confirm open register',exact:true}).click();
+   await modal.getByRole('button',{name:'Retry same request'}).click();await modal.getByRole('heading',{name:'Register open',exact:true}).waitFor();assert.equal(registerWrites,1);
+   await modal.getByRole('button',{name:'Filters',exact:true}).click();await page.locator('.register-filter').waitFor({state:'visible'});const box=await modal.boundingBox();await page.mouse.click(box.x+box.width-15,box.y+70);assert.equal(await page.locator('.register-filter').evaluate(n=>n.matches(':popover-open')),false);
+   await modal.getByRole('button',{name:'Close register',exact:true}).click();await modal.getByLabel('Counted cash',{exact:true}).fill('99');await modal.getByLabel('Closing note',{exact:true}).fill('One short');await modal.getByRole('checkbox').check();await modal.getByRole('button',{name:'Confirm close register',exact:true}).click();await modal.getByRole('button',{name:'Retry same request'}).click();await modal.getByRole('heading',{name:'No open register',exact:true}).waitFor();assert.equal(registerWrites,2);assert.equal(register.difference,-1);
+   await modal.getByRole('button',{name:/Cash movements/}).click();await modal.getByText('No cash movements found.',{exact:true}).waitFor();
+   await page.setViewportSize({width:390,height:844});assert.ok(await modal.evaluate(n=>n.scrollWidth<=n.clientWidth));await page.screenshot({path:path.resolve('../outputs/tenant-register-mobile.png')});
+   await modal.getByRole('button',{name:'Close',exact:true}).click();await page.getByRole('button',{name:'Switch to dark mode'}).click();await workspace.getByRole('button',{name:'My cash register',exact:true}).click();await modal.getByRole('heading',{name:'No open register',exact:true}).waitFor();await page.screenshot({path:path.resolve('../outputs/tenant-register-dark.png')});
+   foreignRegister=true;await modal.getByRole('button',{name:'Reload register'}).click();await modal.getByRole('alert').getByText('Register data could not be verified.',{exact:true}).waitFor();assert.equal(await modal.getByRole('button',{name:'Open register',exact:true}).count(),0);assert.deepEqual(errors,[]);
+   console.log('PASS register actual Next BFF: open/close lost-response retry exactly once, own actor response rejection, discrepancy, history, cash movement empty state, filter outside-dismiss, mobile light/dark.');return;
+  }
   assert.equal(await workspace.locator('.workspace-access').getByText('Reports',{exact:true}).count(),1);assert.equal(await workspace.locator('.workspace-access').getByText('Medicine catalog',{exact:true}).count(),catalogMode?1:0);
   if(catalogMode){
    const catalog=workspace.getByRole('region',{name:'Shop medicines and inventory'});

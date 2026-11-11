@@ -1,4 +1,5 @@
 import {validateImportRows,validPriceRows} from '../../features/shops/bulk-policy.ts';
+export {validRegisterBody} from '../../features/shops/register-policy.ts';
 export {validPurchaseBody} from '../../features/shops/purchase-policy.ts';
 export {validPurchaseStatusBody} from '../../features/shops/purchase-read-policy.ts';
 export {validSupplierPayment} from '../../features/shops/purchase-payment-policy.ts';
@@ -24,7 +25,8 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
   const paymentOptions=method==='GET'&&path.length===3&&path[0]==='finance'&&path[1]==='accounts'&&path[2]==='payment-options';
   const returnable=method==='GET'&&path.length===4&&path[0]==='pharmacy'&&path[1]==='purchases'&&/^[0-9a-f-]{36}$/i.test(path[2])&&path[3]==='returnable-items';
   const returns=path[0]==='pharmacy'&&path[1]==='purchase-returns'&&(method==='GET'&&(path.length===2||path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))||config.writes==='true'&&(method==='POST'&&path.length===2||path.length===4&&/^[0-9a-f-]{36}$/i.test(path[2])&&(method==='PATCH'&&path[3]==='status'||method==='POST'&&path[3]==='refunds')));
-  if(!(method==='GET'&&read)&&!write&&!bulk&&!master&&!supplier&&!purchase&&!paymentOptions&&!returnable&&!returns)return null;
+  const register=path[0]==='pharmacy'&&path[1]==='cash-register'&&(method==='GET'&&(path.length===2||path.length===3&&(path[2]==='active'||/^[0-9a-f-]{36}$/i.test(path[2]))||path.length===4&&/^[0-9a-f-]{36}$/i.test(path[2])&&path[3]==='movements')||method==='POST'&&config.writes==='true'&&(path.length===3&&path[2]==='open'||path.length===4&&/^[0-9a-f-]{36}$/i.test(path[2])&&path[3]==='close'));
+  if(!(method==='GET'&&read)&&!write&&!bulk&&!master&&!supplier&&!purchase&&!paymentOptions&&!returnable&&!returns&&!register)return null;
   try{
     const base=new URL(config.base);
     if(!['https:','http:'].includes(base.protocol)||base.username||base.password||base.search||base.hash)return null;

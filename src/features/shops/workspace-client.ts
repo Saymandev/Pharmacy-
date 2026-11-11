@@ -20,6 +20,10 @@ export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,
   }
   const get=(path:string,withMeta=false)=>request(path,withMeta);
   return {
+    activeRegister:(branchId:string)=>get(`pharmacy/cash-register/active?${new URLSearchParams({branchId})}`),
+    registerSessions:(branchId:string,page:number,filters:Record<string,string>={})=>get(`pharmacy/cash-register?${resourceQuery(branchId,page,filters,['search','status','startDate','endDate'])}`,true),
+    registerMovements:(id:string,branchId:string,page:number)=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid register.',400);return get(`pharmacy/cash-register/${id}/movements?${resourceQuery(branchId,page,{},[])}`,true);},
+    saveRegister:(id:string|null,body:unknown,key:string)=>{if(id&&!/^[0-9a-f-]{36}$/i.test(id)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid register request.',400);return request(`pharmacy/cash-register/${id?`${id}/close`:'open'}`,false,{method:'POST',body,key});},
     bootstrap:(after?:string,search?:string)=>{const query=new URLSearchParams();if(after)query.set('after',after);if(search)query.set('search',search);return get(`workspace/bootstrap${query.size?`?${query}`:''}`);},
     branch:(id:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid branch.',400);return get(`workspace/branches/${encodeURIComponent(id)}`);},
     medicines:(branchId:string,page:number,filters:Record<string,string>={})=>get(`pharmacy/medicines?${resourceQuery(branchId,page,filters,['search','isActive','hasStock','barcode','unit','dosageForm','strength','categoryId','genericId','groupId','medicineManufacturerId','medicineUnitId'])}`,true),
