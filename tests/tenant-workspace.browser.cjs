@@ -6,6 +6,7 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
 (async()=>{
  const catalogMode=process.env.TENANT_CATALOG_TEST==='1';
  const bulkMode=process.env.TENANT_BULK_TEST==='1';let bulkImports=0,priceWrites=0,batchCost=10,batchMrp=20,priceConflict=false;
+ let masterName='',masterBangla='',deleteConflict=true;
  const formMode=process.env.TENANT_MEDICINE_FORM_TEST==='1';
  const stockMode=process.env.TENANT_STOCK_FORM_TEST==='1',stockIdA='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',freshMedicineId='77777777-7777-4777-8777-777777777777';
  const transferMode=process.env.TENANT_TRANSFER_TEST==='1';let targetQuantity=0,transferWrites=0,forceTransferConflict=false,foreignHistory=false,denyHistory=false;const transferMovements=[];
@@ -13,12 +14,18 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
  const referenceId='55555555-5555-4555-8555-555555555555',medicineId='44444444-4444-4444-8444-444444444444';
  let savedName='',savedVersion='2026-11-10T00:00:00.000Z',forceConflict=false,creates=0,updates=0;const savedKeys=new Map();
  let browser,child,logs='',revoked=false,late=false,release,releaseCatalog,denyCatalog=false,foreignCatalog=false;const upstream=[];
- const shop=id=>({tenant:{id,name:id==='a'?'Main Pharmacy':'Second Pharmacy',slug:id},membershipId:'member-'+id,userId:'u',role:{id:'role-'+id,name:id==='a'?'Manager':'Cashier'},permissions:id==='a'?['sale:read','report:read',...(catalogMode?['medicine:read','stock:read']:[]),...(stockMode||transferMode?['stock:create','stock:update']:[]),...(formMode||bulkMode?['medicine:create','medicine:update',...['category','generic','group','manufacturer','unit'].map(name=>`medicine-${name}:read`)]:[])]:['stock:read'],allBranches:id==='a',branchIds:id==='a'?[]:[b1],homeBranchId:id==='a'?a1:null});
+ const shop=id=>({tenant:{id,name:id==='a'?'Main Pharmacy':'Second Pharmacy',slug:id},membershipId:'member-'+id,userId:'u',role:{id:'role-'+id,name:id==='a'?'Manager':'Cashier'},permissions:id==='a'?['sale:read','report:read',...(catalogMode?['medicine:read','stock:read']:[]),...(stockMode||transferMode?['stock:create','stock:update']:[]),...(bulkMode?['medicine-category:create','medicine-category:update','medicine-category:delete']:[]),...(formMode||bulkMode?['medicine:create','medicine:update',...['category','generic','group','manufacturer','unit'].map(name=>`medicine-${name}:read`)]:[])]:['stock:read'],allBranches:id==='a',branchIds:id==='a'?[]:[b1],homeBranchId:id==='a'?a1:null});
  const row=(tenant,id,name)=>({id,tenantId:tenant,name,isActive:true});
  const branches={a:[row('a',a1,'Main counter'),row('a',a2,'Rear counter')],b:[row('b',b1,'Second counter')]};
  const stub=http.createServer(async(req,res)=>{
   const chunks=[];for await(const chunk of req)chunks.push(chunk);const raw=Buffer.concat(chunks),multipart=String(req.headers['content-type']??'').startsWith('multipart/form-data'),body=raw.length&&!multipart?JSON.parse(raw.toString()):undefined;
   const url=new URL(req.url,'http://fixture'),tenant=req.headers['x-tenant-id'],key=req.headers['idempotency-key'];upstream.push({path:url.pathname,query:Object.fromEntries(url.searchParams),tenant,authorization:req.headers.authorization,method:req.method,body,key});
+  if(bulkMode&&url.pathname.startsWith('/api/v1/pharmacy/categories')&&req.method!=='GET'){
+   const respond=(status,data,message)=>{res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify({success:status<400,data,message}));};
+   if(tenant!=='a'){respond(403,null,'Insufficient tenant permissions');return;}
+   if(req.method==='DELETE'){if(deleteConflict){deleteConflict=false;respond(409,null,'Linked medicines prevent deletion');return;}masterName='';respond(200,{message:'Deleted'});return;}
+   masterName=body.name;masterBangla=body.nameBangla;respond(200,{id:referenceId,tenantId:tenant,name:masterName,nameBangla:masterBangla});return;
+  }
   if(bulkMode&&url.pathname.endsWith('/medicines/import-preview')&&req.method==='POST'){
    const respond=(status,data,message)=>{res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify({success:status<400,data,message}));};
    if(!multipart||raw.length>1024*1024||raw.includes(Buffer.from('invalid.csv'))){respond(422,null,'Invalid import upload');return;}
@@ -70,7 +77,7 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
    let data,meta;if(url.pathname==='/api/v1/workspace/bootstrap')data={...shop(tenant),branches:{items:(branches[tenant]??[]).filter(row=>row.name.toLowerCase().includes((url.searchParams.get('search')??'').toLowerCase())),nextCursor:null}};
    else if(url.pathname.startsWith('/api/v1/workspace/branches/'))data=(branches[tenant]??[]).find(item=>item.id===url.pathname.split('/').at(-1));
    else if(['/api/v1/pharmacy/categories','/api/v1/pharmacy/generics','/api/v1/pharmacy/groups','/api/v1/pharmacy/manufacturers','/api/v1/pharmacy/units'].includes(url.pathname)){
-    data=[{id:referenceId,tenantId:tenant,name:url.searchParams.get('search')==='Own reference'?'Own reference':url.searchParams.get('search')?'Server reference':'Own reference'}];meta={page:Number(url.searchParams.get('page')||1),pageSize:20,totalItems:1,totalPages:1,hasNextPage:false,hasPreviousPage:false};
+    data=[{id:referenceId,tenantId:tenant,name:masterName|| (url.searchParams.get('search')==='Own reference'?'Own reference':url.searchParams.get('search')?'Server reference':'Own reference'),nameBangla:masterBangla}];meta={page:Number(url.searchParams.get('page')||1),pageSize:20,totalItems:1,totalPages:1,hasNextPage:false,hasPreviousPage:false};
    }
    else if(url.pathname.startsWith('/api/v1/pharmacy/')){
     if(denyCatalog){res.writeHead(403,{'content-type':'application/json'});res.end(JSON.stringify({success:false,message:'Insufficient tenant permissions'}));return;}
@@ -142,6 +149,7 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
    assert.ok(upstream.some(call=>call.query.batchNumber==='a-BATCH'&&call.query.branchId===a1));
    await catalog.getByRole('tab',{name:'Medicine catalog',exact:true}).click();await catalog.getByRole('button',{name:/Main medicine/}).waitFor();
    if(bulkMode){
+    await catalog.getByRole('button',{name:'Catalog master data',exact:true}).click();const manager=page.getByRole('dialog',{name:'Catalog master data',exact:true});await manager.getByRole('cell',{name:'Own reference',exact:true}).waitFor();await manager.getByRole('button',{name:'Add master',exact:true}).click();await manager.getByLabel('Name *',{exact:true}).fill('New category');await manager.getByLabel('Bangla name',{exact:true}).fill('নতুন ক্যাটাগরি');await manager.getByRole('button',{name:'Save master',exact:true}).click();await manager.getByRole('cell',{name:'New category',exact:true}).waitFor();await manager.getByRole('button',{name:'Edit master',exact:true}).click();await manager.getByLabel('Name *',{exact:true}).fill('Edited category');await manager.getByRole('button',{name:'Save master',exact:true}).click();await manager.getByRole('cell',{name:'Edited category',exact:true}).waitFor();await manager.getByRole('button',{name:'Delete master',exact:true}).click();await manager.getByRole('button',{name:'Delete master',exact:true}).first().click();await manager.getByRole('alert').getByText('Linked medicines prevent deletion').waitFor();await manager.getByRole('button',{name:'Delete master',exact:true}).first().click();await manager.getByRole('cell',{name:'Own reference',exact:true}).waitFor();for(const label of ['Generic','Group','Manufacturer','Medicine unit']){await manager.getByRole('button',{name:label,exact:true}).click();await manager.getByRole('cell',{name:'Own reference',exact:true}).waitFor();assert.equal(await manager.getByRole('button',{name:'Add master',exact:true}).count(),0);}await manager.getByRole('button',{name:'Close master data',exact:true}).click();
     await catalog.getByRole('button',{name:'Import medicines',exact:true}).click();let modal=page.getByRole('dialog',{name:'Import medicines',exact:true});
     await modal.getByLabel('Choose CSV or XLSX',{exact:true}).setInputFiles({name:'invalid.csv',mimeType:'text/csv',buffer:Buffer.from('name,tenantId\nBad,b')});await modal.getByRole('alert').waitFor();assert.equal(bulkImports,0);
     await modal.getByLabel('Choose CSV or XLSX',{exact:true}).setInputFiles({name:'valid.csv',mimeType:'text/csv',buffer:Buffer.from('name,barcode,salePrice\nImported test,00123,12.50')});await modal.getByText('1 medicines ready for review').waitFor();await modal.getByText('Review all imported fields',{exact:true}).click();await modal.locator('.tenant-import-details').getByText('12.5',{exact:true}).waitFor();await modal.getByText('Review all imported fields',{exact:true}).click();
@@ -291,7 +299,7 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
   assert.equal((await context.request.post(base+'/api/backend/tenant-workspace/a/workspace/bootstrap')).status(),403);
   assert.equal((await context.request.get(base+'/api/backend/tenant-workspace/a/pharmacy/stocks/adjust')).status(),404);
   const anonymous=await browser.newContext();assert.equal((await anonymous.request.get(base+'/api/backend/tenant-workspace/a/workspace/bootstrap')).status(),401);await anonymous.close();
-  assert.equal(upstream.length,before);assert.ok(upstream.every(item=>(item.method==='GET'||(formMode||stockMode||transferMode||bulkMode)&&['POST','PATCH'].includes(item.method))&&['a','b'].includes(item.tenant)&&(item.path.startsWith('/api/v1/workspace/')||item.path.startsWith('/api/v1/pharmacy/'))));assert.deepEqual(errors,[]);
+  assert.equal(upstream.length,before);assert.ok(upstream.every(item=>(item.method==='GET'||bulkMode&&item.method==='DELETE'&&item.path.startsWith('/api/v1/pharmacy/categories/')||(formMode||stockMode||transferMode||bulkMode)&&['POST','PATCH'].includes(item.method))&&['a','b'].includes(item.tenant)&&(item.path.startsWith('/api/v1/workspace/')||item.path.startsWith('/api/v1/pharmacy/'))));assert.deepEqual(errors,[]);
   if(catalogMode)console.log('PASS tenant catalog/inventory: actual Next proxy, server search/filter/pagination, details, popover dismiss, scoped quantities, denied/foreign response rejection, branch-change late response disposal, read scope checks.');
   console.log('PASS tenant workspace: real Next proxy + isolated HTTP upstream; HttpOnly cookie, route-bound tenant vs forged header, allowlist/method/anonymous denial, shop/permission/branch isolation, saved scope, late response, revocation, mobile dark. No real database.');
  }catch(error){console.error(logs);throw error;}

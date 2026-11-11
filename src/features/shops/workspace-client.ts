@@ -7,7 +7,7 @@ export class WorkspaceError extends Error{
 export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,fetcher:typeof fetch=fetch){
   if(!/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(tenantId))throw new WorkspaceError('Invalid shop.',400);
   const controller=new AbortController();let disposed=false;
-  async function request(path:string,withMeta=false,mutation?:{method:'POST'|'PATCH';body:unknown;key:string}){
+  async function request(path:string,withMeta=false,mutation?:{method:'POST'|'PATCH'|'DELETE';body:unknown;key:string}){
     if(disposed||sessionSignal.aborted)throw new WorkspaceError('Shop selection changed.',409);
     const response=await fetcher(`/api/backend/tenant-workspace/${encodeURIComponent(tenantId)}/${path}`,{
       method:mutation?.method??'GET',body:mutation?JSON.stringify(mutation.body):undefined,credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json',...(mutation?{'Content-Type':'application/json','Idempotency-Key':mutation.key}:{})},signal:AbortSignal.any([controller.signal,sessionSignal]),
@@ -43,6 +43,7 @@ export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,
     },
     updatePrices:(body:unknown,key:string)=>{if(!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid save key.',400);return request('pharmacy/stocks/bulk-price-update',false,{method:'PATCH',body,key});},
     dispose(){disposed=true;controller.abort();},
+    saveMaster:(kind:string,id:string|null,body:unknown,remove=false)=>{if(!['categories','generics','groups','manufacturers','units'].includes(kind)||id&&!/^[0-9a-f-]{36}$/i.test(id)||remove&&!id)throw new WorkspaceError('Invalid master selection.',400);return request(`pharmacy/${kind}${id?`/${id}`:''}`,false,{method:remove?'DELETE':id?'PATCH':'POST',body,key:crypto.randomUUID()});},
   };
 }
 function resourceQuery(branchId:string,page:number,filters:Record<string,string>,allowed:string[]){

@@ -16,6 +16,7 @@ import { StockEditor } from './stock-editor';
 import { type StockMovement,validStockMovement,movementLabels } from './history-contract';
 import { HistoryDetail } from './history-detail';
 import { BulkEditor } from './bulk-editor';
+import {MasterManager} from './master-manager';
 
 type Tab='medicines'|'stocks'|'history';type Client=ReturnType<typeof createWorkspaceClient>;
 const formatMoney=(value:number|string)=>`BDT ${Number(value).toFixed(2)}`;
@@ -23,6 +24,7 @@ export function TenantCatalog({context,branch,writesEnabled=false}:{context:Shop
  const {t,language}=useLanguage();const defaultTab=context.permissions.includes('medicine:read')?'medicines':'stocks';
  const [tab,setTab]=useState<Tab>(defaultTab),[search,setSearch]=useState(''),[draft,setDraft]=useState<Record<string,string>>({});
  const [bulk,setBulk]=useState<'import'|'prices'|null>(null);
+ const [mastersOpen,setMastersOpen]=useState(false);
  const [query,setQuery]=useState<{page:number;filters:Record<string,string>}>({page:1,filters:{}}),[retry,setRetry]=useState(0);
  const [medicines,setMedicines]=useState<CatalogMedicine[]>([]),[stocks,setStocks]=useState<InventoryStock[]>([]),[meta,setMeta]=useState<CatalogMeta|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState('');
  const [detail,setDetail]=useState<CatalogMedicine|null>(null),[detailLoading,setDetailLoading]=useState(false);
@@ -89,6 +91,8 @@ export function TenantCatalog({context,branch,writesEnabled=false}:{context:Shop
   {editor&&<MedicineEditor context={context} branchId={branch.id} id={editor.id} onClose={()=>setEditor(null)} onSaved={created=>{setEditor(null);setDetail(null);setNotice(created?'Medicine saved. Register opening stock separately to show it in this branch.':'Medicine changes saved.');setRetry(value=>value+1);}}/>}
   {stockEditor&&<StockEditor context={context} branch={branch} stockId={stockEditor.stockId} initialMedicineId={stockEditor.medicineId} transfer={stockEditor.transfer} onClose={()=>setStockEditor(null)} onSaved={()=>{setStockEditor(null);setDetail(null);setNotice(stockEditor.transfer?'Transfer confirmed.':'Stock save confirmed.');setRetry(value=>value+1);}}/>}
   {movement&&<HistoryDetail row={movement} context={context} branch={branch} onClose={()=>setMovement(null)}/>}
+  {medicineReferences.some(ref=>context.permissions.includes(ref.permission))&&<button type="button" onClick={()=>setMastersOpen(true)}>{t('Catalog master data')}</button>}
+  {mastersOpen&&<MasterManager context={context} writesEnabled={writesEnabled} onClose={()=>setMastersOpen(false)}/>}
   {bulk&&<BulkEditor mode={bulk} context={context} branch={branch} onClose={()=>setBulk(null)} onSaved={()=>{setNotice(bulk==='import'?'Import confirmed. Register opening stock separately to show medicines in this branch.':'Batch price updates confirmed.');setBulk(null);setRetry(value=>value+1);}}/>}
  </section>;
 }

@@ -14,12 +14,18 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
     path.length===2&&path[0]==='pharmacy'&&['categories','generics','groups','manufacturers','units'].includes(path[1]);
   const write=config.writes==='true'&&path[0]==='pharmacy'&&(path[1]==='medicines'&&(method==='POST'&&path.length===2||method==='PATCH'&&path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))||path[1]==='stocks'&&method==='POST'&&path.length===3&&['opening','adjust','transfer'].includes(path[2]));
   const bulk=config.writes==='true'&&path.length===3&&path[0]==='pharmacy'&&(path[1]==='medicines'&&['import','import-preview'].includes(path[2])&&method==='POST'||path[1]==='stocks'&&path[2]==='bulk-price-update'&&method==='PATCH');
-  if(!(method==='GET'&&read)&&!write&&!bulk)return null;
+  const master=config.writes==='true'&&path[0]==='pharmacy'&&['categories','generics','groups','manufacturers','units'].includes(path[1])&&(path.length===2&&method==='POST'||path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2])&&['PATCH','DELETE'].includes(method));
+  if(!(method==='GET'&&read)&&!write&&!bulk&&!master)return null;
   try{
     const base=new URL(config.base);
     if(!['https:','http:'].includes(base.protocol)||base.username||base.password||base.search||base.hash)return null;
     return {url:`${base.toString().replace(/\/$/,'')}/${path.map(encodeURIComponent).join('/')}`,tenantId};
   }catch{return null;}
+}
+export function validMasterBody(value:unknown,method:string):boolean{
+ if(!value||typeof value!=='object'||Array.isArray(value))return false;
+ if(method==='DELETE')return Object.keys(value).length===0;
+ return Object.keys(value).every(key=>['name','nameBangla'].includes(key))&&'name'in value&&typeof value.name==='string'&&!!value.name.trim()&&value.name.trim().length<=100&&(!('nameBangla'in value)||value.nameBangla===null||typeof value.nameBangla==='string'&&value.nameBangla.trim().length<=150);
 }
 export function validBulkProxyBody(value:unknown,kind:string):boolean{
  if(kind==='bulk-price-update')return validPriceRows(value);
