@@ -1,5 +1,6 @@
 import {validateImportRows,validPriceRows} from '../../features/shops/bulk-policy.ts';
 export {validPurchaseBody} from '../../features/shops/purchase-policy.ts';
+export {validPurchaseStatusBody} from '../../features/shops/purchase-read-policy.ts';
 export function tenantWorkspaceTarget(tenantId:string,path:string[],method:string,config={
   session:process.env.TENANT_SESSION_PREVIEW_ENABLED,workspace:process.env.TENANT_WORKSPACE_PREVIEW_ENABLED,base:process.env.TENANT_BACKEND_API_URL,
   writes:process.env.TENANT_CATALOG_WRITES_ENABLED,
@@ -17,7 +18,7 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
   const bulk=config.writes==='true'&&path.length===3&&path[0]==='pharmacy'&&(path[1]==='medicines'&&['import','import-preview'].includes(path[2])&&method==='POST'||path[1]==='stocks'&&path[2]==='bulk-price-update'&&method==='PATCH');
   const master=config.writes==='true'&&path[0]==='pharmacy'&&['categories','generics','groups','manufacturers','units'].includes(path[1])&&(path.length===2&&method==='POST'||path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2])&&['PATCH','DELETE'].includes(method));
   const supplier=path[0]==='pharmacy'&&path[1]==='suppliers'&&(path.length===2||path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))&&(method==='GET'||config.writes==='true'&&(path.length===2&&method==='POST'||path.length===3&&['PATCH','DELETE'].includes(method)));
-  const purchase=config.writes==='true'&&method==='POST'&&path.length===2&&path[0]==='pharmacy'&&path[1]==='purchases';
+  const purchase=path[0]==='pharmacy'&&path[1]==='purchases'&&(method==='GET'&&(path.length===2||path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))||config.writes==='true'&&(method==='POST'&&path.length===2||method==='PATCH'&&path.length===4&&/^[0-9a-f-]{36}$/i.test(path[2])&&path[3]==='status'));
   if(!(method==='GET'&&read)&&!write&&!bulk&&!master&&!supplier&&!purchase)return null;
   try{
     const base=new URL(config.base);
