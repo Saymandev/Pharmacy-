@@ -13,7 +13,7 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
     path.length===3&&path[0]==='pharmacy'&&path[1]==='stocks'&&path[2]==='history'||
     path.length===2&&path[0]==='pharmacy'&&['categories','generics','groups','manufacturers','units'].includes(path[1]);
   const write=config.writes==='true'&&path[0]==='pharmacy'&&(path[1]==='medicines'&&(method==='POST'&&path.length===2||method==='PATCH'&&path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))||path[1]==='stocks'&&method==='POST'&&path.length===3&&['opening','adjust','transfer'].includes(path[2]));
-  const bulk=config.writes==='true'&&path.length===3&&path[0]==='pharmacy'&&(path[1]==='medicines'&&path[2]==='import'&&method==='POST'||path[1]==='stocks'&&path[2]==='bulk-price-update'&&method==='PATCH');
+  const bulk=config.writes==='true'&&path.length===3&&path[0]==='pharmacy'&&(path[1]==='medicines'&&['import','import-preview'].includes(path[2])&&method==='POST'||path[1]==='stocks'&&path[2]==='bulk-price-update'&&method==='PATCH');
   if(!(method==='GET'&&read)&&!write&&!bulk)return null;
   try{
     const base=new URL(config.base);

@@ -11,9 +11,15 @@ async function proxy(request:Request,context:Context){
   if(!target)return Response.json({success:false,message:'Shop workspace is not available.'},{status:404,headers:noStore});
   const token=(await cookies()).get('pharmacy_access')?.value;
   if(!token)return Response.json({success:false,message:'Sign in to open your shop.'},{status:401,headers:noStore});
-  let body:string|undefined;
+  const preview=path[0]==='pharmacy'&&path[1]==='medicines'&&path[2]==='import-preview';
+  let body:string|FormData|undefined;
   const headers:Record<string,string>={Authorization:`Bearer ${token}`,'X-Tenant-Id':target.tenantId,Accept:'application/json'};
   if(mutating){
+    if(preview){
+      if(new URL(request.url).search)return Response.json({success:false,message:'Invalid preview request.'},{status:422,headers:noStore});
+      try{const form=await request.formData(),entries=[...form.entries()];if(entries.length!==1||entries[0][0]!=='file'||!(entries[0][1] instanceof File)||entries[0][1].size>1024*1024||!/\.csv$|\.xlsx$/i.test(entries[0][1].name))throw new Error('Invalid file');body=form;}
+      catch{return Response.json({success:false,message:'Choose one CSV or XLSX file up to 1 MB.'},{status:422,headers:noStore});}
+    }else{
     const key=request.headers.get('idempotency-key');
     if(!key||!/^[A-Za-z0-9_-]{16,128}$/.test(key)||new URL(request.url).search||request.headers.get('content-type')?.split(';')[0].trim()!=='application/json')return Response.json({success:false,message:'A JSON body and valid save key are required.'},{status:422,headers:noStore});
     const bulk=['import','bulk-price-update'].includes(path[2]),limit=bulk?262144:32768;
@@ -21,6 +27,7 @@ async function proxy(request:Request,context:Context){
     try{body=await request.text();if(new TextEncoder().encode(body).byteLength>limit)return Response.json({success:false,message:'Form is too large.'},{status:413,headers:noStore});const value=JSON.parse(body);if(!(bulk?validBulkProxyBody(value,path[2]):path[1]==='stocks'?validStockProxyBody(value,path[2]):validMedicineProxyBody(value,request.method)))throw new Error('Invalid fields');}
     catch{return Response.json({success:false,message:'Invalid form fields.'},{status:422,headers:noStore});}
     headers['Content-Type']='application/json';headers['Idempotency-Key']=key;
+    }
   }
   try{
     const upstream=await fetch(target.url+new URL(request.url).search,{

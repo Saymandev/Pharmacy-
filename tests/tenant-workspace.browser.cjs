@@ -17,8 +17,13 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
  const row=(tenant,id,name)=>({id,tenantId:tenant,name,isActive:true});
  const branches={a:[row('a',a1,'Main counter'),row('a',a2,'Rear counter')],b:[row('b',b1,'Second counter')]};
  const stub=http.createServer(async(req,res)=>{
-  const chunks=[];for await(const chunk of req)chunks.push(chunk);const body=chunks.length?JSON.parse(Buffer.concat(chunks).toString()):undefined;
+  const chunks=[];for await(const chunk of req)chunks.push(chunk);const raw=Buffer.concat(chunks),multipart=String(req.headers['content-type']??'').startsWith('multipart/form-data'),body=raw.length&&!multipart?JSON.parse(raw.toString()):undefined;
   const url=new URL(req.url,'http://fixture'),tenant=req.headers['x-tenant-id'],key=req.headers['idempotency-key'];upstream.push({path:url.pathname,query:Object.fromEntries(url.searchParams),tenant,authorization:req.headers.authorization,method:req.method,body,key});
+  if(bulkMode&&url.pathname.endsWith('/medicines/import-preview')&&req.method==='POST'){
+   const respond=(status,data,message)=>{res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify({success:status<400,data,message}));};
+   if(!multipart||raw.length>1024*1024||raw.includes(Buffer.from('invalid.csv'))){respond(422,null,'Invalid import upload');return;}
+   const xlsx=raw.includes(Buffer.from('preview.xlsx'));respond(200,{rows:[{name:xlsx?'Preview XLSX':'Imported test',barcode:'00123',salePrice:12.5}]});return;
+  }
   if(bulkMode&&(url.pathname.endsWith('/medicines/import')||url.pathname.endsWith('/bulk-price-update'))&&['POST','PATCH'].includes(req.method)){
    const respond=(status,data,message)=>{res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify({success:status<400,data,message}));};
    if(tenant!=='a'){respond(403,null,'Insufficient tenant permissions');return;}
@@ -138,12 +143,14 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
    await catalog.getByRole('tab',{name:'Medicine catalog',exact:true}).click();await catalog.getByRole('button',{name:/Main medicine/}).waitFor();
    if(bulkMode){
     await catalog.getByRole('button',{name:'Import medicines',exact:true}).click();let modal=page.getByRole('dialog',{name:'Import medicines',exact:true});
-    await modal.getByLabel('Choose CSV',{exact:true}).setInputFiles({name:'invalid.csv',mimeType:'text/csv',buffer:Buffer.from('name,tenantId\nBad,b')});await modal.getByRole('alert').waitFor();assert.equal(bulkImports,0);
-    await modal.getByLabel('Choose CSV',{exact:true}).setInputFiles({name:'valid.csv',mimeType:'text/csv',buffer:Buffer.from('name,barcode,salePrice\nImported test,00123,12.50')});await modal.getByText('1 medicines ready for review').waitFor();await modal.getByText('Review all imported fields',{exact:true}).click();await modal.locator('.tenant-import-details').getByText('12.5',{exact:true}).waitFor();await modal.getByText('Review all imported fields',{exact:true}).click();
+    await modal.getByLabel('Choose CSV or XLSX',{exact:true}).setInputFiles({name:'invalid.csv',mimeType:'text/csv',buffer:Buffer.from('name,tenantId\nBad,b')});await modal.getByRole('alert').waitFor();assert.equal(bulkImports,0);
+    await modal.getByLabel('Choose CSV or XLSX',{exact:true}).setInputFiles({name:'valid.csv',mimeType:'text/csv',buffer:Buffer.from('name,barcode,salePrice\nImported test,00123,12.50')});await modal.getByText('1 medicines ready for review').waitFor();await modal.getByText('Review all imported fields',{exact:true}).click();await modal.locator('.tenant-import-details').getByText('12.5',{exact:true}).waitFor();await modal.getByText('Review all imported fields',{exact:true}).click();
+    await modal.getByLabel('Choose CSV or XLSX',{exact:true}).setInputFiles({name:'preview.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from('fixture xlsx bytes')});await modal.getByText('Preview XLSX',{exact:true}).waitFor();
+    await modal.getByRole('button',{name:'Import Category',exact:true}).click();await page.getByRole('option',{name:'Own reference',exact:true}).click();assert.ok(upstream.some(call=>call.path.endsWith('/categories')&&call.tenant==='a'));
     await page.setViewportSize({width:390,height:844});await modal.evaluate(node=>node.scrollTop=0);await page.screenshot({path:path.resolve('../outputs/tenant-import-mobile.png')});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-    await modal.locator('form').evaluate(form=>{form.requestSubmit();form.requestSubmit();});await modal.getByRole('button',{name:'Retry same save',exact:true}).waitFor();assert.equal(bulkImports,1);assert.equal(await modal.getByLabel('Choose CSV',{exact:true}).isDisabled(),true);
+    await modal.locator('form').evaluate(form=>{form.requestSubmit();form.requestSubmit();});await modal.getByRole('button',{name:'Retry same save',exact:true}).waitFor();assert.equal(bulkImports,1);assert.equal(await modal.getByLabel('Choose CSV or XLSX',{exact:true}).isDisabled(),true);
     await modal.getByRole('button',{name:'Retry same save',exact:true}).click();await catalog.getByText('Import confirmed. Register opening stock separately to show medicines in this branch.').waitFor();assert.equal(bulkImports,1);
-    const imports=upstream.filter(call=>call.path.endsWith('/medicines/import'));assert.equal(imports.length,2);assert.equal(imports[0].key,imports[1].key);assert.deepEqual(imports[0].body,imports[1].body);assert.equal(imports[0].body.rows[0].branchId,undefined);
+    const imports=upstream.filter(call=>call.path.endsWith('/medicines/import'));assert.equal(imports.length,2);assert.equal(imports[0].key,imports[1].key);assert.deepEqual(imports[0].body,imports[1].body);assert.equal(imports[0].body.rows[0].branchId,undefined);assert.equal(imports[0].body.rows[0].categoryId,referenceId);
     await catalog.getByRole('button',{name:'Bulk price update',exact:true}).click();modal=page.getByRole('dialog',{name:'Bulk price update',exact:true});await modal.getByText('a-BATCH · 5 Pcs').waitFor();
     assert.equal(await modal.getByRole('checkbox').isChecked(),false);await modal.getByRole('checkbox').check();await modal.getByLabel('New unit cost Main medicine a-BATCH',{exact:true}).fill('12');priceConflict=true;
     await modal.getByRole('button',{name:'Confirm price updates',exact:true}).click();await modal.getByRole('alert').getByText('Prices changed. Reload the batch before updating.').waitFor();assert.equal(priceWrites,0);

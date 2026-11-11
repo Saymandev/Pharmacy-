@@ -6,8 +6,10 @@ are still staged; this is not a production rollout or completed SaaS acceptance.
 
 ## Import
 
-- `medicine:create` exposes Import medicines. Download the sample, choose UTF-8
-  CSV (128 KB / 100 medicines maximum), review rows, then explicitly confirm.
+- `medicine:create` exposes Import medicines. Download the CSV sample, then choose
+  one UTF-8 CSV or XLSX file (1 MB / 100 medicines maximum). The backend parses
+  the uploaded file for preview, so the preview and final import share exact
+  alias, workbook, formula and expansion checks.
 - Standard quotes, escaped quotes, embedded newlines, CRLF, BOM and barcode leading
   zeros are handled. Invalid quotes/columns, formulas, invalid scalar values,
   duplicate barcode, excessive bounds and empty files fail before mutation.
@@ -18,8 +20,11 @@ are still staged; this is not a production rollout or completed SaaS acceptance.
 - Import is shop-wide catalog creation. No inferred branch, opening stock or
   reference IDs are sent. Opening stock and reference masters use their separate
   scoped workflows. Backend revalidates and commits all rows/audits atomically.
-- This frontend phase accepts CSV only. The backend's existing XLSX and opening /
-  reference capabilities are not exposed through this new JSON BFF allowlist.
+- A single-sheet XLSX can now be previewed. Opening stock remains separate. The
+  optional master mapping selects existing tenant category, generic, group,
+  manufacturer or medicine unit and applies it to every preview row. It does not
+  create a master record and does not bypass the normal reference permission or
+  backend ownership validation.
 
 ## Prices
 
@@ -44,13 +49,13 @@ responses freeze the body/key and offer same-request retry; duplicate submits
 are blocked. Source scope is checked before rendering and returned stock tuples
 are checked before confirmation. Unmount/session disposal rejects late saves.
 
-Verification: 59 native backend PostgreSQL/Prisma/RLS/HTTP checks (including stale
-price whole-batch rollback and replay), 25 frontend unit tests, actual Next BFF /
+Verification: 60 native backend PostgreSQL/Prisma/RLS/HTTP checks (including stale
+price whole-batch rollback and replay, exact CSV/XLSX preview with no write), 26 frontend unit tests, actual Next BFF /
 loopback HTTP browser tests (invalid CSV, preview, duplicate submit, uncertain
 retry, stale reload, server search, selection reset, scope guards and mobile
 light/dark). Changed-module ESLint, TypeScript and production build passed
 before push. Fixtures use no real database or live API.
 
-Remaining: XLSX frontend preview/master mapping, durable retry recovery across
+Remaining: per-row name-to-master matching/conflict resolution, durable retry recovery across
 reloads, remaining resource adapters, tenant migration/route composition and
 real two-shop acceptance. Default-off gates do not disable legacy live writes.

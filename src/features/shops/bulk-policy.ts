@@ -1,4 +1,4 @@
-export const importColumns=['name','nameBangla','genericName','genericNameBangla','barcode','unit','dosageForm','strength','purchasePrice','salePrice','mrp','reorderLevel','isActive'] as const;
+export const importColumns=['name','nameBangla','genericName','genericNameBangla','barcode','unit','dosageForm','strength','purchasePrice','salePrice','mrp','reorderLevel','isActive','categoryId','genericId','groupId','medicineManufacturerId','medicineUnitId'] as const;
 export type ImportRow=Record<string,string|number|boolean>;
 const prices=['purchasePrice','salePrice','mrp'];
 export function priceNumber(value:unknown):number{
@@ -15,6 +15,7 @@ export function validateImportRows(value:unknown):value is ImportRow[]{
    if(prices.includes(key)){if(typeof item!=='number')return false;priceNumber(item);}
    else if(key==='reorderLevel'){if(!Number.isInteger(item)||Number(item)<0||Number(item)>2147483647)return false;}
    else if(key==='isActive'){if(typeof item!=='boolean')return false;}
+   else if(['categoryId','genericId','groupId','medicineManufacturerId','medicineUnitId'].includes(key)){if(typeof item!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item))return false;}
    else {const max=key==='nameBangla'||key==='genericNameBangla'?300:key==='barcode'?100:key==='unit'?50:200;if(typeof item!=='string'||!item.trim()||item.length>max||/^[=+@\-\t\r]/.test(item))return false;}
   }
   if(typeof row.barcode==='string'){if(codes.has(row.barcode))return false;codes.add(row.barcode);}

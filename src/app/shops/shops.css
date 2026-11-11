@@ -48,6 +48,11 @@
 .tenant-bulk-editor input:not([type=checkbox]) { width:100%; min-width:0; }
 .tenant-bulk-batches { display:grid; gap:.65rem; }
 .tenant-import-details { margin-top:12px; font-size:13px; }
+.tenant-import-masters { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:14px 0; padding:14px; border:1px solid var(--line); border-radius:12px; background:var(--canvas); }
+.tenant-import-masters h3,.tenant-import-masters p { grid-column:1/-1; margin:0; }
+.tenant-import-masters p { color:var(--ink-soft); font-size:12px; line-height:1.5; }
+.tenant-import-masters .tenant-editor-reference { margin:0; }
+@media(max-width:560px) { .tenant-import-masters { grid-template-columns:1fr; } }
 .tenant-import-details summary { cursor:pointer; padding-block:10px; font-weight:650; }
 .tenant-import-details dl { padding:12px; border:1px solid var(--line); border-radius:10px; }
 .tenant-import-details dl>div { margin-top:8px; }

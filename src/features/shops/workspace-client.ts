@@ -33,6 +33,14 @@ export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,
     saveMedicine:(id:string|null,body:unknown,key:string)=>{if(id&&!/^[0-9a-f-]{36}$/i.test(id)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid medicine save request.',400);return request(`pharmacy/medicines${id?`/${id}`:''}`,false,{method:id?'PATCH':'POST',body,key});},
     saveStock:(kind:'opening'|'adjust'|'transfer',body:unknown,key:string)=>{if(!['opening','adjust','transfer'].includes(kind)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid stock save request.',400);return request(`pharmacy/stocks/${kind}`,false,{method:'POST',body,key});},
     importMedicines:(body:unknown,key:string)=>{if(!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid save key.',400);return request('pharmacy/medicines/import',false,{method:'POST',body,key});},
+    async previewImport(file:File){
+      if(disposed||sessionSignal.aborted)throw new WorkspaceError('Shop selection changed.',409);
+      if(file.size>1024*1024||!/\.csv$|\.xlsx$/i.test(file.name))throw new WorkspaceError('Choose one CSV or XLSX file up to 1 MB.',422);
+      const form=new FormData();form.append('file',file,file.name);
+      const response=await fetcher(`/api/backend/tenant-workspace/${encodeURIComponent(tenantId)}/pharmacy/medicines/import-preview`,{method:'POST',body:form,credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'},signal:AbortSignal.any([controller.signal,sessionSignal])});
+      const payload=await response.json();if(disposed||sessionSignal.aborted)throw new WorkspaceError('Shop selection changed.',409);
+      if(!response.ok||payload?.success!==true||!('data'in payload))throw new WorkspaceError(typeof payload?.message==='string'?payload.message:'Import preview could not be loaded.',response.status);return payload.data as unknown;
+    },
     updatePrices:(body:unknown,key:string)=>{if(!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid save key.',400);return request('pharmacy/stocks/bulk-price-update',false,{method:'PATCH',body,key});},
     dispose(){disposed=true;controller.abort();},
   };
