@@ -46,5 +46,6 @@ Changed-code ESLint, TypeScript and production build pass. No real DB is used by
 fixtures.
 
 Feature branches only. Preview gates, live data, SQL rollout and deployment are
-unchanged. Customer deletion, advance allocation to historical invoices, ledger
-export and tenant sales-history/due-collection UI remain separate work.
+unchanged. Customer deletion, advance allocation to historical invoices and ledger
+export remain separate work. Tenant sales history and money collection now have a
+separate [sales workspace](saas-sales-history-due.md).

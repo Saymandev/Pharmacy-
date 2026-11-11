@@ -12,8 +12,10 @@ fully due sales**, with one payment account plus optional existing customer
 advance. Server-paginated customer search/detail requires `customer:read`;
 applying advance additionally requires `customer:update`. Customer creation,
 advance deposits/refunds and ledger now have a separate [customer workspace](saas-customer-advance.md).
-Mixed payment accounts, pending sales, historical receipts and sale returns remain
-separate increments. POS itself uses customer list/detail reads and sale creation.
+Mixed payment accounts, pending sales and sale returns remain separate increments.
+Historical receipts and money collection now have a separate
+[sales workspace](saas-sales-history-due.md). POS itself uses customer list/detail
+reads and sale creation.
 
 The compact catalog uses server name/generic/barcode search and pagination, card
 and list modes, active owned branch stock, expiry screening and FEFO default

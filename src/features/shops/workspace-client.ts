@@ -20,6 +20,9 @@ export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,
   }
   const get=(path:string,withMeta=false)=>request(path,withMeta);
   return {
+    sales:(branchId:string,page:number,filters:Record<string,string>={})=>get(`sales?${resourceQuery(branchId,page,filters,['search','status','paymentStatus','hasDue','invoiceNumber','customerId','startDate','endDate'])}`,true),
+    sale:(id:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid invoice.',400);return get(`sales/${id}`);},
+    collectDue:(id:string,body:unknown,key:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid collection request.',400);return request(`sales/${id}/payments`,false,{method:'POST',body,key});},
     saveCustomer:(id:string|null,body:unknown,key:string)=>{if(id&&!/^[0-9a-f-]{36}$/i.test(id)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid customer save.',400);return request(`customers${id?`/${id}`:''}`,false,{method:id?'PATCH':'POST',body,key});},
     customerLedger:(id:string,branchId:string,page:number,filters:Record<string,string>={})=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid customer.',400);return get(`customers/${id}/ledger?${resourceQuery(branchId,page,filters,['kind','startDate','endDate'])}`);},
     customerAdvance:(id:string,kind:'received'|'refunded',body:unknown,key:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id)||!['received','refunded'].includes(kind)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid advance request.',400);return request(`customers/${id}/${kind==='received'?'advances':'advance-refunds'}`,false,{method:'POST',body,key});},
