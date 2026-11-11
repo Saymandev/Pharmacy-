@@ -14,7 +14,7 @@ export function ReferencePicker({tenantId,kind,label,value,onChange,currentLabel
  useEffect(()=>{
   if(!open||!canRead)return;const client=createWorkspaceClient(tenantId,sessionBoundary.capture().signal),current=++revision.current;let active=true;
   const timer=setTimeout(()=>{setLoading(true);setError('');if(query.page===1)setRows([]);
-   void (kind==='stock-medicines'?client.stockMedicines(branchId??'',query.page,query.search):kind==='history-medicines'?client.historyMedicines(branchId??'',query.page,query.search):client.references(kind,query.page,query.search)).then(result=>{
+   void (kind==='suppliers'?client.suppliers(query.page,query.search):kind==='stock-medicines'?client.stockMedicines(branchId??'',query.page,query.search):kind==='history-medicines'?client.historyMedicines(branchId??'',query.page,query.search):client.references(kind,query.page,query.search)).then(result=>{
     if(!active||current!==revision.current)return;
     if(!validCatalogPage(result,query.page,(row):row is ReferenceOption=>validReference(row,tenantId)&&(!['stock-medicines','history-medicines'].includes(kind)||validCatalogMedicine(row,tenantId,branchId??''))))throw new Error('Invalid reference response');
     setRows(old=>query.page===1?result.data:[...old,...result.data.filter(row=>!old.some(item=>item.id===row.id))]);setMore(result.meta.hasNextPage);

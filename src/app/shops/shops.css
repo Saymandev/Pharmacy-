@@ -47,6 +47,10 @@
 .tenant-bulk-toolbar label { display:grid; gap:.4rem; flex:1; min-width:0; }
 .tenant-bulk-editor input:not([type=checkbox]) { width:100%; min-width:0; }
 .tenant-bulk-batches { display:grid; gap:.65rem; }
+.tenant-purchase-line { border:1px solid var(--line); border-radius:12px; padding:14px; margin:14px 0; background:var(--canvas); }
+.tenant-purchase-line h3 { margin:0 0 12px; font-size:15px; }
+.tenant-bulk-editor .tenant-purchase-line .tenant-editor-grid { padding:0; margin-block:12px; }
+.tenant-bulk-editor fieldset>p { font-size:13px; line-height:1.5; color:var(--ink-soft); }
 .tenant-import-details { margin-top:12px; font-size:13px; }
 .tenant-import-masters { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:14px 0; padding:14px; border:1px solid var(--line); border-radius:12px; background:var(--canvas); }
 .tenant-import-masters h3,.tenant-import-masters p { grid-column:1/-1; margin:0; }
