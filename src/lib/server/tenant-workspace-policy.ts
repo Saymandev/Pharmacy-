@@ -9,8 +9,9 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
     path.length===2&&path[0]==='pharmacy'&&['medicines','stocks'].includes(path[1])||
     path.length===3&&path[0]==='pharmacy'&&path[1]==='medicines'&&/^[0-9a-f-]{36}$/i.test(path[2])||
     path.length===3&&path[0]==='pharmacy'&&path[1]==='stocks'&&/^[0-9a-f-]{36}$/i.test(path[2])||
+    path.length===3&&path[0]==='pharmacy'&&path[1]==='stocks'&&path[2]==='history'||
     path.length===2&&path[0]==='pharmacy'&&['categories','generics','groups','manufacturers','units'].includes(path[1]);
-  const write=config.writes==='true'&&path[0]==='pharmacy'&&(path[1]==='medicines'&&(method==='POST'&&path.length===2||method==='PATCH'&&path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))||path[1]==='stocks'&&method==='POST'&&path.length===3&&['opening','adjust'].includes(path[2]));
+  const write=config.writes==='true'&&path[0]==='pharmacy'&&(path[1]==='medicines'&&(method==='POST'&&path.length===2||method==='PATCH'&&path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))||path[1]==='stocks'&&method==='POST'&&path.length===3&&['opening','adjust','transfer'].includes(path[2]));
   if(!(method==='GET'&&read)&&!write)return null;
   try{
     const base=new URL(config.base);
@@ -20,8 +21,8 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
 }
 export function validStockProxyBody(value:unknown,kind:string):boolean{
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
-  const allowed=kind==='opening'?['medicineId','branchId','batchNumber','expiryDate','quantity','unitPrice','mrp','unit','rackNumber','note']:kind==='adjust'?['stockId','quantity','type','note','expectedQuantity']:[];
-  if(kind==='adjust'&&(!('expectedQuantity'in value)||!Number.isInteger(value.expectedQuantity)||Number(value.expectedQuantity)<0||!('note'in value)||typeof value.note!=='string'||!value.note.trim()))return false;
+  const allowed=kind==='opening'?['medicineId','branchId','batchNumber','expiryDate','quantity','unitPrice','mrp','unit','rackNumber','note']:kind==='adjust'?['stockId','quantity','type','note','expectedQuantity']:kind==='transfer'?['stockId','toBranchId','quantity','note','expectedQuantity']:[];
+  if(['adjust','transfer'].includes(kind)&&(!('expectedQuantity'in value)||!Number.isInteger(value.expectedQuantity)||Number(value.expectedQuantity)<0||!('note'in value)||typeof value.note!=='string'||!value.note.trim()))return false;
   return Object.keys(value).length>0&&Object.keys(value).every(key=>allowed.includes(key));
 }
 export function validMedicineProxyBody(value:unknown,method:string):boolean{

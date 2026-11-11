@@ -85,5 +85,8 @@ precondition is optional for existing staged clients; this new proxy requires it
   changed-module lint and production build pass. Browser fixtures
   never contact a real DB/live API and clean up their own Next/server processes.
 
-Remaining: stock history UI, transfer/import/bulk price workflows, durable offline
+Update: Stock History and Branch Transfer UI are implemented under the existing
+scope/gates; see [history and transfer](saas-history-transfer.md).
+
+Remaining: import/bulk price workflows, durable offline
 operation reconciliation, remaining resource adapters and final tenant release UAT.

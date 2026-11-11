@@ -12,10 +12,10 @@ test('adjustment carries the inspected quantity and requires a reason, avoiding 
  const body=adjustmentPayload(id,5,{...emptyStock,quantity:'2',type:'decrease',note:'Count correction'});assert.equal(body.expectedQuantity,5);assert.equal(body.quantity,2);assert.equal(body.type,'decrease');
  for(const [current,patch]of [[1,{quantity:'2',type:'decrease'}],[2147483647,{quantity:'1'}],[5,{note:''}],[5,{quantity:'1e2'}]])assert.throws(()=>adjustmentPayload(id,current,{...emptyStock,note:'Reason',...patch}));
 });
-test('stock mutation proxy permits only opening/adjust POST under the existing write gate and rejects identity/ledger fields',()=>{
+test('stock mutation proxy gates explicit actions and rejects identity/ledger fields',()=>{
  const config={session:'true',workspace:'true',base:'http://localhost/api/v1',writes:'true'};
  for(const kind of ['opening','adjust'])assert.ok(tenantWorkspaceTarget('a',['pharmacy','stocks',kind],'POST',config));
- assert.equal(tenantWorkspaceTarget('a',['pharmacy','stocks','adjust'],'POST',{...config,writes:'false'}),null);assert.equal(tenantWorkspaceTarget('a',['pharmacy','stocks','transfer'],'POST',config),null);
+ assert.equal(tenantWorkspaceTarget('a',['pharmacy','stocks','adjust'],'POST',{...config,writes:'false'}),null);assert.equal(tenantWorkspaceTarget('a',['pharmacy','stocks','import'],'POST',config),null);
  assert.equal(validStockProxyBody({stockId:id,quantity:2,type:'increase',expectedQuantity:5,note:'Count'},'adjust'),true);
  for(const body of [{stockId:id,quantity:1,type:'increase',note:'Reason'},{stockId:id,quantity:1,expectedQuantity:5,note:''},{stockId:id,quantity:1,expectedQuantity:5,note:'Reason',tenantId:'b'},{medicineId:id,branchId:id,quantity:1,accountId:id}])assert.equal(validStockProxyBody(body,'stockId'in body?'adjust':'opening'),false);
 });

@@ -20,16 +20,18 @@ export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,
   }
   const get=(path:string,withMeta=false)=>request(path,withMeta);
   return {
-    bootstrap:(after?:string)=>get(`workspace/bootstrap${after?`?after=${encodeURIComponent(after)}`:''}`),
+    bootstrap:(after?:string,search?:string)=>{const query=new URLSearchParams();if(after)query.set('after',after);if(search)query.set('search',search);return get(`workspace/bootstrap${query.size?`?${query}`:''}`);},
     branch:(id:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid branch.',400);return get(`workspace/branches/${encodeURIComponent(id)}`);},
     medicines:(branchId:string,page:number,filters:Record<string,string>={})=>get(`pharmacy/medicines?${resourceQuery(branchId,page,filters,['search','isActive','hasStock','barcode','unit','dosageForm','strength','categoryId','genericId','groupId','medicineManufacturerId','medicineUnitId'])}`,true),
     stocks:(branchId:string,page:number,filters:Record<string,string>={})=>get(`pharmacy/stocks?${resourceQuery(branchId,page,filters,['search','batchNumber','rackNumber','unit','expiryStartDate','expiryEndDate','medicineManufacturerId'])}`,true),
     stock:(id:string,branchId:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id)||!/^[0-9a-f-]{36}$/i.test(branchId))throw new WorkspaceError('Invalid stock selection.',400);return get(`pharmacy/stocks/${id}?${new URLSearchParams({branchId})}`);},
     stockMedicines:(branchId:string,page:number,search:string)=>get(`pharmacy/medicines?${resourceQuery(branchId,page,{search,isActive:'true',registeredOnly:'false'},['search','isActive','registeredOnly'])}`,true),
+    historyMedicines:(branchId:string,page:number,search:string)=>get(`pharmacy/medicines?${resourceQuery(branchId,page,{search,registeredOnly:'false'},['search','registeredOnly'])}`,true),
+    history:(branchId:string,page:number,filters:Record<string,string>={})=>get(`pharmacy/stocks/history?${resourceQuery(branchId,page,filters,['search','stockId','medicineId','batchNumber','type','stockChangeType','startDate','endDate'])}`,true),
     medicine:(id:string,branchId:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid medicine.',400);const query=new URLSearchParams(resourceQuery(branchId,1,{},[]));query.delete('page');query.delete('limit');return get(`pharmacy/medicines/${id}?${query}`);},
     references:(kind:string,page:number,search:string)=>{if(!['categories','generics','groups','manufacturers','units'].includes(kind)||!Number.isInteger(page)||page<1)throw new WorkspaceError('Invalid reference query.',400);return get(`pharmacy/${kind}?${new URLSearchParams({page:String(page),limit:'20',search})}`,true);},
     saveMedicine:(id:string|null,body:unknown,key:string)=>{if(id&&!/^[0-9a-f-]{36}$/i.test(id)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid medicine save request.',400);return request(`pharmacy/medicines${id?`/${id}`:''}`,false,{method:id?'PATCH':'POST',body,key});},
-    saveStock:(kind:'opening'|'adjust',body:unknown,key:string)=>{if(!['opening','adjust'].includes(kind)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid stock save request.',400);return request(`pharmacy/stocks/${kind}`,false,{method:'POST',body,key});},
+    saveStock:(kind:'opening'|'adjust'|'transfer',body:unknown,key:string)=>{if(!['opening','adjust','transfer'].includes(kind)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid stock save request.',400);return request(`pharmacy/stocks/${kind}`,false,{method:'POST',body,key});},
     dispose(){disposed=true;controller.abort();},
   };
 }

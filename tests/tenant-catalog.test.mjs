@@ -26,6 +26,6 @@ test('resource transport keeps metadata, fixes branch identity and rejects calle
 test('resource proxy explicitly permits only fixed list/detail GET routes',()=>{
  const config={session:'true',workspace:'true',base:'http://localhost:9999/api/v1'};
  for(const path of [['pharmacy','medicines'],['pharmacy','stocks'],['pharmacy','medicines',id]])assert.ok(tenantWorkspaceTarget('a',path,'GET',config));
- for(const path of [['pharmacy','stocks','adjust'],['pharmacy','medicines','import'],['pharmacy','stocks','history']])assert.equal(tenantWorkspaceTarget('a',path,'GET',config),null);
+ for(const path of [['pharmacy','stocks','adjust'],['pharmacy','medicines','import'],['pharmacy','stocks','history','export']])assert.equal(tenantWorkspaceTarget('a',path,'GET',config),null);
  assert.equal(tenantWorkspaceTarget('a',['pharmacy','medicines'],'POST',config),null);
 });

@@ -18,3 +18,10 @@ export function adjustmentPayload(stockId:string,current:number,draft:StockDraft
  if(!draft.note.trim()||draft.note.trim().length>255)throw new Error('Enter an adjustment reason up to 255 characters.');
  return {stockId,quantity:change,type:draft.type,note:draft.note.trim(),expectedQuantity:current};
 }
+export function transferPayload(stockId:string,sourceBranchId:string,destinationId:string,current:number,draft:StockDraft){
+ if(!uuid.test(stockId)||!uuid.test(sourceBranchId)||!uuid.test(destinationId)||sourceBranchId===destinationId)throw new Error('Choose a different destination branch.');
+ if(!Number.isInteger(current)||current<0||current>2147483647)throw new Error('Reload stock before transferring.');
+ const change=quantity(draft.quantity);if(change>current)throw new Error('Transfer quantity exceeds the recorded source stock.');
+ if(!draft.note.trim()||draft.note.trim().length>255)throw new Error('Enter a transfer reason up to 255 characters.');
+ return {stockId,toBranchId:destinationId,quantity:change,note:draft.note.trim(),expectedQuantity:current};
+}
