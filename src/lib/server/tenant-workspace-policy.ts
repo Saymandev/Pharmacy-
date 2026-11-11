@@ -2,6 +2,7 @@ import {validateImportRows,validPriceRows} from '../../features/shops/bulk-polic
 export {validPurchaseBody} from '../../features/shops/purchase-policy.ts';
 export {validPurchaseStatusBody} from '../../features/shops/purchase-read-policy.ts';
 export {validSupplierPayment} from '../../features/shops/purchase-payment-policy.ts';
+export {validReturnBody} from '../../features/shops/purchase-return-policy.ts';
 export function tenantWorkspaceTarget(tenantId:string,path:string[],method:string,config={
   session:process.env.TENANT_SESSION_PREVIEW_ENABLED,workspace:process.env.TENANT_WORKSPACE_PREVIEW_ENABLED,base:process.env.TENANT_BACKEND_API_URL,
   writes:process.env.TENANT_CATALOG_WRITES_ENABLED,
@@ -21,7 +22,9 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
   const supplier=path[0]==='pharmacy'&&path[1]==='suppliers'&&(path.length===2||path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))&&(method==='GET'||config.writes==='true'&&(path.length===2&&method==='POST'||path.length===3&&['PATCH','DELETE'].includes(method)));
   const purchase=path[0]==='pharmacy'&&path[1]==='purchases'&&(method==='GET'&&(path.length===2||path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))||config.writes==='true'&&(method==='POST'&&path.length===2||method==='PATCH'&&path.length===4&&/^[0-9a-f-]{36}$/i.test(path[2])&&path[3]==='status'||method==='POST'&&path.length===4&&/^[0-9a-f-]{36}$/i.test(path[2])&&path[3]==='payments'));
   const paymentOptions=method==='GET'&&path.length===3&&path[0]==='finance'&&path[1]==='accounts'&&path[2]==='payment-options';
-  if(!(method==='GET'&&read)&&!write&&!bulk&&!master&&!supplier&&!purchase&&!paymentOptions)return null;
+  const returnable=method==='GET'&&path.length===4&&path[0]==='pharmacy'&&path[1]==='purchases'&&/^[0-9a-f-]{36}$/i.test(path[2])&&path[3]==='returnable-items';
+  const returns=path[0]==='pharmacy'&&path[1]==='purchase-returns'&&(method==='GET'&&(path.length===2||path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))||config.writes==='true'&&(method==='POST'&&path.length===2||path.length===4&&/^[0-9a-f-]{36}$/i.test(path[2])&&(method==='PATCH'&&path[3]==='status'||method==='POST'&&path[3]==='refunds')));
+  if(!(method==='GET'&&read)&&!write&&!bulk&&!master&&!supplier&&!purchase&&!paymentOptions&&!returnable&&!returns)return null;
   try{
     const base=new URL(config.base);
     if(!['https:','http:'].includes(base.protocol)||base.username||base.password||base.search||base.hash)return null;
