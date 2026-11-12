@@ -20,6 +20,10 @@ export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,
   }
   const get=(path:string,withMeta=false)=>request(path,withMeta);
   return {
+    saleReturnable:(id:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid invoice.',400);return get(`sales/${id}/returnable-items`);},
+    saleReturns:(branchId:string,saleId:string,page:number,filters:Record<string,string>={})=>{if(!/^[0-9a-f-]{36}$/i.test(saleId))throw new WorkspaceError('Invalid invoice.',400);return get(`sale-returns?${resourceQuery(branchId,page,filters,['search','status','invoiceNumber','startDate','endDate'])}&${new URLSearchParams({saleId})}`,true);},
+    saleReturn:(id:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid return.',400);return get(`sale-returns/${id}`);},
+    saveSaleReturn:(id:string|null,kind:'create'|'status'|'refund',body:unknown,key:string)=>{if(!['create','status','refund'].includes(kind)||kind!=='create'&&(!id||!/^[0-9a-f-]{36}$/i.test(id))||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid sale return request.',400);return request(kind==='create'?'sale-returns':`sale-returns/${id}/${kind==='refund'?'refunds':'status'}`,false,{method:kind==='status'?'PATCH':'POST',body,key});},
     pendingSaleStatus:(id:string,body:unknown,key:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid pending sale.',400);return request(`sales/${id}/status`,false,{method:'PATCH',body,key});},
     sales:(branchId:string,page:number,filters:Record<string,string>={})=>get(`sales?${resourceQuery(branchId,page,filters,['search','status','paymentStatus','hasDue','invoiceNumber','customerId','startDate','endDate'])}`,true),
     sale:(id:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid invoice.',400);return get(`sales/${id}`);},

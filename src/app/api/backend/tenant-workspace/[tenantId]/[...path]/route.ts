@@ -6,6 +6,7 @@ import {validPosBody} from '@/features/shops/tenant-pos-policy';
 import {validPendingSaleBody} from '@/features/shops/pending-sale-policy';
 import {validPosDraftBody} from '@/features/shops/pos-draft-policy';
 import {validCustomerProfile,validAdvanceBody} from '@/features/shops/customer-policy';
+import {validSaleReturnBody,validSaleReturnStatus} from '@/features/shops/sale-return-policy';
 
 type Context={params:Promise<{tenantId:string;path:string[]}>};
 const noStore={'Cache-Control':'no-store'};
@@ -31,6 +32,10 @@ async function proxy(request:Request,context:Context){
     if(path[0]==='customers'){
       try{body=await request.text();if(new TextEncoder().encode(body).byteLength>limit||!(path.length===3?validAdvanceBody(JSON.parse(body)):validCustomerProfile(JSON.parse(body),request.method==='PATCH')))throw new Error('Invalid customer');}
       catch{return Response.json({success:false,message:'Invalid customer fields.'},{status:422,headers:noStore});}
+      headers['Content-Type']='application/json';headers['Idempotency-Key']=key;
+    }else if(path[0]==='sale-returns'){
+      try{body=await request.text();const value=JSON.parse(body);if(new TextEncoder().encode(body).byteLength>limit||!(path[2]==='refunds'?validSupplierPayment(value):path[2]==='status'?validSaleReturnStatus(value):validSaleReturnBody(value)))throw new Error('Invalid return');}
+      catch{return Response.json({success:false,message:'Invalid sale return fields.'},{status:422,headers:noStore});}
       headers['Content-Type']='application/json';headers['Idempotency-Key']=key;
     }else if(path[0]==='sales'){
       try{body=await request.text();if(new TextEncoder().encode(body).byteLength>limit||!(path[2]==='status'?validPendingSaleBody(JSON.parse(body)):path.length===3?validSupplierPayment(JSON.parse(body)):validPosBody(JSON.parse(body))||validPosDraftBody(JSON.parse(body))))throw new Error('Invalid sale');}
