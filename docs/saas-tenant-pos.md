@@ -12,7 +12,8 @@ fully due sales**, with one payment account plus optional existing customer
 advance. Server-paginated customer search/detail requires `customer:read`;
 applying advance additionally requires `customer:update`. Customer creation,
 advance deposits/refunds and ledger now have a separate [customer workspace](saas-customer-advance.md).
-Mixed payment accounts, POS Save pending and sale returns remain separate increments.
+Mixed payment accounts and sale returns remain separate increments. POS now has
+a separate [Save pending action](saas-pos-drafts.md) with no stock/payment effect.
 Existing drafts now have a [completion/rejection flow](saas-pending-sales.md).
 Historical receipts and money collection now have a separate
 [sales workspace](saas-sales-history-due.md). POS itself uses customer list/detail

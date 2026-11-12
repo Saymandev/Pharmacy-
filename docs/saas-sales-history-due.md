@@ -48,6 +48,7 @@ projection privacy, return due reconciliation and archived record denial. Change
 code lint, TypeScript and production build pass.
 
 Feature branches only; no live writes, merge, SQL deployment or gate changes.
-Global due access across the final tenant navigation shell, POS draft creation,
-sale-return/refund screens, export and release UAT remain separate work. This
+Global due access across the final tenant navigation shell, draft editing,
+sale-return/refund screens, export and release UAT remain separate work. POS draft
+creation is available through [Save pending](saas-pos-drafts.md). This
 preview's Collect due entry is scoped to the selected shop workspace.

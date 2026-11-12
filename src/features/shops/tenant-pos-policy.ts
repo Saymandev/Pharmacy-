@@ -28,13 +28,13 @@ export function validPosBody(value:unknown):value is PosBody{
  return validPosFields(value);
 }
 // Current backend permission, customer ledger and stock checks remain authoritative.
-function validPosFields(v:Record<string,unknown>):boolean{
- if(!uuid(v.branchId)||'customerId'in v&&!uuid(v.customerId)||v.type!=='pos'||v.status!=='completed'||typeof v.note!=='string'||v.note.length>2000||!Array.isArray(v.saleItems)||!Array.isArray(v.payments)||v.payments.length>10)return false;
+export function validPosFields(v:Record<string,unknown>,status:'completed'|'pending'='completed'):boolean{
+ if(!uuid(v.branchId)||'customerId'in v&&!uuid(v.customerId)||v.type!=='pos'||v.status!==status||typeof v.note!=='string'||v.note.length>2000||!Array.isArray(v.saleItems)||!Array.isArray(v.payments)||v.payments.length>10)return false;
  const seen=new Set<string>();try{
   for(const line of v.saleItems){if(!object(line)||Object.keys(line).length!==3||!Object.keys(line).every(k=>['stockId','quantity','price'].includes(k))||!uuid(line.stockId)||seen.has(line.stockId)||typeof line.price!=='number'||typeof line.quantity!=='number')return false;seen.add(line.stockId);}
   const totals=posTotals(v.saleItems as PosBody['saleItems'],v.discountAmount as number,v.taxPercentage as number);let paid=BigInt(0);
   for(const p of v.payments){if(!object(p)||Object.keys(p).length!==4||!Object.keys(p).every(k=>['accountId','amount','paymentMethod','note'].includes(k))||!uuid(p.accountId)||!supplierPaymentMethods.includes(p.paymentMethod as typeof supplierPaymentMethods[number])||typeof p.note!=='string'||p.note.length>2000||purchaseCents(p.amount)<=BigInt(0))return false;paid+=purchaseCents(p.amount);}
-  const advance=purchaseCents(v.advanceAmount),total=purchaseCents(totals.total);return v.customerId?paid+advance<=total:advance===BigInt(0)&&paid===total;
+  const advance=purchaseCents(v.advanceAmount),total=purchaseCents(totals.total);if(status==='pending')return v.payments.length===0&&advance===BigInt(0);return v.customerId?paid+advance<=total:advance===BigInt(0)&&paid===total;
  }catch{return false;}
 }
 export function saleableStock(stock:CatalogStock,now=new Date()):boolean{
@@ -42,12 +42,15 @@ export function saleableStock(stock:CatalogStock,now=new Date()):boolean{
  return uuid(stock.id)&&stock.quantity>0&&Date.parse(stock.expiryDate)>=Date.parse(today+'T00:00:00+06:00');
 }
 export function buildPosBody(branchId:string,lines:PosLine[],discount:number,taxPercentage:number,note:string,accountId:string,method:string,funding?:{tenantId:string;customer:PosCustomer|null;payment:number|null;advance:number;canAdvance:boolean}):PosBody{
- for(const line of lines)if(line.medicine.tenantId!==line.stock.tenantId||line.stock.branchId!==branchId||!line.medicine.isActive||!line.medicine.stocks.some(s=>s.id===line.stock.id)||!saleableStock(line.stock)||line.quantity>line.stock.quantity)throw new Error('Check the active medicine, batch and available quantity.');
- const saleItems=lines.map(line=>({stockId:line.stock.id,quantity:line.quantity,price:Number(line.medicine.salePrice)})),totals=posTotals(saleItems,discount,taxPercentage);
+ const saleItems=posSaleItems(branchId,lines),totals=posTotals(saleItems,discount,taxPercentage);
  const person=funding?.customer??null;if(person&&(!validPosCustomer(person,funding!.tenantId)||person.isWalkIn))throw new Error('Customer could not be verified.');
  const amounts=posFunding(totals.total,person,funding?.payment??null,funding?.advance??0,funding?.canAdvance??false);
  const body:PosBody={branchId,...(person?{customerId:person.id}:{}),type:'pos',status:'completed',discountAmount:discount,taxPercentage,note:note.trim(),advanceAmount:amounts.advance,saleItems,payments:amounts.payment?[{accountId,amount:amounts.payment,paymentMethod:method,note:''}]:[]};
  if(!validPosFields(body))throw new Error('Choose a payment account and check the sale.');return body;
+}
+export function posSaleItems(branchId:string,lines:PosLine[]){
+ for(const line of lines)if(line.medicine.tenantId!==line.stock.tenantId||line.stock.branchId!==branchId||!line.medicine.isActive||!line.medicine.stocks.some(s=>s.id===line.stock.id)||!saleableStock(line.stock)||line.quantity>line.stock.quantity)throw new Error('Check the active medicine, batch and available quantity.');
+ return lines.map(line=>({stockId:line.stock.id,quantity:line.quantity,price:Number(line.medicine.salePrice)}));
 }
 export type PosReceipt={id:string;tenantId:string;branchId:string;customerId:string;userId:string;invoiceNumber:string;status:'completed';paymentStatus:'paid'|'partial'|'due';totalPrice:string|number;discountAmount:string|number;taxAmount:string|number;netPrice:string|number;paidAmount:string|number;dueAmount:string|number;createdAt:string;saleItems:{id:string;saleId:string;tenantId:string;branchId:string;stockId:string;itemName:string;unit:string;quantity:number|string;price:number|string;totalPrice:number|string}[]};
 export function validPosResult(value:unknown,tenantId:string,userId:string,body:PosBody):value is PosReceipt{

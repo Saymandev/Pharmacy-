@@ -1,5 +1,14 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "Save pending": "পেন্ডিং হিসেবে সেভ করুন",
+  "Draft saved": "ড্রাফট সেভ হয়েছে",
+  "Draft save collects no payment or advance.": "ড্রাফট সেভে পেমেন্ট বা অ্যাডভান্স কালেক্ট হয় না।",
+  "Saving a draft does not apply stock or payment. Completion checks stock again.": "ড্রাফট সেভে স্টক বা পেমেন্ট অ্যাপ্লাই হয় না। কমপ্লিট করার সময় স্টক আবার চেক হবে।",
+  "Open Sales history to review the current draft status.": "ড্রাফটের বর্তমান স্ট্যাটাস দেখতে সেলস হিস্টোরি ওপেন করুন।",
+  "A user with Sales history access can complete or reject this draft.": "সেলস হিস্টোরির পারমিশন আছে এমন ইউজার এই ড্রাফট কমপ্লিট বা রিজেক্ট করতে পারবেন।",
+  "Draft response could not be verified.": "ড্রাফটের রেসপন্স ভেরিফাই করা যায়নি।",
+  "Draft scope could not be verified.": "ড্রাফটের শপ ও ব্রাঞ্চ ভেরিফাই করা যায়নি।",
+  "Check the draft medicines, quantities and totals.": "ড্রাফটের মেডিসিন, কোয়ান্টিটি ও টোটাল চেক করুন।",
   "Complete pending sale": "পেন্ডিং সেল কমপ্লিট করুন",
   "Reject pending sale": "পেন্ডিং সেল রিজেক্ট করুন",
   "Confirm completion": "কমপ্লিশন কনফার্ম করুন",

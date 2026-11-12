@@ -31,6 +31,7 @@ unmount the financial form or lose its retry key. Backend native PostgreSQL suit
 complete/reject concurrency, exact wallet/account/stock changes and stable replay.
 Changed code lint, TypeScript and production build pass.
 
-This increment handles **existing pending invoices**. POS Save pending/draft
-creation and draft editing remain separate UI work, as do sale returns/refunds.
+This increment handles **existing pending invoices**. POS draft creation is now
+available through [Save pending](saas-pos-drafts.md). Draft editing and sale
+returns/refunds remain separate UI work.
 Feature branches only; preview gates, live data, main and deployment are unchanged.
