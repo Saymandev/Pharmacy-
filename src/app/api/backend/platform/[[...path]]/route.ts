@@ -1,0 +1,15 @@
+import {cookies} from 'next/headers';
+import {platformTarget} from '@/lib/server/platform-policy';
+import {isSameOriginRequest} from '@/lib/server/request-security';
+import {validPlatformCommand} from '@/features/platform/platform-policy';
+type Context={params:Promise<{path?:string[]}>};const noStore={'Cache-Control':'no-store'};
+async function proxy(request:Request,context:Context){
+ const {path=[]}=await context.params,target=platformTarget(path,request.method),mutating=request.method!=='GET';
+ if(!target)return Response.json({success:false,message:'Platform preview unavailable'},{status:404,headers:noStore});
+ if(mutating&&!isSameOriginRequest(request))return Response.json({success:false,message:'Request origin could not be verified.'},{status:403,headers:noStore});
+ const token=(await cookies()).get('pharmacy_access')?.value;if(!token)return Response.json({success:false,message:'Sign in to continue.'},{status:401,headers:noStore});
+ const headers:Record<string,string>={Authorization:`Bearer ${token}`,Accept:'application/json'};let body:string|undefined;
+ if(mutating){const key=request.headers.get('idempotency-key');if(!key||!/^[A-Za-z0-9_-]{16,128}$/.test(key)||new URL(request.url).search||request.headers.get('content-type')?.split(';')[0].trim()!=='application/json')return Response.json({success:false,message:'A JSON body and valid save key are required.'},{status:422,headers:noStore});try{body=await request.text();if(new TextEncoder().encode(body).byteLength>8192||!validPlatformCommand(JSON.parse(body)))throw new Error('Invalid command');}catch{return Response.json({success:false,message:'Check the status and reason.'},{status:422,headers:noStore});}headers['Content-Type']='application/json';headers['Idempotency-Key']=key;}
+ try{const upstream=await fetch(target+new URL(request.url).search,{method:request.method,headers,body,cache:'no-store',redirect:'error',signal:AbortSignal.any([request.signal,AbortSignal.timeout(15000)])});return new Response(upstream.body,{status:upstream.status,headers:{...noStore,'Content-Type':upstream.headers.get('content-type')??'application/json'}});}catch{return Response.json({success:false,message:'Platform server is unavailable.'},{status:502,headers:noStore});}
+}
+export const GET=proxy;export const PATCH=proxy;export const POST=proxy;export const DELETE=proxy;
