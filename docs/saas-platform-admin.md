@@ -1,5 +1,8 @@
 # Platform Super Admin preview
 
+The later [pending shop onboarding](saas-shop-onboarding.md) phase adds an
+explicitly authorized Add shop intake. Full provisioning and activation remain pending.
+
 `/platform` is separate from `/shops` and the legacy dashboard. Active tenant
 Super Admin roles do not grant operator access. The server resolves an explicit
 active operator and capabilities on every request.
