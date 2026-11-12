@@ -13,6 +13,7 @@ import {RegisterWorkspace} from './register-workspace';
 import {TenantPos} from './tenant-pos';
 import {CustomerWorkspace} from './customer-workspace';
 import {SalesWorkspace} from './sales-workspace';
+import {TenantReports} from './tenant-reports';
 
 const accessLabels=[['medicine:read','Medicine catalog'],['stock:read','Inventory'],['sale:read','Sales history'],['report:read','Reports'],['account:read','Finance']] as const;
 type Client=ReturnType<typeof createWorkspaceClient>;
@@ -74,6 +75,7 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
   {!busy&&context&&branch&&context.permissions.includes('customer:read')&&<CustomerWorkspace key={`customers:${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={writesEnabled} onOpenChange={open=>{posOpen.current=open;}}/>}
   {!busy&&context&&branch&&context.permissions.includes('sale:read')&&<SalesWorkspace key={`sales:${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={writesEnabled} onOpenChange={open=>{posOpen.current=open;}}/>}
   {!busy&&context&&branch&&context.permissions.includes('cash-register:read')&&<RegisterWorkspace key={`register:${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={writesEnabled}/>}
+  {!busy&&context&&branch&&context.permissions.includes('report:read')&&<TenantReports key={`reports:${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} onOpenChange={open=>{posOpen.current=open;}}/>}
   {settings&&<BranchSettings error={error} branches={branches} branch={branch} busy={busy} hasMore={!!cursor} canChoose={!!context} onChoose={choose} onMore={()=>{if(client.current&&cursor)void load(client.current,cursor);}} onClose={()=>setSettings(false)}/>}
  </section>;
 }

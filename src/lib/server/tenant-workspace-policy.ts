@@ -32,7 +32,8 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
   const customer=path[0]==='customers'&&(method==='GET'&&(path.length===1||path.length===2&&/^[0-9a-f-]{36}$/i.test(path[1])||path.length===3&&/^[0-9a-f-]{36}$/i.test(path[1])&&path[2]==='ledger')||config.writes==='true'&&(method==='POST'&&path.length===1||method==='PATCH'&&path.length===2&&/^[0-9a-f-]{36}$/i.test(path[1])||method==='POST'&&path.length===3&&/^[0-9a-f-]{36}$/i.test(path[1])&&['advances','advance-refunds'].includes(path[2])));
   const saleAllowance=method==='GET'&&path.length===3&&path[0]==='sales'&&/^[0-9a-f-]{36}$/i.test(path[1])&&path[2]==='returnable-items';
   const saleReturns=path[0]==='sale-returns'&&(method==='GET'&&(path.length===1||path.length===2&&/^[0-9a-f-]{36}$/i.test(path[1]))||config.writes==='true'&&(method==='POST'&&path.length===1||path.length===3&&/^[0-9a-f-]{36}$/i.test(path[1])&&(method==='PATCH'&&path[2]==='status'||method==='POST'&&path[2]==='refunds')));
-  if(!(method==='GET'&&read)&&!write&&!bulk&&!master&&!supplier&&!purchase&&!paymentOptions&&!returnable&&!returns&&!register&&!sale&&!customer&&!saleAllowance&&!saleReturns)return null;
+  const report=method==='GET'&&path[0]==='reports'&&(path.length===3&&(path[1]==='pharmacy'&&['summary','sales-report','purchase-report','due-collection'].includes(path[2])||path[1]==='finance'&&['income','expense','movements'].includes(path[2]))||path.length===4&&path[1]==='exports'&&['summary','sales','purchases','collections','income','expense','movements'].includes(path[2])&&path[3]==='document');
+  if(!(method==='GET'&&read)&&!write&&!bulk&&!master&&!supplier&&!purchase&&!paymentOptions&&!returnable&&!returns&&!register&&!sale&&!customer&&!saleAllowance&&!saleReturns&&!report)return null;
   try{
     const base=new URL(config.base);
     if(!['https:','http:'].includes(base.protocol)||base.username||base.password||base.search||base.hash)return null;

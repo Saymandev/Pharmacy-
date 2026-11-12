@@ -15,6 +15,7 @@
     "test:tenant-customers": "node --test tests/customer-workspace.test.mjs && node tests/run-tenant-customer-browser.cjs",
     "test:tenant-sales": "node --test tests/sales-workspace.test.mjs && node tests/run-tenant-sales-browser.cjs",
     "test:tenant-sale-returns": "node --test tests/sale-returns.test.mjs && node tests/run-tenant-sale-returns-browser.cjs",
+    "test:tenant-reports": "node --test tests/tenant-reports.test.mjs && node tests/run-tenant-reports-browser.cjs",
     "test:tenant-pending-sales": "node --test tests/pending-sale.test.mjs && node tests/run-tenant-pending-browser.cjs",
     "test:tenant-pos-drafts": "node --test tests/pos-draft.test.mjs && node tests/run-tenant-draft-browser.cjs",
     "test:tenant-workspace": "node --test tests/workspace-client.test.mjs && node tests/tenant-workspace.browser.cjs",
