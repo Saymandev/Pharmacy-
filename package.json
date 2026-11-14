@@ -18,6 +18,7 @@
     "test:tenant-reports": "node --test tests/tenant-reports.test.mjs && node tests/run-tenant-reports-browser.cjs",
     "test:platform-admin": "node --test tests/platform-admin.test.mjs && node tests/platform-admin.browser.cjs",
     "test:shop-onboarding": "node --test tests/shop-onboarding.test.mjs && node tests/run-shop-onboarding-browser.cjs",
+    "test:owner-invitations": "node --test tests/owner-invitation.test.mjs && node tests/run-owner-invitation-browser.cjs",
     "test:tenant-pending-sales": "node --test tests/pending-sale.test.mjs && node tests/run-tenant-pending-browser.cjs",
     "test:tenant-pos-drafts": "node --test tests/pos-draft.test.mjs && node tests/run-tenant-draft-browser.cjs",
     "test:tenant-workspace": "node --test tests/workspace-client.test.mjs && node tests/tenant-workspace.browser.cjs",

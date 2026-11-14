@@ -14,6 +14,7 @@ async function proxy(request: Request, context: RouteContext) {
   }
 
   const { path } = await context.params;
+  if(path[0]==='owner-invitations')return NextResponse.json({success:false,message:'Owner invitations unavailable'},{status:404,headers:{'Cache-Control':'no-store'}});
   if(path[0]==='platform')return NextResponse.json({success:false,message:'Platform preview unavailable'},{status:404,headers:{'Cache-Control':'no-store'}});
   if(path[0]==='tenant-workspace')return NextResponse.json({success:false,message:'Shop workspace is not available.'},{status:404,headers:{'Cache-Control':'no-store'}});
   if (path[0] === "tenant-session" && !tenantSessionRouteAllowed(path,request.method)) {
