@@ -12,6 +12,11 @@
   --brand-wash: #eaf5ef;
   --font-ui: Inter, "Segoe UI", Arial, sans-serif;
 }
+html[data-tenant-palette="ocean"] { --brand:#147c9f; --brand-dark:#07536e; --brand-wash:#e8f5fa; }
+html[data-tenant-palette="violet"] { --brand:#7350b8; --brand-dark:#4d2d8b; --brand-wash:#f2edfc; }
+html[data-tenant-palette="slate"] { --brand:#3c6975; --brand-dark:#27464f; --brand-wash:#eaf1f3; }
+html[data-tenant-font="rounded"] { --font-ui:Nunito, "Segoe UI", Arial, sans-serif; }
+html[data-tenant-font="compact"] { --font-ui:"Arial Narrow", "Segoe UI", Arial, sans-serif; }
 
 @theme inline {
   --color-background: var(--canvas);
