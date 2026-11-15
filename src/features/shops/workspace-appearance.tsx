@@ -11,9 +11,10 @@ export function WorkspaceAppearance({tenantId}:{tenantId:string}){
   void client.activeCustomization().then(value=>{if(!active||!root||!value||typeof value!=='object')return;const c=(value as {configs?:{current?:{theme?:{palette?:string;density?:string}}}}).configs?.current,theme=c?.theme;
    if(!theme||!Object.hasOwn(palettes,theme.palette??''))return;
    root.dataset.workspacePalette=theme.palette;root.dataset.density=theme.density==='compact'?'compact':'comfortable';
+   const font=(theme as {font?:unknown}).font;root.dataset.workspaceFont=font==='rounded'||font==='compact'?font:'system';
    const templates=(c as {templates?:{report?:unknown}})?.templates;root.dataset.workspaceReport=templates?.report==='dense'?'dense':'standard';
   }).catch(()=>{});
-  return()=>{active=false;client.dispose();if(root){delete root.dataset.workspacePalette;delete root.dataset.density;delete root.dataset.workspaceReport;}};
+  return()=>{active=false;client.dispose();if(root){delete root.dataset.workspacePalette;delete root.dataset.density;delete root.dataset.workspaceReport;delete root.dataset.workspaceFont;}};
  },[tenantId]);
  return <span ref={marker} hidden style={{display:'none'} as CSSProperties}/>;
 }
