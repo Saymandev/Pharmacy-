@@ -6,7 +6,7 @@ import {
   RotateCcw,
   Save,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api as legacyApi, ApiClientError } from "@/lib/api/client";
 import {sessionBoundary} from '@/lib/api/session-boundary';
 import {
@@ -61,6 +61,8 @@ export function TenantCustomizationEditor({
 }) {
   const { t, language } = useLanguage(),
     { customization, refreshCustomization } = useCustomization();
+  const mounted=useRef(false),mutation=useRef(false);
+  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
   const api=useMemo(()=>{
     if(!tenantId)return legacyApi;
     const signal=sessionBoundary.capture().signal;
@@ -72,19 +74,20 @@ export function TenantCustomizationEditor({
     [loading, setLoading] = useState(true),
     [saving, setSaving] = useState(false);
   const error = (cause: unknown) =>
-    cause instanceof ApiClientError
+    cause instanceof ApiClientError || cause instanceof Error
       ? cause.message
       : "Customization could not be saved.";
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const value = await api.get<Saved>("/settings/customization");
+      if(!mounted.current)return;
       setSaved(value);
       setDraft(value.configs.current);
     } catch (cause) {
-      onError(error(cause));
+      if(mounted.current)onError(error(cause));
     } finally {
-      setLoading(false);
+      if(mounted.current)setLoading(false);
     }
   }, [onError,api]);
   useEffect(() => {
@@ -120,7 +123,8 @@ export function TenantCustomizationEditor({
     }));
   }
   async function publish() {
-    if (!saved || saving || !canUpdate) return;
+    if (!saved || mutation.current || saving || !canUpdate) return;
+    mutation.current=true;
     setSaving(true);
     try {
       const value = await api.patch<Saved>("/settings/customization", {
@@ -128,32 +132,35 @@ export function TenantCustomizationEditor({
         theme: draft.theme,
         templates: draft.templates,
       });
+      if(!mounted.current)return;
       setSaved(value);
       setDraft(value.configs.current);
       if(tenantId)window.dispatchEvent(new CustomEvent('tenant-customization-published',{detail:{tenantId}}));else await refreshCustomization();
       onNotice(t("Theme and templates published."));
     } catch (cause) {
-      onError(error(cause));
+      if(mounted.current)onError(error(cause));
     } finally {
-      setSaving(false);
+      mutation.current=false;if(mounted.current)setSaving(false);
     }
   }
   async function restore(version: number) {
-    if (!saved || saving || !canUpdate) return;
+    if (!saved || mutation.current || saving || !canUpdate) return;
+    mutation.current=true;
     setSaving(true);
     try {
       const value = await api.post<Saved>(
         `/settings/customization/restore/${version}`,
         { revision: saved.revision },
       );
+      if(!mounted.current)return;
       setSaved(value);
       setDraft(value.configs.current);
       if(tenantId)window.dispatchEvent(new CustomEvent('tenant-customization-published',{detail:{tenantId}}));else await refreshCustomization();
       onNotice(t("Previous version restored as a new publication."));
     } catch (cause) {
-      onError(error(cause));
+      if(mounted.current)onError(error(cause));
     } finally {
-      setSaving(false);
+      mutation.current=false;if(mounted.current)setSaving(false);
     }
   }
   const disabled = busy || saving || loading || !canUpdate;
