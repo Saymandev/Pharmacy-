@@ -1,4 +1,4 @@
-export type ReceiptSnapshot={schemaVersion:1;tenantId:string;branchId:string;name:string;branchName:string;address:string;phone:string;footer:string;brandingRevision:number;template:'standard'|'compact';templateVersion:number};
+export type ReceiptSnapshot={schemaVersion:1;tenantId:string;branchId:string;name:string;branchName:string;address:string;phone:string;footer:string;brandingRevision:number;template:'standard'|'compact';templateVersion:number;logo?:{id:string}|null};
 export function receiptSnapshot(value:unknown,tenantId:string,branchId:string):ReceiptSnapshot|null{
  if(!value||typeof value!=='object'||Array.isArray(value))return null;
  const v=value as ReceiptSnapshot;

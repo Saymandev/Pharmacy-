@@ -9,6 +9,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api as legacyApi, ApiClientError } from "@/lib/api/client";
 import {sessionBoundary} from '@/lib/api/session-boundary';
+import {validCustomizationResponse} from '../shops/customization-policy';
 import {
   useCustomization,
   type TenantCustomization,
@@ -81,6 +82,7 @@ export function TenantCustomizationEditor({
     setLoading(true);
     try {
       const value = await api.get<Saved>("/settings/customization");
+      if(!validCustomizationResponse(value))throw new Error('Customization response could not be verified.');
       if(!mounted.current)return;
       setSaved(value);
       setDraft(value.configs.current);
@@ -132,6 +134,7 @@ export function TenantCustomizationEditor({
         theme: draft.theme,
         templates: draft.templates,
       });
+      if(!validCustomizationResponse(value))throw new Error('Customization response could not be verified.');
       if(!mounted.current)return;
       setSaved(value);
       setDraft(value.configs.current);
@@ -152,6 +155,7 @@ export function TenantCustomizationEditor({
         `/settings/customization/restore/${version}`,
         { revision: saved.revision },
       );
+      if(!validCustomizationResponse(value))throw new Error('Customization response could not be verified.');
       if(!mounted.current)return;
       setSaved(value);
       setDraft(value.configs.current);
@@ -192,6 +196,7 @@ export function TenantCustomizationEditor({
         <p>{t("Loading customization…")}</p>
       ) : (
         <div className="tenant-customization-body">
+          <button type="button" disabled={saving||busy} onClick={()=>void load()}>{t('Reload customization')}</button>
           <section>
             <h4>{t("Theme")}</h4>
             <div className="tenant-customization-options">
