@@ -41,6 +41,7 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
   const url=new URL(req.url,'http://fixture'),tenant=req.headers['x-tenant-id'],key=req.headers['idempotency-key'];upstream.push({path:url.pathname,query:Object.fromEntries(url.searchParams),tenant,authorization:req.headers.authorization,method:req.method,body,key});
   if(saleReturnFixture&&saleReturnFixture.handle(req,res,url,body,key,tenant))return;
   if(reportFixture&&reportFixture.handle(req,res,url,tenant))return;
+  if(url.pathname==='/api/v1/settings/customization/active'){res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({success:true,data:{configs:{current:{theme:{palette:tenant==='a'?'ocean':'violet',density:'compact'}}}}}));return;}
   if(salesMode&&url.pathname.startsWith('/api/v1/sales')&&!(draftMode&&url.pathname==='/api/v1/sales'&&req.method==='POST')){
    const respond=(status,data,message,meta)=>{res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify({success:status<400,data,message,...(meta?{meta}:{})}));};
    if(pendingMode&&holdPendingList&&req.method==='GET'&&url.pathname==='/api/v1/sales'){holdPendingList=false;release=()=>respond(503,null,'Background list unavailable');return;}
@@ -504,10 +505,12 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
   await page.getByRole('button',{name:'Done',exact:true}).click();
   if(catalogMode){releaseCatalog();await workspace.getByRole('button',{name:/Rear medicine/}).waitFor();assert.equal(await workspace.getByRole('button',{name:/Main medicine/}).count(),0);}
   assert.equal(await page.evaluate(()=>sessionStorage.getItem('pharmacy.workspace-branch:u:a:member-a')),a2);
+  await page.waitForFunction(()=>document.querySelector('.tenant-workspace')?.dataset.workspacePalette==='ocean');
   late=true;await page.evaluate(()=>dispatchEvent(new Event('focus')));
   for(let i=0;i<50&&!release;i++)await sleep(50);assert.ok(release,'Delayed old-shop request started');
   await page.getByRole('button',{name:/Second Pharmacy/}).click();
   await workspace.getByText('Choose a branch in workspace settings',{exact:true}).waitFor();
+  await page.waitForFunction(()=>document.querySelector('.tenant-workspace')?.dataset.workspacePalette==='violet');
   late=false;release();
   assert.equal(await workspace.locator('.workspace-access').getByText('Reports',{exact:true}).count(),0);assert.equal(await workspace.locator('.workspace-access').getByText('Inventory',{exact:true}).count(),1);
   assert.equal(await workspace.getByText('Rear counter',{exact:true}).count(),0);
@@ -517,6 +520,7 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
   await page.waitForFunction(()=>document.querySelector('.workspace-current-branch strong')?.textContent==='Second counter');
   await page.getByRole('button',{name:'Done',exact:true}).click();
   await page.getByRole('button',{name:'Switch to dark mode'}).click();await page.setViewportSize({width:390,height:844});
+  assert.equal(await workspace.evaluate(node=>getComputedStyle(node).getPropertyValue('--brand').trim()),'#c8acff');
   await page.screenshot({path:path.resolve('../outputs/tenant-workspace-mobile.png'),fullPage:true});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   revoked=true;await page.evaluate(()=>dispatchEvent(new Event('focus')));await workspace.getByRole('alert').getByText('Tenant access denied').waitFor();
@@ -528,7 +532,7 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
   assert.equal((await context.request.post(base+'/api/backend/tenant-workspace/a/workspace/bootstrap')).status(),403);
   assert.equal((await context.request.get(base+'/api/backend/tenant-workspace/a/pharmacy/stocks/adjust')).status(),404);
   const anonymous=await browser.newContext();assert.equal((await anonymous.request.get(base+'/api/backend/tenant-workspace/a/workspace/bootstrap')).status(),401);await anonymous.close();
-  assert.equal(upstream.length,before);assert.ok(upstream.every(item=>(item.method==='GET'||bulkMode&&item.method==='DELETE'&&['categories','suppliers'].some(kind=>item.path.startsWith(`/api/v1/pharmacy/${kind}/`))||(formMode||stockMode||transferMode||bulkMode)&&['POST','PATCH'].includes(item.method))&&['a','b'].includes(item.tenant)&&(item.path.startsWith('/api/v1/workspace/')||item.path.startsWith('/api/v1/pharmacy/')||bulkMode&&item.path==='/api/v1/finance/accounts/payment-options')));assert.deepEqual(errors,[]);
+  assert.equal(upstream.length,before);assert.ok(upstream.every(item=>(item.method==='GET'||bulkMode&&item.method==='DELETE'&&['categories','suppliers'].some(kind=>item.path.startsWith(`/api/v1/pharmacy/${kind}/`))||(formMode||stockMode||transferMode||bulkMode)&&['POST','PATCH'].includes(item.method))&&['a','b'].includes(item.tenant)&&(item.path==='/api/v1/settings/customization/active'||item.path.startsWith('/api/v1/workspace/')||item.path.startsWith('/api/v1/pharmacy/')||bulkMode&&item.path==='/api/v1/finance/accounts/payment-options')));assert.deepEqual(errors,[]);
   if(catalogMode)console.log('PASS tenant catalog/inventory: actual Next proxy, server search/filter/pagination, details, popover dismiss, scoped quantities, denied/foreign response rejection, branch-change late response disposal, read scope checks.');
   console.log('PASS tenant workspace: real Next proxy + isolated HTTP upstream; HttpOnly cookie, route-bound tenant vs forged header, allowlist/method/anonymous denial, shop/permission/branch isolation, saved scope, late response, revocation, mobile dark. No real database.');
  }catch(error){console.error(logs);throw error;}
