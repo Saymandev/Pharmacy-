@@ -21,6 +21,7 @@ export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,
   }
   const get=(path:string,withMeta=false)=>request(path,withMeta);
   return {
+    activeCustomization:()=>get('settings/customization/active'),
     report:(kind:'summary'|ReportDataset,selection:ReportSelection,page=1,exporting=false)=>{if(kind!=='summary'&&!reportDatasets.includes(kind)||!reportWindow(selection)||!Number.isInteger(page)||page<1||page>1000000)throw new WorkspaceError('Choose a valid report window of at most 366 days ending today or earlier',422);const query=new URLSearchParams({branchId:selection.branchId,startDate:selection.startDate,endDate:selection.endDate});if(kind!=='summary'){query.set('search',selection.search.trim());if(!exporting){query.set('page',String(page));query.set('limit','25');}}return get(`reports/${exporting?`exports/${kind}/document`:kind==='summary'?'pharmacy/summary':reportPaths[kind]}?${query}`);},
     saleReturnable:(id:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid invoice.',400);return get(`sales/${id}/returnable-items`);},
     saleReturns:(branchId:string,saleId:string,page:number,filters:Record<string,string>={})=>{if(!/^[0-9a-f-]{36}$/i.test(saleId))throw new WorkspaceError('Invalid invoice.',400);return get(`sale-returns?${resourceQuery(branchId,page,filters,['search','status','invoiceNumber','startDate','endDate'])}&${new URLSearchParams({saleId})}`,true);},

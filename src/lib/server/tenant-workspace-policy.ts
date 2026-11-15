@@ -12,7 +12,8 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
 }):{url:string;tenantId:string}|null{
   if(config.session!=='true'||config.workspace!=='true'||!config.base)return null;
   if(!/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(tenantId))return null;
-  const read=path.length===2&&path[0]==='workspace'&&path[1]==='bootstrap'||
+  const read=path.length===3&&path[0]==='settings'&&path[1]==='customization'&&path[2]==='active'||
+    path.length===2&&path[0]==='workspace'&&path[1]==='bootstrap'||
     path.length===3&&path[0]==='workspace'&&path[1]==='branches'&&/^[0-9a-f-]{36}$/i.test(path[2])||
     path.length===2&&path[0]==='pharmacy'&&['medicines','stocks'].includes(path[1])||
     path.length===3&&path[0]==='pharmacy'&&path[1]==='medicines'&&/^[0-9a-f-]{36}$/i.test(path[2])||
