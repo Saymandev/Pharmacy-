@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {receiptSnapshot} from '../src/features/shops/receipt-snapshot.ts';
+const saved={schemaVersion:1,tenantId:'a',branchId:'branch-a',name:'Original shop',branchName:'Original branch',address:'Old address',phone:'123',footer:'Thank you',brandingRevision:2,template:'compact',templateVersion:3};
+test('receipt retains issued identity and rejects foreign or malformed snapshots',()=>{assert.deepEqual(receiptSnapshot(saved,'a','branch-a'),saved);for(const value of [null,{...saved,tenantId:'b'},{...saved,branchId:'foreign'},{...saved,template:'html'},{...saved,templateVersion:0},{...saved,name:'x'.repeat(151)}])assert.equal(receiptSnapshot(value,'a','branch-a'),null);});

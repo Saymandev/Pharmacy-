@@ -1,4 +1,6 @@
 /* Shared appearance tokens, preference controls and recent workspaces. */
+.tenant-pos-receipt article[data-template=compact]{font-size:12px}
+.tenant-pos-receipt article[data-template=compact] :is(li,dl>div,p){margin-block:5px;padding-block:4px}
 .tenant-workspace[data-workspace-report=dense] .tenant-report-table :is(th,td){padding:7px 10px;font-size:12px}
 .tenant-workspace[data-workspace-report=dense] .tenant-report-metrics article{padding:10px;gap:7px}
 .tenant-workspace[data-density=compact] .workspace-access li{padding:6px 9px}
