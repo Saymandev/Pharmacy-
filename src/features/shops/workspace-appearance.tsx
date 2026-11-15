@@ -10,9 +10,9 @@ export function WorkspaceAppearance({tenantId}:{tenantId:string}){
  useEffect(()=>{let active=true;const client=createWorkspaceClient(tenantId,sessionBoundary.capture().signal),root=marker.current?.parentElement;
   void client.activeCustomization().then(value=>{if(!active||!root||!value||typeof value!=='object')return;const c=(value as {configs?:{current?:{theme?:{palette?:string;density?:string}}}}).configs?.current,theme=c?.theme;
    if(!theme||!Object.hasOwn(palettes,theme.palette??''))return;
-   const colors=palettes[theme.palette!];['--brand','--brand-dark','--brand-wash'].forEach((key,index)=>root.style.setProperty(key,colors[index]));root.dataset.density=theme.density==='compact'?'compact':'comfortable';
+   root.dataset.workspacePalette=theme.palette;root.dataset.density=theme.density==='compact'?'compact':'comfortable';
   }).catch(()=>{});
-  return()=>{active=false;client.dispose();if(root){['--brand','--brand-dark','--brand-wash'].forEach(key=>root.style.removeProperty(key));delete root.dataset.density;}};
+  return()=>{active=false;client.dispose();if(root){delete root.dataset.workspacePalette;delete root.dataset.density;}};
  },[tenantId]);
  return <span ref={marker} hidden style={{display:'none'} as CSSProperties}/>;
 }

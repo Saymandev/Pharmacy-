@@ -1,4 +1,10 @@
 /* Shared appearance tokens, preference controls and recent workspaces. */
+.tenant-workspace[data-workspace-palette=ocean]{--brand:#147c9f;--brand-dark:#07536e;--brand-wash:#e8f5fa}
+.tenant-workspace[data-workspace-palette=violet]{--brand:#7350b8;--brand-dark:#4d2d8b;--brand-wash:#f2edfc}
+.tenant-workspace[data-workspace-palette=slate]{--brand:#3c6975;--brand-dark:#27464f;--brand-wash:#eaf1f3}
+html[data-theme=dark] .tenant-workspace[data-workspace-palette=ocean]{--brand:#82d7f0;--brand-dark:#c2edfa;--brand-wash:#183a47}
+html[data-theme=dark] .tenant-workspace[data-workspace-palette=violet]{--brand:#c8acff;--brand-dark:#e7d8ff;--brand-wash:#362647}
+html[data-theme=dark] .tenant-workspace[data-workspace-palette=slate]{--brand:#a3ced9;--brand-dark:#d0e7ed;--brand-wash:#263d44}
 :root { --panel: var(--surface); --border: var(--line); --text-muted: var(--ink-soft); }
 html[data-theme="dark"] { --ink:#edf5f1; --ink-soft:#b3c7bc; --ink-muted:#97afa1; --line:#344a3e; --canvas:#101a15; --surface:#1b2a21; --brand:#78dbac; --brand-dark:#bef2d5; --brand-wash:#254733; color-scheme:dark; background:var(--canvas); }
 html[data-theme="light"] { color-scheme:light; }
