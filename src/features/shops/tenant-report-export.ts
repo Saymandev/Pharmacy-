@@ -7,6 +7,8 @@ export function summaryMetrics(value:TenantSummary,t:(s:string)=>string=s=>s){co
  {label:'Operational income',key:'net',value:s.income.net},{label:'Operational expenses',key:'net',value:s.expense.net},{label:'Advance applied (no new receipt)',key:'advanceApplied',value:s.advanceApplied},
  ].map(metric=>({...metric,label:metric.label.split(' · ').map(part=>t(part)).join(' · ')}));}
 export async function exportTenantReport(kind:'summary'|ReportDataset,value:TenantSummary|ReportDocument,format:'csv'|'pdf',context:{tenantName:string;branchName:string;startDate:string;endDate:string;search:string;language:string},t:(s:string)=>string,signal:AbortSignal){
+ const appearance=(value.meta as unknown as {documentAppearance?:{tenantId?:string;name?:string;schemaVersion?:number;templateVersion?:number;template?:string}}).documentAppearance;
+ if(appearance){if(appearance.tenantId!==value.meta.tenantId||appearance.schemaVersion!==1||typeof appearance.name!=='string'||appearance.name.length>150||!Number.isInteger(appearance.templateVersion)||!['standard','dense'].includes(appearance.template??''))throw new Error('Report branding could not be verified.');context={...context,tenantName:appearance.name};}
  const title=kind==='summary'?'Pharmacy summary':reportTitles[kind],filename=`${kind}-${context.startDate}-${context.endDate}.${format}`;
  const rows:Record<string,string|null>[]=kind==='summary'?summaryMetrics(value as TenantSummary,t).map(r=>({metric:r.label,value:String(r.value)})):(value as ReportDocument).data;
  const columns=kind==='summary'?['metric','value']:reportColumns[kind];
