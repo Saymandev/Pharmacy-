@@ -17,6 +17,6 @@ export async function exportTenantReport(kind:'summary'|ReportDataset,value:Tena
  const displayColumns=columns.map(k=>reportLabels[k]??k);
  const model:ReportModel={metrics:[],tables:[{id:kind,name:`${context.tenantName} · ${t(title)} · BDT`,columns:displayColumns,rows:rows.map(row=>Object.fromEntries(columns.map((k,i)=>[displayColumns[i],row[k]]))),totals:[]}]};
  pdfMake.addVirtualFileSystem(fonts);pdfMake.addFonts({Bengali:{normal:new URL('/fonts/NotoSansBengali-Regular.ttf',location.origin).href,bold:new URL('/fonts/NotoSansBengali-Bold.ttf',location.origin).href,italics:new URL('/fonts/NotoSansBengali-Regular.ttf',location.origin).href,bolditalics:new URL('/fonts/NotoSansBengali-Bold.ttf',location.origin).href}});
- const blob=await pdfMake.createPdf(reportPdfDefinition(model,{title:t(title),branch:`${context.tenantName} / ${context.branchName}`,startDate:context.startDate,endDate:context.endDate,generated:value.meta.asOf,search:context.search,language:context.language},s=>t(s==='Generated'?'As of':s))).getBlob();
+ const blob=await pdfMake.createPdf(reportPdfDefinition(model,{title:t(title),branch:`${context.tenantName} / ${context.branchName}`,startDate:context.startDate,endDate:context.endDate,generated:value.meta.asOf,search:context.search,language:context.language,density:appearance?.template==='dense'?'dense':'standard'},s=>t(s==='Generated'?'As of':s))).getBlob();
  if(signal.aborted)throw new Error('Shop selection changed.');saveReportBlob(blob,filename);
 }

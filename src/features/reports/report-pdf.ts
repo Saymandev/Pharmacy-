@@ -1,7 +1,7 @@
 import type { Content, ContentText, TableCell, TDocumentDefinitions } from "pdfmake/interfaces";
 import { formatReportValue, isMoneyColumn, reportLabel, type ReportModel } from "./report-model";
 
-export type PdfReportContext = { title: string; branch: string; startDate: string; endDate: string; generated: string; search?: string; type?: string; language?: string };
+export type PdfReportContext = { title: string; branch: string; startDate: string; endDate: string; generated: string; search?: string; type?: string; language?: string; density?: 'standard'|'dense' };
 
 // Separate font runs preserve Bengali shaping while keeping Latin text readable.
 function text(value: string): ContentText {
@@ -11,6 +11,7 @@ function text(value: string): ContentText {
 export function reportPdfDefinition(model: ReportModel, context: PdfReportContext, t: (value: string) => string = value => value): TDocumentDefinitions {
   const locale = context.language === "bn" ? "bn-BD" : "en-BD";
   const wide = model.tables.some(table => table.columns.length > 6);
+  const dense = context.density === 'dense';
   const generated = new Date(context.generated).toLocaleString(locale, { timeZone: "Asia/Dhaka" });
   const content: Content[] = [
     { ...text("PHARMACY · " + t("Reports")), color: "#147956", bold: true, fontSize: 10, margin: [0, 0, 0, 8] },
@@ -40,7 +41,7 @@ export function reportPdfDefinition(model: ReportModel, context: PdfReportContex
         ...table.rows.map(row => columns.map(key => ({ ...text(formatReportValue(key, row[key], locale)), alignment: isMoneyColumn(key) ? "right" as const : "left" as const })))];
       content.push({ ...text(heading), bold: true, fontSize: 13, margin: [0, 10, 0, 5], pageBreak: part > 0 ? "before" : undefined });
       content.push({ ...text(`${table.rows.length.toLocaleString(locale)} ${t("records")}`), color: "#60736a", fontSize: 8, margin: [0, 0, 0, 8] });
-      content.push({ table: { headerRows: 1, widths: columns.map(() => "*"), body }, layout: "lightHorizontalLines", fontSize: columns.length > 6 ? 7 : 8, margin: [0, 0, 0, 12] });
+      content.push({ table: { headerRows: 1, widths: columns.map(() => "*"), body }, layout: dense ? {paddingTop:()=>2,paddingBottom:()=>2,hLineWidth:()=>0.3,vLineWidth:()=>0,hLineColor:()=>"#dce5df"} : "lightHorizontalLines", fontSize: columns.length > 6 ? 7 : 8, margin: [0, 0, 0, dense ? 8 : 12] });
     }
     if (table.totals.length) content.push({ ...text(table.totals.map(metric => `${t(metric.label)}: ${formatReportValue(metric.key, metric.value, locale)}`).join(" · ")), bold: true, fontSize: 9, margin: [0, 0, 0, 12] });
   }
