@@ -15,6 +15,7 @@ import {CustomerWorkspace} from './customer-workspace';
 import {SalesWorkspace} from './sales-workspace';
 import {TenantReports} from './tenant-reports';
 import {WorkspaceAppearance} from './workspace-appearance';
+import {TenantCustomizationEditor} from '../admin/tenant-customization-editor';
 
 const accessLabels=[['medicine:read','Medicine catalog'],['stock:read','Inventory'],['sale:read','Sales history'],['report:read','Reports'],['account:read','Finance']] as const;
 type Client=ReturnType<typeof createWorkspaceClient>;
@@ -68,6 +69,7 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
  }
  return <section className="tenant-workspace" aria-label={t('Shop workspace')} aria-busy={busy}>
   <WorkspaceAppearance key={selected.tenant.id} tenantId={selected.tenant.id}/>
+  {context?.allBranches&&context.permissions.includes('settings:read')&&<TenantCustomizationEditor key={selected.tenant.id} tenantId={selected.tenant.id} canUpdate={writesEnabled&&context.permissions.includes('settings:update')} busy={busy} onNotice={()=>{}} onError={setError}/>}
   <header><div><h2>{t('Shop workspace')}</h2><p>{context?.role.name??t('Verifying access…')}</p></div><button type="button" disabled={!context||busy} onClick={()=>setSettings(true)}><Settings2 size={16}/>{t('Workspace settings')}</button></header>
   {error&&!settings&&<div role="alert" className="shop-access-error"><p>{error}</p><button type="button" disabled={busy} onClick={()=>{if(client.current)void load(client.current);}}>{t('Retry')}</button></div>}
   {busy&&<DataSkeleton variant="form" rows={2}>{t('Loading workspace…')}</DataSkeleton>}

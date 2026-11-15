@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import {validCustomizationBody} from '@/features/shops/customization-policy';
 import { tenantWorkspaceTarget,validMedicineProxyBody,validStockProxyBody,validBulkProxyBody,validMasterBody,validSupplierBody,validPurchaseBody,validPurchaseStatusBody,validSupplierPayment,validReturnBody } from '@/lib/server/tenant-workspace-policy';
 import { isSameOriginRequest } from '@/lib/server/request-security';
 import {validRegisterBody} from '@/features/shops/register-policy';
@@ -29,7 +30,10 @@ async function proxy(request:Request,context:Context){
     const key=request.headers.get('idempotency-key');
     if(!key||!/^[A-Za-z0-9_-]{16,128}$/.test(key)||new URL(request.url).search||request.headers.get('content-type')?.split(';')[0].trim()!=='application/json')return Response.json({success:false,message:'A JSON body and valid save key are required.'},{status:422,headers:noStore});
     const bulk=['import','bulk-price-update'].includes(path[2]),limit=bulk?262144:32768;
-    if(path[0]==='customers'){
+    if(path[0]==='settings'){
+      try{body=await request.text();if(new TextEncoder().encode(body).byteLength>4096||!validCustomizationBody(JSON.parse(body),path[2]==='restore'))throw new Error('Invalid customization');}catch{return Response.json({success:false,message:'Invalid customization fields.'},{status:422,headers:noStore});}
+      headers['Content-Type']='application/json';headers['Idempotency-Key']=key;
+    }else if(path[0]==='customers'){
       try{body=await request.text();if(new TextEncoder().encode(body).byteLength>limit||!(path.length===3?validAdvanceBody(JSON.parse(body)):validCustomerProfile(JSON.parse(body),request.method==='PATCH')))throw new Error('Invalid customer');}
       catch{return Response.json({success:false,message:'Invalid customer fields.'},{status:422,headers:noStore});}
       headers['Content-Type']='application/json';headers['Idempotency-Key']=key;

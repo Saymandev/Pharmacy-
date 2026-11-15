@@ -7,7 +7,8 @@ import {
   Save,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { api, ApiClientError } from "@/lib/api/client";
+import { api as legacyApi, ApiClientError } from "@/lib/api/client";
+import {sessionBoundary} from '@/lib/api/session-boundary';
 import {
   useCustomization,
   type TenantCustomization,
@@ -50,14 +51,22 @@ export function TenantCustomizationEditor({
   busy,
   onNotice,
   onError,
+  tenantId,
 }: {
   canUpdate: boolean;
   busy: boolean;
   onNotice: (message: string) => void;
   onError: (message: string) => void;
+  tenantId?: string;
 }) {
   const { t, language } = useLanguage(),
     { customization, refreshCustomization } = useCustomization();
+  const api=useMemo(()=>{
+    if(!tenantId)return legacyApi;
+    const signal=sessionBoundary.capture().signal;
+    const request=async<T,>(path:string,method='GET',body?:unknown):Promise<T>=>{const response=await fetch(`/api/backend/tenant-workspace/${encodeURIComponent(tenantId)}${path}`,{method,credentials:'same-origin',cache:'no-store',signal,headers:{Accept:'application/json',...(body?{'Content-Type':'application/json','Idempotency-Key':crypto.randomUUID()}:{})},body:body?JSON.stringify(body):undefined});const value=await response.json();if(signal.aborted)throw new Error('Shop selection changed.');if(!response.ok||value.success!==true)throw new Error(value.message??'Customization request failed.');return value.data as T;};
+    return {get:<T,>(path:string)=>request<T>(path),patch:<T,>(path:string,body:unknown)=>request<T>(path,'PATCH',body),post:<T,>(path:string,body:unknown)=>request<T>(path,'POST',body)};
+  },[tenantId]);
   const [saved, setSaved] = useState<Saved | null>(null),
     [draft, setDraft] = useState<TenantCustomization>(customization),
     [loading, setLoading] = useState(true),
@@ -77,7 +86,7 @@ export function TenantCustomizationEditor({
     } finally {
       setLoading(false);
     }
-  }, [onError]);
+  }, [onError,api]);
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);
     return () => window.clearTimeout(timer);
@@ -121,7 +130,7 @@ export function TenantCustomizationEditor({
       });
       setSaved(value);
       setDraft(value.configs.current);
-      await refreshCustomization();
+      if(tenantId)window.dispatchEvent(new CustomEvent('tenant-customization-published',{detail:{tenantId}}));else await refreshCustomization();
       onNotice(t("Theme and templates published."));
     } catch (cause) {
       onError(error(cause));
@@ -139,7 +148,7 @@ export function TenantCustomizationEditor({
       );
       setSaved(value);
       setDraft(value.configs.current);
-      await refreshCustomization();
+      if(tenantId)window.dispatchEvent(new CustomEvent('tenant-customization-published',{detail:{tenantId}}));else await refreshCustomization();
       onNotice(t("Previous version restored as a new publication."));
     } catch (cause) {
       onError(error(cause));

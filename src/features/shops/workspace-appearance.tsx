@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useRef,type CSSProperties} from 'react';
+import {useEffect,useRef,useState,type CSSProperties} from 'react';
 import {createWorkspaceClient} from './workspace-client';
 import {sessionBoundary} from '@/lib/api/session-boundary';
 
@@ -7,6 +7,8 @@ const palettes:Record<string,string[]>={pharmacy:['#16775f','#0c4c3c','#eaf5ef']
 /** Appearance stays inside the selected workspace and is discarded on shop switch. */
 export function WorkspaceAppearance({tenantId}:{tenantId:string}){
  const marker=useRef<HTMLSpanElement>(null);
+ const [revision,setRevision]=useState(0);
+ useEffect(()=>{const refresh=(event:Event)=>{if((event as CustomEvent).detail?.tenantId===tenantId)setRevision(value=>value+1);};window.addEventListener('tenant-customization-published',refresh);return()=>window.removeEventListener('tenant-customization-published',refresh);},[tenantId]);
  useEffect(()=>{let active=true;const client=createWorkspaceClient(tenantId,sessionBoundary.capture().signal),root=marker.current?.parentElement;
   void client.activeCustomization().then(value=>{if(!active||!root||!value||typeof value!=='object')return;const c=(value as {configs?:{current?:{theme?:{palette?:string;density?:string}}}}).configs?.current,theme=c?.theme;
    if(!theme||!Object.hasOwn(palettes,theme.palette??''))return;
@@ -15,6 +17,6 @@ export function WorkspaceAppearance({tenantId}:{tenantId:string}){
    const templates=(c as {templates?:{report?:unknown}})?.templates;root.dataset.workspaceReport=templates?.report==='dense'?'dense':'standard';
   }).catch(()=>{});
   return()=>{active=false;client.dispose();if(root){delete root.dataset.workspacePalette;delete root.dataset.density;delete root.dataset.workspaceReport;delete root.dataset.workspaceFont;}};
- },[tenantId]);
+ },[tenantId,revision]);
  return <span ref={marker} hidden style={{display:'none'} as CSSProperties}/>;
 }
