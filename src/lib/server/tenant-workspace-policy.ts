@@ -14,7 +14,8 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
   if(!/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(tenantId))return null;
   const customization=path[0]==='settings'&&path[1]==='customization'&&(method==='GET'&&path.length===2||config.writes==='true'&&(method==='PATCH'&&path.length===2||method==='POST'&&path.length===4&&path[2]==='restore'&&/^[1-9][0-9]{0,8}$/.test(path[3])));
   if(customization){try{const base=new URL(config.base);if(!['http:','https:'].includes(base.protocol)||base.username||base.password||base.search||base.hash)return null;return {tenantId,url:`${base.toString().replace(/\/$/,'')}/${path.join('/')}`};}catch{return null;}}
-  const read=path.length===3&&path[0]==='settings'&&path[1]==='customization'&&path[2]==='active'||
+  const read=path.length===3&&path[0]==='sales'&&/^[0-9a-f-]{36}$/i.test(path[1])&&path[2]==='receipt-logo'||
+    path.length===3&&path[0]==='settings'&&path[1]==='customization'&&path[2]==='active'||
     path.length===2&&path[0]==='workspace'&&path[1]==='bootstrap'||
     path.length===3&&path[0]==='workspace'&&path[1]==='branches'&&/^[0-9a-f-]{36}$/i.test(path[2])||
     path.length===2&&path[0]==='pharmacy'&&['medicines','stocks'].includes(path[1])||
