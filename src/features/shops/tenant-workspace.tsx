@@ -1,5 +1,6 @@
 "use client";
 import {canWriteFeature} from './entitlement-policy';
+import {ShopBillingPortal} from './billing-portal';
 import { useCallback,useEffect,useRef,useState } from 'react';
 import { Settings2,X } from 'lucide-react';
 import { Select } from '@/components/ui/select';
@@ -24,7 +25,7 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
  const {t}=useLanguage();
  const feature=(key:Parameters<typeof canWriteFeature>[1])=>writesEnabled&&canWriteFeature(context?.entitlements,key);
  const [context,setContext]=useState<WorkspaceBootstrap|null>(null),[branches,setBranches]=useState<WorkspaceBranch[]>([]),[cursor,setCursor]=useState<string|null>(null);
- const [branch,setBranch]=useState<WorkspaceBranch|null>(null),[busy,setBusy]=useState(true),[error,setError]=useState(''),[settings,setSettings]=useState(false);
+ const [branch,setBranch]=useState<WorkspaceBranch|null>(null),[busy,setBusy]=useState(true),[error,setError]=useState(''),[settings,setSettings]=useState(false),[billing,setBilling]=useState(false);
  const client=useRef<Client|null>(null),revision=useRef(0),posOpen=useRef(false);
  const invalidate=useCallback(()=>{revision.current++;},[]);
  const forget=useCallback(()=>{try{sessionStorage.removeItem(workspaceBranchKey(selected));}catch{}},[selected]);
@@ -71,6 +72,8 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
  }
  return <section className="tenant-workspace" aria-label={t('Shop workspace')} aria-busy={busy}>
   <WorkspaceAppearance key={selected.tenant.id} tenantId={selected.tenant.id}/>
+  {context?.billingAccess&&<button type="button" onClick={()=>{posOpen.current=true;setBilling(true);}}>{t('Shop subscription & billing')}</button>}
+  {billing&&context?.billingAccess&&<ShopBillingPortal key={`billing:${selected.tenant.id}`} tenantId={selected.tenant.id} writesEnabled={writesEnabled} onClose={()=>{posOpen.current=false;setBilling(false);if(client.current)void load(client.current);}}/>}
   {context?.allBranches&&context.permissions.includes('settings:read')&&<TenantCustomizationEditor key={selected.tenant.id} tenantId={selected.tenant.id} canUpdate={feature('customization')&&context.permissions.includes('settings:update')} busy={busy} onNotice={()=>{}} onError={setError}/>}
   <header><div><h2>{t('Shop workspace')}</h2><p>{context?.role.name??t('Verifying access…')}</p></div><button type="button" disabled={!context||busy} onClick={()=>setSettings(true)}><Settings2 size={16}/>{t('Workspace settings')}</button></header>
   {!busy&&context&&<aside className="shop-preview-notice" role="status">{t(context.entitlements?.operable?'Subscription access verified.':'Shop tools are read-only. Review the billing agreement to restore access.')} {context.entitlements&&<span>{t('Branches')}: {context.entitlements.usage.branches} / {context.entitlements.limits.branches??t('Unlimited')} · {t('Team seats')}: {context.entitlements.usage.seats} / {context.entitlements.limits.seats??t('Unlimited')} · {t('Reserved storage bytes')}: {context.entitlements.usage.reservedStorageBytes}</span>}</aside>}

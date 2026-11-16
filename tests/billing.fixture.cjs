@@ -9,6 +9,7 @@ module.exports = () => {
     proofs = [],
     saved = new Map();
   let commits = 0;
+  const reviewRequest={id:'request-1',targetTenantId:'a',revision:1,kind:'RENEWAL',invoiceId:null,payload:{kind:'RENEWAL',note:'Please renew our shop agreement'},status:'OPEN',response:null,createdAt:date,updatedAt:date};
   const invoice = {
     id: "invoice-1",
     targetTenantId: target,
@@ -46,6 +47,11 @@ module.exports = () => {
         res.end(JSON.stringify({ success: status < 400, data, message }));
         return true;
       };
+      if(url.pathname==='/api/v1/platform/shops/a/billing-requests')return send(200,[reviewRequest]);
+      if(url.pathname==='/api/v1/platform/shops/a/billing-requests/request-1/review'){
+        if(saved.has(key))return send(200,saved.get(key));
+        Object.assign(reviewRequest,{status:body.status,response:body.response,revision:2});const result={id:reviewRequest.id,status:reviewRequest.status,revision:2};saved.set(key,result);return send(503,null,'Review saved but response lost');
+      }
       if (req.method === "GET" && url.pathname.includes("/proofs/")) {
         res.writeHead(200, {"content-type":"application/pdf","content-disposition":'attachment; filename="bank-proof.pdf"'});
         res.end(Buffer.from("%PDF-1.4 test proof"));return true;
@@ -327,6 +333,7 @@ module.exports = () => {
       });
       await d.waitFor({ state: "detached" });
       assert.equal(invoices.at(-1).purpose, "CHANGE");
+      const queue=page.getByRole('region',{name:'Shop billing requests',exact:true});await queue.getByRole('button',{name:'Shop billing requests',exact:true}).click();await queue.getByRole('button',{name:'Review request',exact:true}).click();await queue.getByRole('textbox',{name:'Response visible to shop owner',exact:true}).fill('Renewal invoice is ready; payment verification is separate.');await queue.locator('select').selectOption('RESOLVED');await queue.getByRole('button',{name:'Save request review',exact:true}).click();await queue.getByRole('button',{name:'Retry same request',exact:true}).waitFor();assert.equal(await queue.getByRole('textbox',{name:'Response visible to shop owner',exact:true}).isDisabled(),true);const [reviewResponse]=await Promise.all([page.waitForResponse(r=>r.url().endsWith('/request-1/review')),queue.getByRole('button',{name:'Retry same request',exact:true}).click()]);assert.equal(reviewResponse.status(),200,await reviewResponse.text());await queue.getByRole('button',{name:'Retry same request',exact:true}).waitFor({state:'detached'});await queue.locator('article').filter({hasText:'Renewal invoice is ready; payment verification is separate.'}).waitFor();const reviewCalls=requests.filter(r=>r.path.endsWith('/request-1/review'));assert.equal(reviewCalls.length,2);assert.equal(reviewCalls[0].key,reviewCalls[1].key);assert.deepEqual(reviewCalls[0].body,reviewCalls[1].body);
       await page.setViewportSize({ width: 390, height: 844 });
       await page
         .getByRole("button", { name: "Switch to dark mode", exact: true })

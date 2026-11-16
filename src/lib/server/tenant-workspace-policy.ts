@@ -14,7 +14,7 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
   if(!/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(tenantId))return null;
   const customization=path[0]==='settings'&&path[1]==='customization'&&(method==='GET'&&path.length===2||config.writes==='true'&&(method==='PATCH'&&path.length===2||method==='POST'&&path.length===4&&path[2]==='restore'&&/^[1-9][0-9]{0,8}$/.test(path[3])));
   if(customization){try{const base=new URL(config.base);if(!['http:','https:'].includes(base.protocol)||base.username||base.password||base.search||base.hash)return null;return {tenantId,url:`${base.toString().replace(/\/$/,'')}/${path.join('/')}`};}catch{return null;}}
-  const read=path.length===3&&path[0]==='sales'&&/^[0-9a-f-]{36}$/i.test(path[1])&&path[2]==='receipt-logo'||
+  const read=path.length===2&&path[0]==='billing'&&path[1]==='portal'||path.length===3&&path[0]==='sales'&&/^[0-9a-f-]{36}$/i.test(path[1])&&path[2]==='receipt-logo'||
     path.length===3&&path[0]==='settings'&&path[1]==='customization'&&path[2]==='active'||
     path.length===2&&path[0]==='pos'&&path[1]==='medicines'||
     path.length===1&&path[0]==='entitlements'||
@@ -25,7 +25,7 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
     path.length===3&&path[0]==='pharmacy'&&path[1]==='stocks'&&/^[0-9a-f-]{36}$/i.test(path[2])||
     path.length===3&&path[0]==='pharmacy'&&path[1]==='stocks'&&path[2]==='history'||
     path.length===2&&path[0]==='pharmacy'&&['categories','generics','groups','manufacturers','units'].includes(path[1]);
-  const write=config.writes==='true'&&path[0]==='pharmacy'&&(path[1]==='medicines'&&(method==='POST'&&path.length===2||method==='PATCH'&&path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))||path[1]==='stocks'&&method==='POST'&&path.length===3&&['opening','adjust','transfer'].includes(path[2]));
+  const write=config.writes==='true'&&(path.length===2&&path[0]==='billing'&&path[1]==='requests'&&method==='POST'||path[0]==='pharmacy'&&(path[1]==='medicines'&&(method==='POST'&&path.length===2||method==='PATCH'&&path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))||path[1]==='stocks'&&method==='POST'&&path.length===3&&['opening','adjust','transfer'].includes(path[2])));
   const bulk=config.writes==='true'&&path.length===3&&path[0]==='pharmacy'&&(path[1]==='medicines'&&['import','import-preview'].includes(path[2])&&method==='POST'||path[1]==='stocks'&&path[2]==='bulk-price-update'&&method==='PATCH');
   const master=config.writes==='true'&&path[0]==='pharmacy'&&['categories','generics','groups','manufacturers','units'].includes(path[1])&&(path.length===2&&method==='POST'||path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2])&&['PATCH','DELETE'].includes(method));
   const supplier=path[0]==='pharmacy'&&path[1]==='suppliers'&&(path.length===2||path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))&&(method==='GET'||config.writes==='true'&&(path.length===2&&method==='POST'||path.length===3&&['PATCH','DELETE'].includes(method)));
