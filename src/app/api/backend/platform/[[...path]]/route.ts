@@ -1,3 +1,4 @@
+import {validEntitlementBody} from "@/features/platform/entitlement-policy";
 import { cookies } from "next/headers";
 import { platformTarget } from "@/lib/server/platform-policy";
 import { isSameOriginRequest } from "@/lib/server/request-security";
@@ -127,7 +128,7 @@ async function proxy(request: Request, context: Context) {
       const value = JSON.parse(body);
       if (
         new TextEncoder().encode(body).byteLength > 8192 ||
-        !(path[2] === "billing"
+        !(path[0] === "addons" || path[2] === "addons" ? validEntitlementBody(path,value) : path[2] === "billing"
           ? validBillingBody(path, value)
           : path[0] === "plans" || path[2] === "subscription"
             ? validCommercialBody(path, value)

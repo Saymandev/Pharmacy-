@@ -339,7 +339,7 @@ export function BillingWorkspace({
                                 billingAddress: i.snapshot.buyer.address,
                               },
                               {
-                                purpose: i.purpose,
+                                purpose: i.purpose,...(i.purpose==="ADDON"?{addonGrantId:i.snapshot.addonGrantId}:{}),
                                 subscriptionRevision: i.subscriptionRevision,
                                 revision: i.revision,
                               },
@@ -401,7 +401,7 @@ export function BillingWorkspace({
                       i.state === "PAID" &&
                       !i.settled &&
                       capabilities.includes(
-                        "platform:subscriptions:manage",
+                        i.purpose==="ADDON"?"platform:entitlements:manage":"platform:subscriptions:manage",
                       ) && (
                         <button
                           disabled={blocked}
@@ -418,7 +418,7 @@ export function BillingWorkspace({
                     {manage &&
                       i.settled &&
                       capabilities.includes(
-                        "platform:subscriptions:manage",
+                        i.purpose==="ADDON"?"platform:entitlements:manage":"platform:subscriptions:manage",
                       ) && (
                         <button
                           disabled={blocked}
@@ -838,14 +838,15 @@ function BillingCommand({
               <Select
                 value={String(fixed.purpose)}
                 onChange={(e) =>
-                  setFixed((v) => ({ ...v, purpose: e.target.value }))
+                  setFixed((v) => {const next={...v,purpose:e.target.value};delete (next as Record<string,unknown>).addonGrantId;if(e.target.value==="ADDON")(next as Record<string,unknown>).addonGrantId="";return next;})
                 }
               >
                 <option value="CURRENT">{t("Current unpaid term")}</option>
-                <option value="RENEWAL">{t("Next renewal term")}</option>
+                <option value="RENEWAL">{t("Next renewal term")}</option><option value="ADDON">{t("Add-on invoice")}</option>
               </Select>
             </label>
           )}
+          {fixed.purpose==="ADDON"&&<label>{t("Unpaid add-on")}<Select required value={String(fixed.addonGrantId??"")} onChange={e=>setFixed(v=>({...v,addonGrantId:e.target.value}))}><option value="">{t("Choose add-on")}</option>{(data.pendingAddons??[]).map(g=><option key={g.id} value={g.id}>{g.snapshot.name} · BDT {g.snapshot.price}</option>)}</Select></label>}
           {action.path === "payments" && (
             <label>
               {t("Payment method")}

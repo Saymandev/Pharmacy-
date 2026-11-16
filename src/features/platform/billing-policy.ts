@@ -5,7 +5,7 @@ export type BillingInvoice = {
   number: string | null;
   revision: number;
   subscriptionRevision: number;
-  purpose: "CURRENT" | "RENEWAL" | "CHANGE";
+  purpose: "CURRENT" | "RENEWAL" | "CHANGE" | "ADDON";
   state: string;
   totalMinor: number;
   dueMinor: number;
@@ -16,6 +16,7 @@ export type BillingInvoice = {
   snapshot: {
     seller: { name: string; address: string };
     buyer: { name: string; address: string };
+    addonGrantId?:string;
     description: string;
     periodStart: string;
     periodEnd: string | null;
@@ -55,6 +56,7 @@ export type BillingEntry = {
 export type BillingView = {
   targetTenantId: string;
   currency: string;
+  pendingAddons?:{id:string;snapshot:{name:string;price:string}}[];
   merchantConfigured: boolean;
   subscriptionRevision: number | null;
   invoices: BillingInvoice[];
@@ -269,11 +271,11 @@ export function validBillingBody(path: string[], v: unknown) {
     return (
       exact(
         "purpose,subscriptionRevision,discount,dueAt,billingName,billingAddress,reason" +
-          (v.purpose === "CHANGE" ? ",previewKey" : "") +
+          (v.purpose === "CHANGE" ? ",previewKey" : v.purpose==="ADDON"?",addonGrantId":"") +
           (tail.length === 3 ? ",revision" : ""),
       ) &&
-      (v.purpose !== "CHANGE" || id(v.previewKey)) &&
-      ["CURRENT", "RENEWAL", "CHANGE"].includes(String(v.purpose)) &&
+      (v.purpose !== "CHANGE" || id(v.previewKey)) && (v.purpose!=="ADDON"||id(v.addonGrantId))&&
+      ["CURRENT", "RENEWAL", "CHANGE", "ADDON"].includes(String(v.purpose)) &&
       Number.isInteger(v.subscriptionRevision) &&
       Number(v.subscriptionRevision) > 0 &&
       money(v.discount) &&

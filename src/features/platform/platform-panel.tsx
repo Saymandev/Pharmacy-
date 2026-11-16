@@ -12,6 +12,7 @@ import {validPlatformSession,validPlatformShop,validPlatformAudit,validPlatformP
 import './platform.css';
 import {ShopOnboardingForm,ShopOnboardingSummary} from './shop-onboarding';
 import {ProvisionShop} from './provision-shop';
+import {EntitlementsWorkspace} from './entitlements-workspace';
 import {BillingWorkspace} from './billing-workspace';
 import {ActivateShop} from './activate-shop';
 import {PlanCatalog,ShopSubscription} from './commercial-workspace';
@@ -43,6 +44,7 @@ function OperatorWorkspace({userId,writesEnabled}:{userId:string;writesEnabled:b
  {selected.status==='PROVISIONING'&&can('platform:shops:create')&&<ShopOnboardingSummary key={selected.id} target={selected.id}/>}
  {can('platform:subscriptions:read')&&<ShopSubscription key={`subscription:${selected.id}`} target={selected.id} canManage={writesEnabled&&can('platform:subscriptions:manage')} blocked={locked} canReadPlans={can('platform:plans:read')} onLock={invitationLock}/>}
  {selected.status==='PROVISIONING'&&writesEnabled&&can('platform:shops:provision')&&<ProvisionShop key={`provision:${selected.id}`} target={selected.id} onLock={invitationLock} onSaved={()=>setAuditRevision(r=>r+1)}/>}
+ {can('platform:entitlements:read')&&<EntitlementsWorkspace key={`entitlements:${selected.id}`} target={selected.id} canManage={writesEnabled&&can('platform:entitlements:manage')} blocked={locked} onLock={invitationLock}/>}
  {can('platform:billing:read')&&<BillingWorkspace key={`billing:${selected.id}`} target={selected.id} capabilities={session.capabilities} writesEnabled={writesEnabled} blocked={locked} onLock={invitationLock} onSaved={()=>setAuditRevision(v=>v+1)}/>}
  {selected.status==='PROVISIONING'&&can('platform:shops:activate')&&<ActivateShop key={`activation:${selected.id}`} target={selected.id} writesEnabled={writesEnabled} onLock={invitationLock} onSaved={()=>{setReload(v=>v+1);void open(selected.id);}}/>}
  {selected.status==='PROVISIONING'&&can('platform:shops:invite')&&<OwnerInvitations key={`invites:${selected.id}`} target={selected.id} writesEnabled={writesEnabled} onLock={invitationLock} onIssued={()=>setAuditRevision(r=>r+1)}/>}

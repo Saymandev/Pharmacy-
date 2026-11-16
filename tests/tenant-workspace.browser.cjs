@@ -40,6 +40,7 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
  const stub=http.createServer(async(req,res)=>{
   const chunks=[];for await(const chunk of req)chunks.push(chunk);const raw=Buffer.concat(chunks),multipart=String(req.headers['content-type']??'').startsWith('multipart/form-data'),body=raw.length&&!multipart?JSON.parse(raw.toString()):undefined;
   const url=new URL(req.url,'http://fixture'),tenant=req.headers['x-tenant-id'],key=req.headers['idempotency-key'];upstream.push({path:url.pathname,query:Object.fromEntries(url.searchParams),tenant,authorization:req.headers.authorization,method:req.method,body,key});
+  if(url.pathname==='/api/v1/pos/medicines')url.pathname='/api/v1/pharmacy/medicines';
   if(saleReturnFixture&&saleReturnFixture.handle(req,res,url,body,key,tenant))return;
   if(customizationFixture&&customizationFixture.handle(req,res,url,body,tenant))return;
   if(reportFixture&&reportFixture.handle(req,res,url,tenant))return;
@@ -196,7 +197,7 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
   function respond(){
    if(res.writableEnded||res.destroyed)return;
    if(revoked&&tenant==='b'){res.writeHead(403,{'content-type':'application/json'});res.end(JSON.stringify({success:false,message:'Tenant access denied'}));return;}
-   let data,meta;if(url.pathname==='/api/v1/workspace/bootstrap')data={...supplierContext(tenant),branches:{items:(branches[tenant]??[]).filter(row=>row.name.toLowerCase().includes((url.searchParams.get('search')??'').toLowerCase())),nextCursor:null}};
+   let data,meta;if(url.pathname==='/api/v1/workspace/bootstrap')data={...supplierContext(tenant),entitlements:{targetTenantId:tenant,state:'ACTIVE',operable:true,revision:'test',features:Object.fromEntries(['pos','catalog','inventory','purchases','customers','finance','reports','hr','communications','team','customization'].map(k=>[k,true])),limits:{branches:null,seats:null,storageBytes:null},usage:{branches:1,seats:1,storageBytes:0,reservedStorageBytes:0}},branches:{items:(branches[tenant]??[]).filter(row=>row.name.toLowerCase().includes((url.searchParams.get('search')??'').toLowerCase())),nextCursor:null}};
    else if(url.pathname.startsWith('/api/v1/workspace/branches/'))data=(branches[tenant]??[]).find(item=>item.id===url.pathname.split('/').at(-1));
    else if(['/api/v1/pharmacy/categories','/api/v1/pharmacy/generics','/api/v1/pharmacy/groups','/api/v1/pharmacy/manufacturers','/api/v1/pharmacy/units'].includes(url.pathname)){
     data=[{id:referenceId,tenantId:tenant,name:masterName|| (url.searchParams.get('search')==='Own reference'?'Own reference':url.searchParams.get('search')?'Server reference':'Own reference'),nameBangla:masterBangla}];meta={page:Number(url.searchParams.get('page')||1),pageSize:20,totalItems:1,totalPages:1,hasNextPage:false,hasPreviousPage:false};
@@ -305,7 +306,7 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
   }
   if(posMode){
    await workspace.getByRole('button',{name:'Open tenant POS',exact:true}).click();const pos=page.getByRole('dialog',{name:'Tenant point of sale'}),search=pos.getByRole('textbox',{name:'Search POS medicines'});
-   await pos.getByRole('region',{name:'POS medicines'}).getByRole('button',{name:/Main medicine/}).waitFor();await search.fill('00123');await search.press('Enter');await page.waitForResponse(r=>r.url().includes('/pharmacy/medicines?')&&r.url().includes('00123'));
+   await pos.getByRole('region',{name:'POS medicines'}).getByRole('button',{name:/Main medicine/}).waitFor();await search.fill('00123');await Promise.all([page.waitForResponse(r=>r.url().includes('/pos/medicines?')&&r.url().includes('00123')),search.press('Enter')]);
    await search.press('ArrowDown');await page.keyboard.press('Enter');const qty=pos.getByRole('spinbutton',{name:'Quantity Main medicine'});await qty.waitFor();await qty.fill('2');await qty.press('Enter');assert.equal(await pos.getByRole('complementary',{name:'Current sale'}).count(),0);
    await page.keyboard.press('F8');await qty.waitFor();assert.equal(await qty.inputValue(),'2');await page.keyboard.press('F8');await pos.getByRole('button',{name:'List mode',exact:true}).click();assert.equal(await pos.locator('.tenant-pos-medicines.list').count(),1);
    await page.evaluate(()=>dispatchEvent(new Event('focus')));assert.equal(await pos.count(),1);await page.keyboard.press('F4');await pos.getByRole('heading',{name:'Review & pay'}).waitFor();await pos.getByLabel('Discount amount',{exact:true}).fill('1');await pos.getByLabel('VAT (%)',{exact:true}).fill('5');await pos.locator('select').filter({has:page.locator(`option[value="${cashAccountId}"]`)}).selectOption(cashAccountId);

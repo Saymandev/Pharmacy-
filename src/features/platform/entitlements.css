@@ -1,0 +1,76 @@
+.platform-entitlements {
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  min-width: 0;
+}
+.platform-entitlements fieldset {
+  border: 0;
+  padding: 12px 0;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.platform-entitlements label {
+  display: grid;
+  gap: 7px;
+}
+.platform-entitlements textarea,
+.platform-entitlements input {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 10px;
+  width: 100%;
+  min-width: 0;
+}
+.platform-entitlements .platform-checkbox {
+  display: flex;
+  align-items: start;
+  gap: 9px;
+}
+.platform-entitlements .platform-checkbox input {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+.platform-entitlements details {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+}
+.platform-entitlements summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.addon-feature-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.entitlement-usage {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.entitlement-usage > div {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.entitlement-usage dt {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.entitlement-usage dd {
+  font-weight: 700;
+  margin: 6px 0 0;
+}
+@media (max-width: 500px) {
+  .entitlement-usage,
+  .addon-feature-list {
+    grid-template-columns: 1fr;
+  }
+}
