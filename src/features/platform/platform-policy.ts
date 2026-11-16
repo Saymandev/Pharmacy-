@@ -1,5 +1,5 @@
 import {validCatalogPage,type CatalogMeta} from '../shops/catalog-contract.ts';
-export const platformCaps=['platform:shops:read','platform:shops:suspend','platform:shops:resume','platform:audit:read','platform:shops:create','platform:shops:invite','platform:shops:provision','platform:plans:read','platform:plans:manage','platform:subscriptions:read','platform:subscriptions:manage','platform:shops:activate'] as const;
+export const platformCaps=['platform:shops:read','platform:shops:suspend','platform:shops:resume','platform:audit:read','platform:shops:create','platform:shops:invite','platform:shops:provision','platform:plans:read','platform:plans:manage','platform:subscriptions:read','platform:subscriptions:manage','platform:shops:activate','platform:billing:read','platform:billing:manage','platform:payments:verify','platform:refunds:approve'] as const;
 export type PlatformSession={operatorId:string;userId:string;capabilities:string[]};
 export type PlatformShop={id:string;name:string;slug:string;status:'PROVISIONING'|'ACTIVE'|'SUSPENDED'|'ARCHIVED';isolationReady:boolean;createdAt:string;updatedAt:string};
 export type PlatformAudit={id:string;operatorId:string;targetTenantId:string;action:'SUSPEND'|'RESUME'|'ONBOARD'|'OWNER_INVITE'|'PROVISION'|'ACTIVATE';reason:string;beforeStatus:string;afterStatus:string;createdAt:string};
