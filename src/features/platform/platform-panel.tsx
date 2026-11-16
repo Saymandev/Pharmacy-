@@ -12,6 +12,7 @@ import {validPlatformSession,validPlatformShop,validPlatformAudit,validPlatformP
 import './platform.css';
 import {ShopOnboardingForm,ShopOnboardingSummary} from './shop-onboarding';
 import {ProvisionShop} from './provision-shop';
+import {ActivateShop} from './activate-shop';
 import {PlanCatalog,ShopSubscription} from './commercial-workspace';
 import {OwnerInvitations} from './owner-invitations';
 export function PlatformPanel({writesEnabled}:{writesEnabled:boolean}){const {status,user}=useAuth(),router=useRouter();useEffect(()=>{if(status==='anonymous')router.replace('/login');},[status,router]);return status!=='authenticated'||!user?<SessionSkeleton>Checking your session…</SessionSkeleton>:<OperatorWorkspace key={user.id} userId={user.id} writesEnabled={writesEnabled}/>;}
@@ -41,6 +42,7 @@ function OperatorWorkspace({userId,writesEnabled}:{userId:string;writesEnabled:b
  {selected.status==='PROVISIONING'&&can('platform:shops:create')&&<ShopOnboardingSummary key={selected.id} target={selected.id}/>}
  {can('platform:subscriptions:read')&&<ShopSubscription key={`subscription:${selected.id}`} target={selected.id} canManage={writesEnabled&&can('platform:subscriptions:manage')} blocked={locked} canReadPlans={can('platform:plans:read')} onLock={invitationLock}/>}
  {selected.status==='PROVISIONING'&&writesEnabled&&can('platform:shops:provision')&&<ProvisionShop key={`provision:${selected.id}`} target={selected.id} onLock={invitationLock} onSaved={()=>setAuditRevision(r=>r+1)}/>}
+ {selected.status==='PROVISIONING'&&can('platform:shops:activate')&&<ActivateShop key={`activation:${selected.id}`} target={selected.id} writesEnabled={writesEnabled} onLock={invitationLock} onSaved={()=>{setReload(v=>v+1);void open(selected.id);}}/>}
  {selected.status==='PROVISIONING'&&can('platform:shops:invite')&&<OwnerInvitations key={`invites:${selected.id}`} target={selected.id} writesEnabled={writesEnabled} onLock={invitationLock} onIssued={()=>setAuditRevision(r=>r+1)}/>}
  {can('platform:audit:read')&&<section aria-label={t('Platform audit')}><h3>{t('Security activity')}</h3>{auditError?<p role="alert">{t(auditError)}</p>:audit?<><ul className="platform-audit-list">{audit.data.map(row=><li key={row.id}><header><strong>{t(row.action)}</strong><time>{new Date(row.createdAt).toLocaleString()}</time></header><p>{row.reason}</p><small>{t(row.beforeStatus)} → {t(row.afterStatus)}</small></li>)}</ul>{!audit.data.length&&<p>{t('No security activity yet.')}</p>}<nav><button disabled={locked||!audit.pagination.hasPreviousPage} onClick={()=>setAuditPage(p=>p-1)}>{t('Previous')}</button><span>{auditPage} / {Math.max(1,audit.pagination.totalPages)}</span><button disabled={locked||!audit.pagination.hasNextPage} onClick={()=>setAuditPage(p=>p+1)}>{t('Next')}</button></nav></>:<DataSkeleton rows={2}>{t('Loading audit…')}</DataSkeleton>}</section>}
  </>:<p>{t('Select a shop to review its status and security activity.')}</p>}</section></div>

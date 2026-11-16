@@ -1,5 +1,18 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "Activate shop": "শপ অ্যাক্টিভেট",
+  "Activation checks the current owner, setup, subscription and database isolation before opening shop access.": "শপ অ্যাক্সেস চালুর আগে ওনার, সেটআপ, সাবস্ক্রিপশন ও ডেটাবেস আইসোলেশন চেক হবে।",
+  "Check activation readiness": "অ্যাক্টিভেশন রেডিনেস চেক",
+  "Shop is pending activation": "শপ অ্যাক্টিভেশন পেন্ডিং",
+  "Provisioning completed": "প্রভিশনিং কমপ্লিট",
+  "Accepted owner and branch access are valid": "অ্যাক্সেপ্ট করা ওনার ও ব্রাঞ্চ অ্যাক্সেস ভ্যালিড",
+  "Shop defaults and walk-in customer are ready": "শপ ডিফল্ট ও ওয়াক-ইন কাস্টমার রেডি",
+  "Subscription is active or trialing": "সাবস্ক্রিপশন অ্যাক্টিভ বা ট্রায়ালে আছে",
+  "Database tenant isolation checks passed": "ডেটাবেস টেন্যান্ট আইসোলেশন চেক পাস",
+  "Activation reason": "অ্যাক্টিভেশনের কারণ",
+  "I confirm this shop should be activated with the verified owner and agreement.": "ভেরিফাই করা ওনার ও এগ্রিমেন্ট অনুযায়ী শপ অ্যাক্টিভেট করতে কনফার্ম করছি।",
+  "Activate verified shop": "ভেরিফাই করা শপ অ্যাক্টিভেট",
+  "Activating…": "অ্যাক্টিভেট হচ্ছে…",
   "Plans and versions": "প্ল্যান ও ভার্সন",
   "Shop subscription": "শপ সাবস্ক্রিপশন",
   "Save draft": "ড্রাফট সেভ",
