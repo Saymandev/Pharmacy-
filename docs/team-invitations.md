@@ -3,8 +3,8 @@
 Team access now includes an Invitations tab for a fresh all-branch administrator
 with team:invite (and user:read). The existing capability/entitlement/mutation
 gates apply. Managers choose an assignable shop role, explicit active branches or
-all branches, optional default branch and expiry (1 hour to 7 days). Existing
-identity required is stated in the form; this workflow does not create accounts.
+all branches, optional default branch and expiry (1 hour to 7 days). The separate gated [account onboarding flow](member-registration.md) lets recipients
+verify their invited email and create an account before joining.
 
 Pending invitations reserve a seat. The form explains same-email replacement.
 Issue success exposes a private fragment link once for copying; history shows
@@ -15,7 +15,7 @@ and payload. Unknown outcomes freeze the form, tabs and modal dismissal until
 resolved. Tokens are never written to local/session storage or list responses.
 
 The dedicated `/member-invitation` page removes the URL fragment immediately.
-An existing account signs in, previews the shop/role/branch names and explicitly
+An existing account signs in (or a new account uses gated verified onboarding), previews the shop/role/branch names and explicitly
 consents. Wrong accounts see no shop metadata. Acceptance retries use the same
 token, disable sign-out during unknown results and show an accepted receipt with
 a Your shops link. Reloading the page requires reopening the original invitation

@@ -1,0 +1,15 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {validRegistrationBody,validRegistrationSent,validRegistered} from '../src/features/shops/member-registration-policy.ts';
+import {createRegistrationClient} from '../src/features/shops/member-registration-client.ts';
+import {memberInvitationTarget} from '../src/lib/server/member-invitation-policy.ts';
+const id='11111111-1111-4111-8111-111111111111',token=id+'.'+'a'.repeat(43),base={token,email:'new@example.test',challengeId:id},complete={...base,code:'123456',username:'new_member',fullName:'New Member',password:'A longer passphrase 432',confirm:true};
+test('registration BFF requires explicit gate and exact unauthenticated route/body allowlists',()=>{
+ const config={enabled:'true',registration:'true',base:'https://backend.test/api/v1/member-invitations'};assert.equal(memberInvitationTarget(['registration','complete'],'POST',config),config.base+'/registration/complete');for(const path of [['registration'],['registration','users'],['registration','complete','extra']])assert.equal(memberInvitationTarget(path,'POST',config),null);assert.equal(memberInvitationTarget(['registration','start'],'POST',{...config,registration:'false'}),null);assert.equal(memberInvitationTarget(['registration','start'],'GET',config),null);
+ assert.ok(validRegistrationBody(base,'start'));assert.ok(validRegistrationBody({...base,code:'123456'},'review'));assert.ok(validRegistrationBody(complete,'complete'));for(const change of [{confirm:false},{roleId:id},{tenantId:'b'},{password:'short'},{password:'অ'.repeat(30)},{username:'ADMIN'},{code:'12345'}])assert.equal(validRegistrationBody({...complete,...change},'complete'),false);
+});
+test('registration receipts cannot expose code, passwords, authority or a different challenge',()=>{
+ assert.ok(validRegistrationSent({challengeId:id,status:'CODE_SENT',expiresAt:'2026-11-18T00:00:00Z'},id));assert.equal(validRegistrationSent({challengeId:id,status:'CODE_SENT',expiresAt:'2026-11-18T00:00:00Z',code:'123456'},id),false);assert.ok(validRegistered({status:'ACCOUNT_CREATED',username:'new_member',requiresSignIn:true},'new_member'));assert.equal(validRegistered({status:'ACCOUNT_CREATED',username:'new_member',requiresSignIn:true,accessToken:'token'},'new_member'),false);
+});
+test('registration transport sends bounded POST bodies without auth, tenant headers or URL credentials and stops after disposal',async()=>{
+ const calls=[],client=createRegistrationClient(new AbortController().signal,async(url,options)=>{calls.push({url,options});return Response.json({success:true,data:{}});});await client.request('complete',complete);const c=calls[0];assert.equal(c.url,'/api/backend/member-invitations/registration/complete');assert.ok(!c.url.includes(token)&&!c.url.includes(complete.password));assert.equal(c.options.credentials,'same-origin');assert.ok(!('Authorization'in c.options.headers)&&!('X-Tenant-Id'in c.options.headers));assert.deepEqual(JSON.parse(c.options.body),complete);client.dispose();await assert.rejects(client.request('start',base));
+});
