@@ -38,8 +38,8 @@ Other shop navigation is locked while a review result is unknown; retry preserve
 the exact command. Financial verification/settlement stays in the existing billing
 workflow.
 
-This is a completed workflow within Task 6. Delegated billing users, private proof
-self-service, quote/change requests and notification outbox/socket delivery remain
+This is a completed workflow within Task 6. Delegated billing users,
+quote/change requests and notification outbox/socket delivery remain
 outstanding. Team/invitations/onboarding, Media and manual HR workspace flows
 have separate completed checkpoints. This work is staged on SaaS feature branches,
 not deployed. Deploy the backend `tenant-billing-history.sql` rollout after its
@@ -63,3 +63,33 @@ denial/retry, empty state and unknown-save locking. Mobile dark and Banglish
 screenshots were inspected. Backend full regression passed 290/290 tests; the
 final platform/boundary run passed 115/115 after bounded page aggregation and UTC
 timestamp verification. This does not enable delegated access or proof uploads.
+
+## Private payment proof self-service — 2026-11-17
+
+Open a payment-review request in Billing request updates, then Payment proof
+attachments to upload/download evidence. PDF, PNG and JPEG are supported up to
+1 MiB per file, three files per request and 32 retained files per shop. Open and
+acknowledged requests allow new uploads; closed requests retain downloads. The
+request remains unverified until the existing operator financial workflow runs.
+
+Unknown upload results freeze the exact file/key, file selection, other billing
+actions, dialog close and Escape dismissal until confirmed retry. Known rejection
+releases the form. Aborted/disposed sessions cannot render a late response or
+download stale content. Foreign/malformed proof lists are hidden, with retry.
+Metadata contracts reject private fields and duplicate IDs. Downloads use a safe
+fixed filename and actual size/type validation even when Next streams without a
+Content-Length header. The shared component supports read-only Super Admin proof
+delivery, visible only with `platform:payments:verify`; billing managers without
+that capability cannot view proof metadata/content through the server.
+
+Deploy the backend proof schema expansion and tenant/platform staged rollouts
+before this frontend, with the same dedicated encryption key on both reviewed
+backend routers. This work does not automatically deploy those changes.
+
+Production build, scoped ESLint and 16 relevant policy/transport tests passed.
+Actual Next BFF owner flow passed invalid-file rejection, lost-response same-file
+retry, close/Escape locking, download bytes and safe filename, foreign-list denial
+and mobile dark layout. Super Admin BFF browser verification passed shop-request
+proof viewing/download alongside the existing billing/review workflow. Mobile
+proof layout was visually inspected. Backend full regression passed 295/295.
+Delegated billing grants remain the next separate task.

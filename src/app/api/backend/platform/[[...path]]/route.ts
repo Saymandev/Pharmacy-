@@ -1,5 +1,6 @@
 import {validEntitlementBody} from "@/features/platform/entitlement-policy";
 import {validBillingReview} from '@/features/shops/billing-portal-policy';
+import {privateRequestProofResponse} from '@/lib/server/billing-request-proof-proxy';
 import { cookies } from "next/headers";
 import { platformTarget } from "@/lib/server/platform-policy";
 import { isSameOriginRequest } from "@/lib/server/request-security";
@@ -70,6 +71,8 @@ async function proxy(request: Request, context: Context) {
     Authorization: `Bearer ${token}`,
     Accept: "application/json",
   };
+  const requestProofDownload=path[2]==='billing-request-proofs';
+  if((requestProofDownload||path[2]==='billing-requests'&&path[4]==='proofs')&&new URL(request.url).search)return Response.json({success:false,message:'Invalid proof query.'},{status:422,headers:noStore});
   let body: string | ArrayBuffer | undefined;
   const proof =
     path[2] === "billing" && path[3] === "payments" && path[5] === "proofs";
@@ -162,6 +165,7 @@ async function proxy(request: Request, context: Context) {
       redirect: "error",
       signal: AbortSignal.any([request.signal, AbortSignal.timeout(15000)]),
     });
+    if(requestProofDownload&&upstream.ok)return await privateRequestProofResponse(upstream)??Response.json({success:false,message:'Private proof could not be verified.'},{status:502,headers:noStore});
     return new Response(upstream.body, {
       status: upstream.status,
       headers: {

@@ -5,6 +5,7 @@ import {validTeamBody} from '@/features/shops/team-policy';
 import {readPrivateMediaUpload,privateMediaHeaders} from '@/lib/server/private-media-proxy';
 import {validMediaMutation} from '@/features/shops/media-policy';
 import {validBillingRequest} from '@/features/shops/billing-portal-policy';
+import {readRequestProofUpload,privateRequestProofResponse} from '@/lib/server/billing-request-proof-proxy';
 import {validCustomizationBody} from '@/features/shops/customization-policy';
 import { tenantWorkspaceTarget,validMedicineProxyBody,validStockProxyBody,validBulkProxyBody,validMasterBody,validSupplierBody,validPurchaseBody,validPurchaseStatusBody,validSupplierPayment,validReturnBody } from '@/lib/server/tenant-workspace-policy';
 import { isSameOriginRequest } from '@/lib/server/request-security';
@@ -27,10 +28,14 @@ async function proxy(request:Request,context:Context){
   const preview=path[0]==='pharmacy'&&path[1]==='medicines'&&path[2]==='import-preview';
   const mediaUpload=path[0]==='media'&&path[1]==='upload-multiple',mediaContent=path[0]==='media'&&path[2]==='content';
   if(mediaContent&&new URL(request.url).search)return Response.json({success:false,message:'Invalid private file query.'},{status:422,headers:noStore});
-  let body:string|FormData|undefined;
+  const requestProofUpload=path[0]==='billing'&&path[1]==='requests'&&path[3]==='proofs'&&request.method==='POST',requestProofDownload=path[0]==='billing'&&path[1]==='request-proofs';
+  if(path[0]==='billing'&&path.length>2&&new URL(request.url).search)return Response.json({success:false,message:'Invalid proof query.'},{status:422,headers:noStore});
+  let body:string|FormData|ArrayBuffer|undefined;
   const headers:Record<string,string>={Authorization:`Bearer ${token}`,'X-Tenant-Id':target.tenantId,Accept:'application/json'};
   if(mutating){
-    if(mediaUpload){
+    if(requestProofUpload){
+      const proof=await readRequestProofUpload(request).catch(()=>null);if(!proof)return Response.json({success:false,message:'Attach a PDF, PNG or JPEG of at most 1 MB'},{status:422,headers:noStore});body=proof.body;Object.assign(headers,proof.headers);
+    }else if(mediaUpload){
       const key=request.headers.get('idempotency-key');if(!key||!/^[A-Za-z0-9_-]{16,128}$/.test(key))return Response.json({success:false,message:'A valid upload key is required.'},{status:422,headers:noStore});
       const form=await readPrivateMediaUpload(request).catch(()=>null);if(!form)return Response.json({success:false,message:'Choose 1–5 PNG, JPEG, GIF, WebP or PDF files. Maximum 5 MB each and 10 MB total.'},{status:422,headers:noStore});body=form;headers['Idempotency-Key']=key;
     }else if(preview){
@@ -81,6 +86,7 @@ async function proxy(request:Request,context:Context){
       cache:'no-store',redirect:'error',signal:AbortSignal.any([request.signal,AbortSignal.timeout(15000)]),
     });
     if(mediaContent&&upstream.ok){const safe=privateMediaHeaders(upstream.headers);if(!safe){await upstream.body?.cancel();return Response.json({success:false,message:'Private file could not be verified.'},{status:502,headers:noStore});}return new Response(upstream.body,{status:upstream.status,headers:safe});}
+    if(requestProofDownload&&upstream.ok)return await privateRequestProofResponse(upstream)??Response.json({success:false,message:'Private proof could not be verified.'},{status:502,headers:noStore});
     return new Response(upstream.body,{status:upstream.status,headers:{...noStore,'Content-Type':upstream.headers.get('content-type')??'application/json'}});
   }catch{return Response.json({success:false,message:'Shop workspace could not be reached.'},{status:502,headers:noStore});}
 }
