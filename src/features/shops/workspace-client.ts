@@ -1,3 +1,4 @@
+import {hrKinds,validHrBody,type HrKind,type HrAction} from './hr-contract.ts';
 import {reportDatasets,reportPaths,reportWindow,type ReportSelection,type ReportDataset} from './report-policy.ts';
 import {validMediaFiles,mediaMimes} from './media-policy.ts';
 import {validInviteBody} from './team-invitation-policy.ts';
@@ -24,6 +25,9 @@ export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,
   }
   const get=(path:string,withMeta=false)=>request(path,withMeta);
   return {
+    hrList:(kind:HrKind,branchId:string,page:number,filters:Record<string,string>={})=>{if(!hrKinds.includes(kind)||!/^[0-9a-f-]{36}$/i.test(branchId)||!Number.isInteger(page)||page<1||page>1000000||Object.keys(filters).some(k=>!['search','status','employeeId','departmentId','from','to'].includes(k)))throw new WorkspaceError('Invalid HR query.',422);return get('hr/'+kind+'?'+new URLSearchParams({branchId,page:String(page),...Object.fromEntries(Object.entries(filters).filter(([,v])=>!!v))}));},
+    hrCommand:(kind:HrKind,action:HrAction,id:string|null,body:unknown,key:string)=>{if(!validHrBody(body,kind,action)||action!=='create'&&(!id||!/^[0-9a-f-]{36}$/i.test(id))||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Check the HR fields',422);return request('hr/'+kind+(action==='create'?'':'/'+id)+(['decision','membership'].includes(action)?'/'+action:''),false,{method:action==='create'?'POST':action==='delete'?'DELETE':'PATCH',body,key});},
+    hrMembership:(id:string,branchId:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id)||!/^[0-9a-f-]{36}$/i.test(branchId))throw new WorkspaceError('Invalid HR identity link.',422);return get('hr/employees/'+id+'/membership?'+new URLSearchParams({branchId}));},
     teamInvitations:(page:number)=>{if(!Number.isInteger(page)||page<1||page>1000000)throw new WorkspaceError('Invalid invitation page.',422);return get('team/invitations?page='+page);},
     teamInvite:(body:unknown,key:string)=>{if(!validInviteBody(body)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Check the invitation fields',422);return request('team/invitations',false,{method:'POST',body,key});},
     revokeTeamInvite:(id:string,key:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid invitation.',422);return request('team/invitations/'+id+'/revoke',false,{method:'POST',body:{},key});},

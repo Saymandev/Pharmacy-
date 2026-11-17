@@ -34,7 +34,7 @@ grants permissions. Shared login credentials are managed outside this workspace.
 Existing-membership/role administration is complete. Existing-account invitations
 and consent have a separate implementation in [team-invitations.md](team-invitations.md).
 Invited account onboarding is implemented in [member-registration.md](member-registration.md).
-General identity lifecycle, automated invitation delivery, HR and remaining billing/
+General identity lifecycle, automated invitation delivery and remaining billing/
 notification work remain separate. All changes remain staged off main/live.
 
 Verification entry points: tenant-team.test.mjs and run-tenant-team-browser.cjs,
@@ -49,3 +49,5 @@ Neither main merge nor production deployment/database changes were performed.
 
 
 Member invitations now have a separate staged implementation; see [team-invitations.md](team-invitations.md). Existing-account consent and invited verified-account onboarding are implemented; general identity lifecycle and automated initial invitation delivery remain separate.
+
+Selected-shop HR integration is now covered by [tenant-hr.md](tenant-hr.md), with per-membership employee linking and branch-scoped operational workflows.

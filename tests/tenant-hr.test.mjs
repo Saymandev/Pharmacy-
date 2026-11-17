@@ -1,0 +1,22 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {hrFormValues,hrFormBody,validHrBody,validHrRow,validHrPage,validHrReceipt,realHrDay} from '../src/features/shops/hr-contract.ts';
+import {tenantWorkspaceTarget} from '../src/lib/server/tenant-workspace-policy.ts';
+import {createWorkspaceClient} from '../src/features/shops/workspace-client.ts';
+const branch='11111111-1111-4111-8111-111111111111',id='22222222-2222-4222-8222-222222222222',stamp='2026-11-17T00:00:00Z';
+const staff={branchId:branch,employeeNumber:'STAFF-1',name:'Cashier',nameBangla:null,age:25,gender:'other',phone:'01700000000',email:null,address:'Main counter',departmentId:null,designationId:null,grossSalary:25000.55,joiningDate:'2026-01-01',leavingDate:null,status:'active'};
+test('HR fields keep pharmacy staff separate from global identity and prevent invalid dates, money and attendance states',()=>{
+ assert.ok(validHrBody(staff,'employees','create'));for(const extra of [{userId:id},{roleId:id},{employeeType:'doctor'},{grossSalary:1.234},{age:17},{leavingDate:'2025-01-01'}])assert.equal(validHrBody({...staff,...extra},'employees','create'),false);
+ assert.equal(realHrDay('2026-02-31'),false);assert.ok(realHrDay('2024-02-29'));const shift={branchId:branch,name:'Night',nameBangla:null,description:null,startTime:'22:00',endTime:'06:00'};assert.ok(validHrBody(shift,'shifts','create'));assert.equal(validHrBody({...shift,endTime:'22:00'},'shifts','create'),false);
+ const attendance={branchId:branch,employeeId:id,day:'2026-01-01',clockIn:'22:00',clockOut:'06:00',manualStatus:'present',manualNote:null};assert.ok(validHrBody(attendance,'attendance','create'));assert.equal(validHrBody({...attendance,manualStatus:'absent'},'attendance','create'),false);
+});
+test('HR projections reject foreign scopes, credential fields and forged nested references; form conversion preserves decimal and dates',()=>{
+ const row={...staff,id,tenantId:'a',createdAt:stamp,updatedAt:stamp,employeeType:'staff',grossSalary:'25000.55',joiningDate:'2026-01-01T00:00:00Z',department:null,designation:null};assert.ok(validHrRow(row,'a',branch,'employees'));assert.equal(validHrRow({...row,userId:'shared-user'},'a',branch,'employees'),false);assert.equal(validHrRow({...row,branchId:id},'a',branch,'employees'),false);assert.equal(validHrRow({...row,department:{id,tenantId:'b',branchId:branch,name:'Foreign'}},'a',branch,'employees'),false);
+ assert.equal(hrFormBody('employees',branch,hrFormValues('employees',row),row).grossSalary,25000.55);assert.equal(hrFormBody('employees',branch,hrFormValues('employees',row),row).joiningDate,'2026-01-01');assert.ok(validHrPage({tenantId:'a',branchId:branch,kind:'employees',items:[row],page:1,pageSize:20,totalItems:1},'a',branch,'employees',1));
+ assert.equal(validHrReceipt({id,tenantId:'a',branchId:branch,deleted:true,password:'secret'},'a',branch,'employees','delete',id),false);
+});
+test('HR tenant BFF is allowlisted; biometrics and legacy user links cannot be called',()=>{
+ const cfg={session:'true',workspace:'true',writes:'true',base:'https://backend.test/api/v1'};assert.ok(tenantWorkspaceTarget('a',['hr','employees'],'GET',cfg));assert.ok(tenantWorkspaceTarget('a',['hr','employees',id,'membership'],'PATCH',cfg));assert.ok(tenantWorkspaceTarget('a',['hr','leaves',id,'decision'],'PATCH',cfg));assert.equal(tenantWorkspaceTarget('a',['hr','employees'],'POST',{...cfg,writes:'false'}),null);for(const path of [['hr','time-cards','webhook'],['hr','attendance-transactions','webhook'],['hr','users',id],['hr','employees',id,'password']])assert.equal(tenantWorkspaceTarget('a',path,'POST',cfg),null);
+});
+test('HR transport pins route scope, server filters and exact mutation payload; disposal rejects late replies',async()=>{
+ const calls=[],client=createWorkspaceClient('a',new AbortController().signal,async(url,options)=>{calls.push({url,options});return Response.json({success:true,data:{}});});await client.hrList('employees',branch,2,{search:'Cashier',status:'active'});assert.ok(calls[0].url.includes('page=2')&&calls[0].url.includes('search=Cashier'));await client.hrCommand('employees','create',null,staff,'hr-test-key-123456');assert.deepEqual(JSON.parse(calls[1].options.body),staff);assert.ok(!('Authorization'in calls[1].options.headers)&&!('X-Tenant-Id'in calls[1].options.headers));client.dispose();await assert.rejects(client.hrList('employees',branch,1));
+});

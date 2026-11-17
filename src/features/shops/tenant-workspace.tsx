@@ -2,6 +2,8 @@
 import {canWriteFeature} from './entitlement-policy';
 import {ShopBillingPortal} from './billing-portal';
 import {MediaLibrary} from './media-library';
+import {hrKinds,hrDefs} from './hr-contract';
+import {TenantHrWorkspace} from './tenant-hr';
 import {TeamWorkspace} from './team-workspace';
 import { useCallback,useEffect,useRef,useState } from 'react';
 import { Settings2,X } from 'lucide-react';
@@ -85,13 +87,14 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
   {!busy&&context&&<aside className="shop-preview-notice" role="status">{t(context.entitlements?.operable?'Subscription access verified.':'Shop tools are read-only. Review the billing agreement to restore access.')} {context.entitlements&&<span>{t('Branches')}: {context.entitlements.usage.branches} / {context.entitlements.limits.branches??t('Unlimited')} · {t('Team seats')}: {context.entitlements.usage.seats} / {context.entitlements.limits.seats??t('Unlimited')} · {t('Reserved storage bytes')}: {context.entitlements.usage.reservedStorageBytes}</span>}</aside>}
   {error&&!settings&&<div role="alert" className="shop-access-error"><p>{t(error)}</p><button type="button" disabled={busy} onClick={()=>{if(client.current)void load(client.current);}}>{t('Retry')}</button></div>}
   {busy&&<DataSkeleton variant="form" rows={2}>{t('Loading workspace…')}</DataSkeleton>}
-  {!busy&&context&&<><div className="workspace-current-branch"><span>{t('Working branch')}</span><strong>{branch?.name??t('Choose a branch in workspace settings')}</strong></div><div className="workspace-access"><h3>{t('Available access')}</h3><ul>{accessLabels.filter(([key])=>context.permissions.includes(key)).map(([key,label])=><li key={key}>{t(label)}</li>)}</ul>{!accessLabels.some(([key])=>context.permissions.includes(key))&&<p>{t('No operation permissions assigned.')}</p>}</div></>}
+  {!busy&&context&&<><div className="workspace-current-branch"><span>{t('Working branch')}</span><strong>{branch?.name??t('Choose a branch in workspace settings')}</strong></div><div className="workspace-access"><h3>{t('Available access')}</h3><ul>{accessLabels.filter(([key])=>context.permissions.includes(key)).map(([key,label])=><li key={key}>{t(label)}</li>)}</ul>{!accessLabels.some(([key])=>context.permissions.includes(key))&&!hrKinds.some(k=>context.permissions.includes(hrDefs[k].cap+':read'))&&<p>{t('No operation permissions assigned.')}</p>}</div></>}
   {!busy&&context&&branch&&(canWriteFeature(context.entitlements,'catalog')||canWriteFeature(context.entitlements,'inventory'))&&(context.permissions.includes('medicine:read')||context.permissions.includes('stock:read'))&&<TenantCatalog key={`${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={feature('catalog')&&feature('inventory')}/>}
   {!busy&&context&&branch&&feature('pos')&&<TenantPos key={`pos:${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={feature('pos')} onOpenChange={open=>{posOpen.current=open;}}/>}
   {!busy&&context&&branch&&context.permissions.includes('customer:read')&&<CustomerWorkspace key={`customers:${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={feature('customers')} onOpenChange={open=>{posOpen.current=open;}}/>}
   {!busy&&context&&branch&&context.permissions.includes('sale:read')&&<SalesWorkspace key={`sales:${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={feature('pos')} onOpenChange={open=>{posOpen.current=open;}}/>}
   {!busy&&context&&branch&&context.permissions.includes('cash-register:read')&&<RegisterWorkspace key={`register:${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={feature('pos')}/>}
   {!busy&&context&&branch&&context.permissions.includes('report:read')&&canWriteFeature(context.entitlements,'reports')&&<TenantReports key={`reports:${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} onOpenChange={open=>{posOpen.current=open;}}/>}
+  {!busy&&context&&branch&&<TenantHrWorkspace key={`hr:${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={feature('hr')} teamWritesEnabled={feature('team')} onOpenChange={open=>{posOpen.current=open;}}/>}
   {settings&&<BranchSettings error={error} branches={branches} branch={branch} busy={busy} hasMore={!!cursor} canChoose={!!context} onChoose={choose} onMore={()=>{if(client.current&&cursor)void load(client.current,cursor);}} onClose={()=>setSettings(false)}/>}
  </section>;
 }

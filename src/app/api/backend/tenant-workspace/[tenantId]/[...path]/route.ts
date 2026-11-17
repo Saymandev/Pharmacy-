@@ -1,3 +1,4 @@
+import {validHrBody,type HrKind,type HrAction} from '@/features/shops/hr-contract';
 import { cookies } from 'next/headers';
 import {validInviteBody} from '@/features/shops/team-invitation-policy';
 import {validTeamBody} from '@/features/shops/team-policy';
@@ -40,7 +41,9 @@ async function proxy(request:Request,context:Context){
     const key=request.headers.get('idempotency-key');
     if(!key||!/^[A-Za-z0-9_-]{16,128}$/.test(key)||new URL(request.url).search||request.headers.get('content-type')?.split(';')[0].trim()!=='application/json')return Response.json({success:false,message:'A JSON body and valid save key are required.'},{status:422,headers:noStore});
     const bulk=['import','bulk-price-update'].includes(path[2]),limit=bulk?262144:32768;
-    if(path[0]==='team'){
+    if(path[0]==='hr'){
+      try{body=await request.text();const action:HrAction=path[3]==='decision'?'decision':path[3]==='membership'?'membership':request.method==='POST'?'create':request.method==='DELETE'?'delete':'update';if(new TextEncoder().encode(body).byteLength>8192||!validHrBody(JSON.parse(body),path[1] as HrKind,action))throw new Error('Invalid HR fields');}catch{return Response.json({success:false,message:'Check the HR fields'},{status:422,headers:noStore});}headers['Content-Type']='application/json';headers['Idempotency-Key']=key;
+    }else if(path[0]==='team'){
       try{body=await request.text();const kind=path[1]==='members'?(path[3]==='access'?'member.access':'member.status'):request.method==='POST'?'role.create':request.method==='PATCH'?'role.update':'role.delete';if(new TextEncoder().encode(body).byteLength>32768||!(path[1]==='invitations'?(path.length===2?validInviteBody(JSON.parse(body)):!!JSON.parse(body)&&typeof JSON.parse(body)==='object'&&!Array.isArray(JSON.parse(body))&&Object.keys(JSON.parse(body)).length===0):validTeamBody(JSON.parse(body),kind)))throw new Error('Invalid team fields');}catch{return Response.json({success:false,message:'Invalid team access fields.'},{status:422,headers:noStore});}
       headers['Content-Type']='application/json';headers['Idempotency-Key']=key;
     }else if(path[0]==='media'){
