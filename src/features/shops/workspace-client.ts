@@ -1,5 +1,6 @@
 import {reportDatasets,reportPaths,reportWindow,type ReportSelection,type ReportDataset} from './report-policy.ts';
 import {validMediaFiles,mediaMimes} from './media-policy.ts';
+import {validTeamBody,type TeamKind} from './team-policy.ts';
 export class WorkspaceError extends Error{
   readonly status:number;
   constructor(message:string,status:number){super(message);this.name='WorkspaceError';this.status=status;}
@@ -22,6 +23,9 @@ export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,
   }
   const get=(path:string,withMeta=false)=>request(path,withMeta);
   return {
+    teamCatalog:()=>get('team/catalog'),
+    teamMembers:(page:number,search:string,status:string)=>{if(!Number.isInteger(page)||page<1||page>1000000||search.length>200||!['','ACTIVE','SUSPENDED','REVOKED','INVITED'].includes(status))throw new WorkspaceError('Invalid team query.',422);return get('team/members?'+new URLSearchParams({page:String(page),search,status}));},
+    teamCommand:(kind:TeamKind,id:string|null,body:unknown,key:string)=>{if(!validTeamBody(body,kind)||kind!=='role.create'&&(!id||!/^[0-9a-f-]{36}$/i.test(id))||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid team access fields.',422);return request(kind==='role.create'?'team/roles':kind.startsWith('role.')?`team/roles/${id}`:`team/members/${id}/${kind==='member.access'?'access':'status'}`,false,{method:kind==='role.create'?'POST':kind==='role.delete'?'DELETE':'PATCH',body,key});},
     mediaList:(branchId:string,page:number,filters:Record<string,string>)=>get(`media?${resourceQuery(branchId,page,filters,['search','type','state','purpose'])}`.replace('limit=20','limit=24')),
     mediaSave:(id:string,kind:'rename'|'trash'|'restore',body:unknown,key:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid media request.',400);return request(`media/${id}${kind==='restore'?'/restore':''}`,false,{method:kind==='rename'?'PATCH':kind==='trash'?'DELETE':'POST',body,key});},
     mediaUploadStatus:(key:string)=>{if(!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid upload key.',400);return get(`media/upload-status/${key}`);},

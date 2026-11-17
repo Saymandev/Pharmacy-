@@ -2,6 +2,7 @@
 import { interfaceBangla } from "./interface-bn";
 import { workspaceBangla } from "./workspace-bn";
 import {mediaBangla} from './media-bn';
+import {teamBangla} from './team-bn';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from "react";
 
@@ -1001,7 +1002,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const t = useCallback((key: string, values?: Record<string, string | number>) => {
-    const message = (language === "bn" ? interfaceBangla[key] : undefined) ?? messages[language][key] ?? (language === "bn" ? mediaBangla[key]??workspaceBangla[key] : undefined) ?? key;
+    const message = (language === "bn" ? interfaceBangla[key] : undefined) ?? messages[language][key] ?? (language === "bn" ? teamBangla[key]??mediaBangla[key]??workspaceBangla[key] : undefined) ?? key;
     return values ? message.replace(/\{(\w+)\}/g, (token, name: string) => values[name] == null ? token : String(values[name])) : message;
   }, [language]);
   const value = useMemo(() => ({ language, setLanguage, t }), [language, setLanguage, t]);

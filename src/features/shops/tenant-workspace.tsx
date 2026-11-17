@@ -2,6 +2,7 @@
 import {canWriteFeature} from './entitlement-policy';
 import {ShopBillingPortal} from './billing-portal';
 import {MediaLibrary} from './media-library';
+import {TeamWorkspace} from './team-workspace';
 import { useCallback,useEffect,useRef,useState } from 'react';
 import { Settings2,X } from 'lucide-react';
 import { Select } from '@/components/ui/select';
@@ -26,7 +27,7 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
  const {t}=useLanguage();
  const feature=(key:Parameters<typeof canWriteFeature>[1])=>writesEnabled&&canWriteFeature(context?.entitlements,key);
  const [context,setContext]=useState<WorkspaceBootstrap|null>(null),[branches,setBranches]=useState<WorkspaceBranch[]>([]),[cursor,setCursor]=useState<string|null>(null);
- const [branch,setBranch]=useState<WorkspaceBranch|null>(null),[busy,setBusy]=useState(true),[error,setError]=useState(''),[settings,setSettings]=useState(false),[billing,setBilling]=useState(false),[media,setMedia]=useState(false);
+ const [branch,setBranch]=useState<WorkspaceBranch|null>(null),[busy,setBusy]=useState(true),[error,setError]=useState(''),[settings,setSettings]=useState(false),[billing,setBilling]=useState(false),[media,setMedia]=useState(false),[team,setTeam]=useState(false);
  const client=useRef<Client|null>(null),revision=useRef(0),posOpen=useRef(false);
  const invalidate=useCallback(()=>{revision.current++;},[]);
  const forget=useCallback(()=>{try{sessionStorage.removeItem(workspaceBranchKey(selected));}catch{}},[selected]);
@@ -73,6 +74,8 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
  }
  return <section className="tenant-workspace" aria-label={t('Shop workspace')} aria-busy={busy}>
   <WorkspaceAppearance key={selected.tenant.id} tenantId={selected.tenant.id}/>
+  {!busy&&context?.allBranches&&(context.billingAccess||context.permissions.includes('user:read')||context.permissions.includes('role:read'))&&<button type="button" onClick={()=>{posOpen.current=true;setTeam(true);}}>{t('Team access')}</button>}
+  {team&&context?.allBranches&&<TeamWorkspace key={`team:${selected.tenant.id}`} context={context} writesEnabled={feature('team')} recoveryEnabled={writesEnabled} onClose={()=>{posOpen.current=false;setTeam(false);if(client.current)void load(client.current);}}/>}
   {context?.billingAccess&&<button type="button" onClick={()=>{posOpen.current=true;setBilling(true);}}>{t('Shop subscription & billing')}</button>}
   {billing&&context?.billingAccess&&<ShopBillingPortal key={`billing:${selected.tenant.id}`} tenantId={selected.tenant.id} writesEnabled={writesEnabled} onClose={()=>{posOpen.current=false;setBilling(false);if(client.current)void load(client.current);}}/>}
   {!busy&&context&&branch&&context.permissions.includes('media:read')&&<button type="button" onClick={()=>{posOpen.current=true;setMedia(true);}}>{t('Media library')}</button>}
