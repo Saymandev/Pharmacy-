@@ -27,9 +27,9 @@ export function ShopAccess({workspaceEnabled=false,writesEnabled=false}:{workspa
       if(revision!==listRequest.current)return;
       if(!validShopPage(page))throw new Error('Invalid shop response');
       setItems(current=>after?[...current,...page.items.filter(row=>!current.some(item=>item.membershipId===row.membershipId))]:page.items);setCursor(page.nextCursor);
-    }catch(cause){if(revision===listRequest.current)setError(cause instanceof ApiClientError?cause.message:t('Shops could not be loaded. Please try again.'));}
+    }catch(cause){if(revision===listRequest.current)setError(cause instanceof ApiClientError?cause.message:'Shops could not be loaded. Please try again.');}
     finally{if(revision===listRequest.current)setLoading(false);}
-  },[t]);
+  },[]);
   useEffect(()=>{
     if(status!=='authenticated'||!user)return;
     let active=true;
@@ -60,7 +60,7 @@ export function ShopAccess({workspaceEnabled=false,writesEnabled=false}:{workspa
     </div></header>
     <div className="shop-access-heading"><h1>{t('Your shops')}</h1><p>{t('Choose a shop to review your access.')} <span>{user?.fullName}</span></p></div>
     <div className="shop-preview-notice" role="note">{t('Shop access preview. Sales and other shop tools are not available here yet.')}</div>
-    {error&&<div className="shop-access-error" role="alert"><p>{error}</p><button type="button" disabled={loading||!!pending} onClick={()=>void load()}>{t('Reload shops')}</button></div>}
+    {error&&<div className="shop-access-error" role="alert"><p>{t(error)}</p><button type="button" disabled={loading||!!pending} onClick={()=>void load()}>{t('Reload shops')}</button></div>}
     {selected&&<section className="shop-selected" aria-labelledby="selected-shop-title"><Check size={22}/><div><h2 id="selected-shop-title" tabIndex={-1} ref={selectionTitle}>{selected.tenant.name}</h2><p>{t(workspaceEnabled?'Selected shop':'Access verified')}{!workspaceEnabled&&` · ${selected.role.name}`}</p>{!workspaceEnabled&&<small>{selected.allBranches?t('All shop branches'):`${selected.branchIds.length} ${t('Assigned branches')}`}</small>}</div></section>}
     {selected&&workspaceEnabled&&<TenantWorkspace key={`${selected.tenant.id}:${selected.membershipId}`} selected={selected} writesEnabled={writesEnabled}/>}
     <section aria-label={t('Available shops')} aria-busy={loading||!!pending} className="shop-access-list">

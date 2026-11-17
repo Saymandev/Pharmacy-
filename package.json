@@ -22,6 +22,7 @@
     "test:billing": "node --test tests/billing-policy.test.mjs && node tests/run-billing-browser.cjs",
     "test:entitlements": "node --test tests/entitlements-policy.test.mjs && node tests/run-entitlements-browser.cjs",
     "test:billing-portal": "node --test tests/billing-portal.test.mjs && node tests/run-billing-portal-browser.cjs",
+    "test:tenant-media": "node --test tests/tenant-media.test.mjs && node tests/run-tenant-media-browser.cjs",
     "test:shop-onboarding": "node --test tests/shop-onboarding.test.mjs && node tests/run-shop-onboarding-browser.cjs",
     "test:owner-invitations": "node --test tests/owner-invitation.test.mjs && node tests/run-owner-invitation-browser.cjs",
     "test:tenant-pending-sales": "node --test tests/pending-sale.test.mjs && node tests/run-tenant-pending-browser.cjs",
@@ -36,7 +37,7 @@
   },
   "dependencies": {
     "lucide-react": "^1.61.0",
-    "next": "16.4.3",
+    "next": "16.4.6",
     "pdfmake": "^0.3.13",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -49,7 +50,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.4.3",
+    "eslint-config-next": "16.4.6",
     "playwright": "1.64.1",
     "tailwindcss": "^4",
     "typescript": "^5"

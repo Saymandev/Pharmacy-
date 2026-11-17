@@ -1,6 +1,7 @@
 "use client";
 import {canWriteFeature} from './entitlement-policy';
 import {ShopBillingPortal} from './billing-portal';
+import {MediaLibrary} from './media-library';
 import { useCallback,useEffect,useRef,useState } from 'react';
 import { Settings2,X } from 'lucide-react';
 import { Select } from '@/components/ui/select';
@@ -25,7 +26,7 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
  const {t}=useLanguage();
  const feature=(key:Parameters<typeof canWriteFeature>[1])=>writesEnabled&&canWriteFeature(context?.entitlements,key);
  const [context,setContext]=useState<WorkspaceBootstrap|null>(null),[branches,setBranches]=useState<WorkspaceBranch[]>([]),[cursor,setCursor]=useState<string|null>(null);
- const [branch,setBranch]=useState<WorkspaceBranch|null>(null),[busy,setBusy]=useState(true),[error,setError]=useState(''),[settings,setSettings]=useState(false),[billing,setBilling]=useState(false);
+ const [branch,setBranch]=useState<WorkspaceBranch|null>(null),[busy,setBusy]=useState(true),[error,setError]=useState(''),[settings,setSettings]=useState(false),[billing,setBilling]=useState(false),[media,setMedia]=useState(false);
  const client=useRef<Client|null>(null),revision=useRef(0),posOpen=useRef(false);
  const invalidate=useCallback(()=>{revision.current++;},[]);
  const forget=useCallback(()=>{try{sessionStorage.removeItem(workspaceBranchKey(selected));}catch{}},[selected]);
@@ -34,7 +35,7 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
   try{
    const fresh=await transport.bootstrap(after);
    if(current!==revision.current)return;
-   if(!validWorkspaceBootstrap(fresh,selected))throw new WorkspaceError(t('Shop access could not be verified. Please try again.'),502);
+   if(!validWorkspaceBootstrap(fresh,selected))throw new WorkspaceError('Shop access could not be verified. Please try again.',502);
    setContext(fresh);setCursor(fresh.branches.nextCursor);
    setBranches(old=>after?[...old.filter(row=>validWorkspaceBranch(row,fresh)),...fresh.branches.items.filter(row=>!old.some(item=>item.id===row.id))]:fresh.branches.items);
    let saved='';try{saved=sessionStorage.getItem(workspaceBranchKey(fresh))??'';}catch{}
@@ -42,17 +43,17 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
    if(candidate){
     const checked=await transport.branch(candidate);
     if(current!==revision.current)return;
-    if(!validWorkspaceBranch(checked,fresh)||checked.id!==candidate)throw new WorkspaceError(t('Branch is no longer available. Choose another branch in settings.'),404);
+    if(!validWorkspaceBranch(checked,fresh)||checked.id!==candidate)throw new WorkspaceError('Branch is no longer available. Choose another branch in settings.',404);
     setBranch(checked);
     setBranches(rows=>rows.some(row=>row.id===checked.id)?rows:[checked,...rows]);
     try{sessionStorage.setItem(workspaceBranchKey(fresh),checked.id);}catch{}
    }
   }catch(cause){
    if(current!==revision.current)return;
-   forget();setBranch(null);setError(cause instanceof WorkspaceError?cause.message:t('Workspace could not be loaded. Please try again.'));
+   forget();setBranch(null);setError(cause instanceof WorkspaceError?cause.message:'Workspace could not be loaded. Please try again.');
    if(cause instanceof WorkspaceError&&(cause.status===401||cause.status===403)){setContext(null);setBranches([]);setCursor(null);}
   }finally{if(current===revision.current)setBusy(false);}
- },[selected,t,forget]);
+ },[selected,forget]);
  useEffect(()=>{
   const transport=createWorkspaceClient(selected.tenant.id,sessionBoundary.capture().signal);client.current=transport;
   let active=true;queueMicrotask(()=>{if(active)void load(transport);});
@@ -74,10 +75,12 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
   <WorkspaceAppearance key={selected.tenant.id} tenantId={selected.tenant.id}/>
   {context?.billingAccess&&<button type="button" onClick={()=>{posOpen.current=true;setBilling(true);}}>{t('Shop subscription & billing')}</button>}
   {billing&&context?.billingAccess&&<ShopBillingPortal key={`billing:${selected.tenant.id}`} tenantId={selected.tenant.id} writesEnabled={writesEnabled} onClose={()=>{posOpen.current=false;setBilling(false);if(client.current)void load(client.current);}}/>}
+  {!busy&&context&&branch&&context.permissions.includes('media:read')&&<button type="button" onClick={()=>{posOpen.current=true;setMedia(true);}}>{t('Media library')}</button>}
+  {media&&context&&branch&&context.permissions.includes('media:read')&&<MediaLibrary key={`media:${selected.tenant.id}:${branch.id}`} context={context} branch={branch} writesEnabled={feature('communications')} recoveryEnabled={writesEnabled} onClose={()=>{posOpen.current=false;setMedia(false);if(client.current)void load(client.current);}}/>}
   {context?.allBranches&&context.permissions.includes('settings:read')&&<TenantCustomizationEditor key={selected.tenant.id} tenantId={selected.tenant.id} canUpdate={feature('customization')&&context.permissions.includes('settings:update')} busy={busy} onNotice={()=>{}} onError={setError}/>}
   <header><div><h2>{t('Shop workspace')}</h2><p>{context?.role.name??t('Verifying access…')}</p></div><button type="button" disabled={!context||busy} onClick={()=>setSettings(true)}><Settings2 size={16}/>{t('Workspace settings')}</button></header>
   {!busy&&context&&<aside className="shop-preview-notice" role="status">{t(context.entitlements?.operable?'Subscription access verified.':'Shop tools are read-only. Review the billing agreement to restore access.')} {context.entitlements&&<span>{t('Branches')}: {context.entitlements.usage.branches} / {context.entitlements.limits.branches??t('Unlimited')} · {t('Team seats')}: {context.entitlements.usage.seats} / {context.entitlements.limits.seats??t('Unlimited')} · {t('Reserved storage bytes')}: {context.entitlements.usage.reservedStorageBytes}</span>}</aside>}
-  {error&&!settings&&<div role="alert" className="shop-access-error"><p>{error}</p><button type="button" disabled={busy} onClick={()=>{if(client.current)void load(client.current);}}>{t('Retry')}</button></div>}
+  {error&&!settings&&<div role="alert" className="shop-access-error"><p>{t(error)}</p><button type="button" disabled={busy} onClick={()=>{if(client.current)void load(client.current);}}>{t('Retry')}</button></div>}
   {busy&&<DataSkeleton variant="form" rows={2}>{t('Loading workspace…')}</DataSkeleton>}
   {!busy&&context&&<><div className="workspace-current-branch"><span>{t('Working branch')}</span><strong>{branch?.name??t('Choose a branch in workspace settings')}</strong></div><div className="workspace-access"><h3>{t('Available access')}</h3><ul>{accessLabels.filter(([key])=>context.permissions.includes(key)).map(([key,label])=><li key={key}>{t(label)}</li>)}</ul>{!accessLabels.some(([key])=>context.permissions.includes(key))&&<p>{t('No operation permissions assigned.')}</p>}</div></>}
   {!busy&&context&&branch&&(canWriteFeature(context.entitlements,'catalog')||canWriteFeature(context.entitlements,'inventory'))&&(context.permissions.includes('medicine:read')||context.permissions.includes('stock:read'))&&<TenantCatalog key={`${branch.id}:${context.permissions.join(',')}`} context={context} branch={branch} writesEnabled={feature('catalog')&&feature('inventory')}/>}
@@ -96,7 +99,7 @@ function BranchSettings({error,branches,branch,busy,hasMore,canChoose,onChoose,o
   <header><h2 id="workspace-branch-title">{t('Workspace settings')}</h2><button type="button" aria-label={t('Close')} onClick={onClose}><X size={18}/></button></header>
   <label className="workspace-branch-field"><span>{t('Working branch')}</span><Select aria-label={t('Shop working branch')} value={branch?.id??''} disabled={busy||!canChoose||!branches.length} onChange={event=>{if(event.target.value)void onChoose(event.target.value);}}><option value="">{t('Select a branch')}</option>{branches.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</Select></label>
   <p>{t('Only active branches assigned to this shop are available.')}</p>
-  {error&&<div className="shop-access-error" role="alert">{error}</div>}
+  {error&&<div className="shop-access-error" role="alert">{t(error)}</div>}
   {!branches.length&&!busy&&<p role="status">{t('No active branches available. Contact your administrator.')}</p>}
   {busy&&<p role="status">{t('Verifying access…')}</p>}
   {hasMore&&<button type="button" disabled={busy} onClick={onMore}>{t('Load more branches')}</button>}

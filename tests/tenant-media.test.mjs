@@ -1,0 +1,29 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {mediaDownloadName,validMedia,validMediaPage,validMediaFiles,validMediaMutation,validUploadReservations} from '../src/features/shops/media-policy.ts';
+import {readPrivateMediaUpload,privateMediaHeaders} from '../src/lib/server/private-media-proxy.ts';
+import {tenantWorkspaceTarget} from '../src/lib/server/tenant-workspace-policy.ts';
+import {createWorkspaceClient} from '../src/features/shops/workspace-client.ts';
+const branch='11111111-1111-4111-8111-111111111111',id='22222222-2222-4222-8222-222222222222',stamp='2026-11-16T00:00:00Z';
+const row={id,tenantId:'a',branchId:branch,fileName:'stock.png',mimeType:'image/png',type:'image',purpose:'library',state:'READY',metadata:{caption:'Stock'},size:3,createdAt:stamp,updatedAt:stamp,deletedAt:null};
+test('private media projections fail closed on foreign branch/shop, provider leakage and inconsistent pagination',()=>{
+ assert.equal(validMedia(row,'a',branch),true);assert.equal(validMedia({...row,tenantId:'b'},'a',branch),false);assert.equal(validMedia({...row,branchId:id},'a',branch),false);assert.equal(validMedia({...row,storageKey:'secret'},'a',branch),false);assert.equal(validMedia({...row,mimeType:'text/html'},'a',branch),false);
+ const page={data:[row],pagination:{page:1,pageSize:24,totalItems:1,totalPages:1,hasNextPage:false,hasPreviousPage:false}};assert.equal(validMediaPage(page,'a',branch,1),true);assert.equal(validMediaPage({...page,data:[row,row]},'a',branch,1),false);assert.equal(validMediaPage({...page,pagination:{...page.pagination,totalPages:2}},'a',branch,1),false);
+ assert.equal(validUploadReservations([{id,state:'PENDING',bytes:3,remainingBytes:3,expiresAt:stamp,expired:true}]),true);assert.equal(validUploadReservations([{id,state:'PENDING',bytes:3,remainingBytes:3,expiresAt:stamp,expired:true,objects:['secret']}]),false);
+});
+test('media writes require optimistic version and reject ownership or arbitrary metadata',()=>{
+ assert.equal(validMediaMutation({expectedUpdatedAt:stamp,fileName:'new.png',metadata:{tags:['stock']}},'rename'),true);assert.equal(validMediaMutation({fileName:'new.png'},'rename'),false);assert.equal(validMediaMutation({expectedUpdatedAt:stamp,fileName:'../x'},'rename'),false);assert.equal(validMediaMutation({expectedUpdatedAt:stamp,fileName:'x',tenantId:'b'},'rename'),false);assert.equal(validMediaMutation({expectedUpdatedAt:stamp,fileName:'x',metadata:{url:'https://bad.test'}},'rename'),false);assert.equal(validMediaMutation({expectedUpdatedAt:stamp},'trash'),true);
+ assert.equal(validMediaFiles([{name:'x.png',type:'image/png',size:3}]),true);assert.equal(validMediaFiles([{name:'x.svg',type:'image/svg+xml',size:3}]),false);assert.equal(validMediaFiles(Array.from({length:6},()=>({name:'x.png',type:'image/png',size:3}))),false);assert.equal(validMediaFiles(Array.from({length:3},()=>({name:'x.pdf',type:'application/pdf',size:5242880}))),false);
+});
+test('multipart BFF bounds raw bytes and forwards only branch-library files; binary headers remain private attachments',async()=>{
+ const request=(form,query=`branchId=${branch}&purpose=library`)=>new Request('https://front.test/upload?'+query,{method:'POST',body:form});
+ const form=new FormData();form.append('files',new File([new Uint8Array([1,2,3])],'stock.png',{type:'image/png'}));assert.ok(await readPrivateMediaUpload(request(form)));assert.equal(await readPrivateMediaUpload(request(form,`branchId=${branch}&purpose=branding`)),null);
+ const forged=new FormData();forged.append('files',new File(['x'],'stock.png',{type:'image/png'}));forged.append('tenantId','b');assert.equal(await readPrivateMediaUpload(request(forged)),null);
+ const huge=new Request(`https://front.test/upload?branchId=${branch}&purpose=library`,{method:'POST',headers:{'content-type':'multipart/form-data; boundary=test'},duplex:'half',body:new ReadableStream({start(c){c.enqueue(new Uint8Array(10485760+65537));c.close();}})});assert.equal(await readPrivateMediaUpload(huge),null);
+ const headers=privateMediaHeaders(new Headers({'content-type':'image/png','content-length':'3','content-disposition':'inline'}));assert.match(headers['Cache-Control'],/no-store/);assert.equal(headers['Content-Disposition'],'attachment; filename="private-file.png"');assert.equal(mediaDownloadName('payload.html','image/png'),'payload.png');assert.equal(mediaDownloadName('photo.JPEG','image/jpeg'),'photo.JPEG');assert.equal(headers['X-Content-Type-Options'],'nosniff');assert.equal(privateMediaHeaders(new Headers({'content-type':'text/html','content-length':'3'})),null);
+ const config={session:'true',workspace:'true',base:'https://back.test/api/v1',writes:'false'};assert.ok(tenantWorkspaceTarget('a',['media',id,'content'],'GET',config));assert.equal(tenantWorkspaceTarget('a',['media','upload-multiple'],'POST',config),null);assert.ok(tenantWorkspaceTarget('a',['media','upload-multiple'],'POST',{...config,writes:'true'}));assert.equal(tenantWorkspaceTarget('a',['media','purge'],'POST',{...config,writes:'true'}),null);
+});
+test('private content transport rejects wrong MIME/length and never accepts upstream URLs or caller auth',async()=>{
+ const calls=[],session=new AbortController(),client=createWorkspaceClient('a',session.signal,async(url,options)=>{calls.push({url,options});return new Response(new Uint8Array([1,2,3]),{headers:{'content-type':'image/png'}});});
+ assert.equal((await client.mediaContent(id,'image/png',3)).size,3);assert.equal(calls[0].url,`/api/backend/tenant-workspace/a/media/${id}/content`);assert.equal(calls[0].options.credentials,'same-origin');assert.equal(calls[0].options.cache,'no-store');assert.equal(calls[0].options.headers,undefined);await assert.rejects(client.mediaContent(id,'application/pdf',3));await assert.rejects(client.mediaContent(id,'image/png',4));client.dispose();await assert.rejects(client.mediaContent(id,'image/png',3));
+});

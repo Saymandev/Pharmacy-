@@ -1,4 +1,6 @@
 import { cookies } from 'next/headers';
+import {readPrivateMediaUpload,privateMediaHeaders} from '@/lib/server/private-media-proxy';
+import {validMediaMutation} from '@/features/shops/media-policy';
 import {validBillingRequest} from '@/features/shops/billing-portal-policy';
 import {validCustomizationBody} from '@/features/shops/customization-policy';
 import { tenantWorkspaceTarget,validMedicineProxyBody,validStockProxyBody,validBulkProxyBody,validMasterBody,validSupplierBody,validPurchaseBody,validPurchaseStatusBody,validSupplierPayment,validReturnBody } from '@/lib/server/tenant-workspace-policy';
@@ -20,10 +22,15 @@ async function proxy(request:Request,context:Context){
   const token=(await cookies()).get('pharmacy_access')?.value;
   if(!token)return Response.json({success:false,message:'Sign in to open your shop.'},{status:401,headers:noStore});
   const preview=path[0]==='pharmacy'&&path[1]==='medicines'&&path[2]==='import-preview';
+  const mediaUpload=path[0]==='media'&&path[1]==='upload-multiple',mediaContent=path[0]==='media'&&path[2]==='content';
+  if(mediaContent&&new URL(request.url).search)return Response.json({success:false,message:'Invalid private file query.'},{status:422,headers:noStore});
   let body:string|FormData|undefined;
   const headers:Record<string,string>={Authorization:`Bearer ${token}`,'X-Tenant-Id':target.tenantId,Accept:'application/json'};
   if(mutating){
-    if(preview){
+    if(mediaUpload){
+      const key=request.headers.get('idempotency-key');if(!key||!/^[A-Za-z0-9_-]{16,128}$/.test(key))return Response.json({success:false,message:'A valid upload key is required.'},{status:422,headers:noStore});
+      const form=await readPrivateMediaUpload(request).catch(()=>null);if(!form)return Response.json({success:false,message:'Choose 1–5 PNG, JPEG, GIF, WebP or PDF files. Maximum 5 MB each and 10 MB total.'},{status:422,headers:noStore});body=form;headers['Idempotency-Key']=key;
+    }else if(preview){
       if(new URL(request.url).search)return Response.json({success:false,message:'Invalid preview request.'},{status:422,headers:noStore});
       try{const form=await request.formData(),entries=[...form.entries()];if(entries.length!==1||entries[0][0]!=='file'||!(entries[0][1] instanceof File)||entries[0][1].size>1024*1024||!/\.csv$|\.xlsx$/i.test(entries[0][1].name))throw new Error('Invalid file');body=form;}
       catch{return Response.json({success:false,message:'Choose one CSV or XLSX file up to 1 MB.'},{status:422,headers:noStore});}
@@ -31,7 +38,10 @@ async function proxy(request:Request,context:Context){
     const key=request.headers.get('idempotency-key');
     if(!key||!/^[A-Za-z0-9_-]{16,128}$/.test(key)||new URL(request.url).search||request.headers.get('content-type')?.split(';')[0].trim()!=='application/json')return Response.json({success:false,message:'A JSON body and valid save key are required.'},{status:422,headers:noStore});
     const bulk=['import','bulk-price-update'].includes(path[2]),limit=bulk?262144:32768;
-    if(path[0]==='billing'){
+    if(path[0]==='media'){
+      try{body=await request.text();const value=JSON.parse(body);if(new TextEncoder().encode(body).byteLength>4096||!(path[1]==='uploads'?!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===0:validMediaMutation(value,request.method==='PATCH'?'rename':request.method==='DELETE'?'trash':'restore')))throw new Error('Invalid media fields');}catch{return Response.json({success:false,message:'Invalid media fields.'},{status:422,headers:noStore});}
+      headers['Content-Type']='application/json';headers['Idempotency-Key']=key;
+    }else if(path[0]==='billing'){
       try{body=await request.text();if(new TextEncoder().encode(body).byteLength>4096||!validBillingRequest(JSON.parse(body)))throw new Error('Invalid billing request');}catch{return Response.json({success:false,message:'Invalid billing request fields.'},{status:422,headers:noStore});}
       headers['Content-Type']='application/json';headers['Idempotency-Key']=key;
     }else if(path[0]==='settings'){
@@ -62,6 +72,7 @@ async function proxy(request:Request,context:Context){
       method:request.method,headers,body,
       cache:'no-store',redirect:'error',signal:AbortSignal.any([request.signal,AbortSignal.timeout(15000)]),
     });
+    if(mediaContent&&upstream.ok){const safe=privateMediaHeaders(upstream.headers);if(!safe){await upstream.body?.cancel();return Response.json({success:false,message:'Private file could not be verified.'},{status:502,headers:noStore});}return new Response(upstream.body,{status:upstream.status,headers:safe});}
     return new Response(upstream.body,{status:upstream.status,headers:{...noStore,'Content-Type':upstream.headers.get('content-type')??'application/json'}});
   }catch{return Response.json({success:false,message:'Shop workspace could not be reached.'},{status:502,headers:noStore});}
 }

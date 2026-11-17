@@ -1,4 +1,5 @@
 import {reportDatasets,reportPaths,reportWindow,type ReportSelection,type ReportDataset} from './report-policy.ts';
+import {validMediaFiles,mediaMimes} from './media-policy.ts';
 export class WorkspaceError extends Error{
   readonly status:number;
   constructor(message:string,status:number){super(message);this.name='WorkspaceError';this.status=status;}
@@ -21,6 +22,27 @@ export function createWorkspaceClient(tenantId:string,sessionSignal:AbortSignal,
   }
   const get=(path:string,withMeta=false)=>request(path,withMeta);
   return {
+    mediaList:(branchId:string,page:number,filters:Record<string,string>)=>get(`media?${resourceQuery(branchId,page,filters,['search','type','state','purpose'])}`.replace('limit=20','limit=24')),
+    mediaSave:(id:string,kind:'rename'|'trash'|'restore',body:unknown,key:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id)||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid media request.',400);return request(`media/${id}${kind==='restore'?'/restore':''}`,false,{method:kind==='rename'?'PATCH':kind==='trash'?'DELETE':'POST',body,key});},
+    mediaUploadStatus:(key:string)=>{if(!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw new WorkspaceError('Invalid upload key.',400);return get(`media/upload-status/${key}`);},
+    mediaReservations:()=>get('media/uploads'),
+    reconcileMedia:(id:string,key:string)=>{if(!/^[0-9a-f-]{36}$/i.test(id))throw new WorkspaceError('Invalid upload reservation.',400);return request(`media/uploads/${id}/reconcile`,false,{method:'POST',body:{},key});},
+    mediaUpload:async(branchId:string,files:File[],key:string)=>{
+      if(disposed||sessionSignal.aborted)throw new WorkspaceError('Shop selection changed.',409);
+      if(!/^[0-9a-f-]{36}$/i.test(branchId)||!/^[A-Za-z0-9_-]{16,128}$/.test(key)||!validMediaFiles(files))throw new WorkspaceError('Choose 1–5 PNG, JPEG, GIF, WebP or PDF files. Maximum 5 MB each and 10 MB total.',422);
+      const form=new FormData();for(const file of files)form.append('files',file);
+      const response=await fetcher(`/api/backend/tenant-workspace/${encodeURIComponent(tenantId)}/media/upload-multiple?${new URLSearchParams({branchId,purpose:'library'})}`,{method:'POST',body:form,credentials:'same-origin',cache:'no-store',redirect:'error',headers:{Accept:'application/json','Idempotency-Key':key},signal:AbortSignal.any([controller.signal,sessionSignal])});
+      const payload=await response.json();if(disposed||sessionSignal.aborted)throw new WorkspaceError('Shop selection changed.',409);
+      if(!response.ok||payload?.success!==true||!('data'in payload))throw new WorkspaceError(typeof payload?.message==='string'?payload.message:'Upload result could not be verified.',response.ok?502:response.status);return payload.data as unknown;
+    },
+    mediaContent:async(id:string,mime:string,size:number)=>{
+      if(disposed||sessionSignal.aborted)throw new WorkspaceError('Shop selection changed.',409);
+      if(!/^[0-9a-f-]{36}$/i.test(id)||!mediaMimes.includes(mime as typeof mediaMimes[number])||!Number.isSafeInteger(size)||size<1||size>5242880)throw new WorkspaceError('Invalid private file.',400);
+      const response=await fetcher(`/api/backend/tenant-workspace/${encodeURIComponent(tenantId)}/media/${id}/content`,{credentials:'same-origin',cache:'no-store',redirect:'error',signal:AbortSignal.any([controller.signal,sessionSignal])});
+      if(!response.ok)throw new WorkspaceError('Private file is unavailable.',response.status);
+      if(response.headers.get('content-type')?.split(';')[0]!==mime)throw new WorkspaceError('Private file type could not be verified.',502);
+      const blob=await response.blob();if(disposed||sessionSignal.aborted)throw new WorkspaceError('Shop selection changed.',409);if(blob.size!==size)throw new WorkspaceError('Private file size could not be verified.',502);return blob;
+    },
     billingPortal:(before?:string)=>get('billing/portal'+(before?'?'+new URLSearchParams({before}):'')),
     billingRequest:(body:unknown,key:string)=>request('billing/requests',false,{method:'POST',body,key}),
     activeCustomization:()=>get('settings/customization/active'),

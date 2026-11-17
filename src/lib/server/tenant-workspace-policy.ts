@@ -14,7 +14,9 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
   if(!/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(tenantId))return null;
   const customization=path[0]==='settings'&&path[1]==='customization'&&(method==='GET'&&path.length===2||config.writes==='true'&&(method==='PATCH'&&path.length===2||method==='POST'&&path.length===4&&path[2]==='restore'&&/^[1-9][0-9]{0,8}$/.test(path[3])));
   if(customization){try{const base=new URL(config.base);if(!['http:','https:'].includes(base.protocol)||base.username||base.password||base.search||base.hash)return null;return {tenantId,url:`${base.toString().replace(/\/$/,'')}/${path.join('/')}`};}catch{return null;}}
-  const read=path.length===2&&path[0]==='billing'&&path[1]==='portal'||path.length===3&&path[0]==='sales'&&/^[0-9a-f-]{36}$/i.test(path[1])&&path[2]==='receipt-logo'||
+  const mediaRead=path[0]==='media'&&(path.length===1||path.length===2&&(path[1]==='uploads'||/^[0-9a-f-]{36}$/i.test(path[1]))||path.length===3&&(path[1]==='upload-status'&&/^[A-Za-z0-9_-]{16,128}$/.test(path[2])||/^[0-9a-f-]{36}$/i.test(path[1])&&path[2]==='content'));
+  const mediaWrite=config.writes==='true'&&path[0]==='media'&&(method==='POST'&&path.length===2&&path[1]==='upload-multiple'||path.length===2&&/^[0-9a-f-]{36}$/i.test(path[1])&&['PATCH','DELETE'].includes(method)||method==='POST'&&(path.length===3&&/^[0-9a-f-]{36}$/i.test(path[1])&&path[2]==='restore'||path.length===4&&path[1]==='uploads'&&/^[0-9a-f-]{36}$/i.test(path[2])&&path[3]==='reconcile'));
+  const read=mediaRead||path.length===2&&path[0]==='billing'&&path[1]==='portal'||path.length===3&&path[0]==='sales'&&/^[0-9a-f-]{36}$/i.test(path[1])&&path[2]==='receipt-logo'||
     path.length===3&&path[0]==='settings'&&path[1]==='customization'&&path[2]==='active'||
     path.length===2&&path[0]==='pos'&&path[1]==='medicines'||
     path.length===1&&path[0]==='entitlements'||
@@ -39,7 +41,7 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
   const saleAllowance=method==='GET'&&path.length===3&&path[0]==='sales'&&/^[0-9a-f-]{36}$/i.test(path[1])&&path[2]==='returnable-items';
   const saleReturns=path[0]==='sale-returns'&&(method==='GET'&&(path.length===1||path.length===2&&/^[0-9a-f-]{36}$/i.test(path[1]))||config.writes==='true'&&(method==='POST'&&path.length===1||path.length===3&&/^[0-9a-f-]{36}$/i.test(path[1])&&(method==='PATCH'&&path[2]==='status'||method==='POST'&&path[2]==='refunds')));
   const report=method==='GET'&&path[0]==='reports'&&(path.length===3&&(path[1]==='pharmacy'&&['summary','sales-report','purchase-report','due-collection'].includes(path[2])||path[1]==='finance'&&['income','expense','movements'].includes(path[2]))||path.length===4&&path[1]==='exports'&&['summary','sales','purchases','collections','income','expense','movements'].includes(path[2])&&path[3]==='document');
-  if(!(method==='GET'&&read)&&!write&&!bulk&&!master&&!supplier&&!purchase&&!paymentOptions&&!returnable&&!returns&&!register&&!sale&&!customer&&!saleAllowance&&!saleReturns&&!report)return null;
+  if(!(method==='GET'&&read)&&!mediaWrite&&!write&&!bulk&&!master&&!supplier&&!purchase&&!paymentOptions&&!returnable&&!returns&&!register&&!sale&&!customer&&!saleAllowance&&!saleReturns&&!report)return null;
   try{
     const base=new URL(config.base);
     if(!['https:','http:'].includes(base.protocol)||base.username||base.password||base.search||base.hash)return null;
