@@ -1,0 +1,15 @@
+export const billingBangla:Record<string,string>={
+ 'Payment & credit history':'পেমেন্ট ও ক্রেডিট হিস্ট্রি',
+ 'Recorded payments are separate from payment review requests.':'রেকর্ড করা পেমেন্ট ও পেমেন্ট রিভিউ রিকোয়েস্ট আলাদাভাবে দেখানো হয়।',
+ 'Billing history view':'বিলিং হিস্ট্রি ভিউ','Payments':'পেমেন্ট','Credits':'ক্রেডিট',
+ 'Loading billing history…':'বিলিং হিস্ট্রি লোড হচ্ছে…','Available shop credit':'অ্যাভেইলেবল শপ ক্রেডিট',
+ 'Pending or rejected payments do not fund invoices. Verified funds still need invoice allocation and subscription settlement.':'পেন্ডিং বা রিজেক্টেড পেমেন্টে ইনভয়েস পেইড হয় না। ভেরিফায়েড পেমেন্টও ইনভয়েসে অ্যালোকেট ও সাবস্ক্রিপশন সেটেল করতে হয়।',
+ 'No recorded subscription payments.':'এখনও সাবস্ক্রিপশন পেমেন্ট রেকর্ড করা হয়নি।',
+ 'Payment breakdown':'পেমেন্ট ব্রেকডাউন','Allocated to invoices':'ইনভয়েসে অ্যালোকেটেড','Refunded':'রিফান্ডেড','Refund pending':'রিফান্ড পেন্ডিং','Available funds':'অ্যাভেইলেবল ফান্ড',
+ 'Invoice credit reduces an invoice total. Shop credit can be applied to eligible invoices.':'ইনভয়েস ক্রেডিট ওই ইনভয়েসের ডিউ কমায়। শপ ক্রেডিট প্রযোজ্য ইনভয়েসে ব্যবহার করা যায়।',
+ 'No subscription credit activity.':'এখনও সাবস্ক্রিপশন ক্রেডিট অ্যাক্টিভিটি নেই।',
+ 'Invoice credit':'ইনভয়েস ক্রেডিট','Credit added':'ক্রেডিট অ্যাডেড','Credit reversed':'ক্রেডিট রিভার্সড','Credit used':'ক্রেডিট ইউজড','Credit returned':'ক্রেডিট রিটার্নড','Shop credit':'শপ ক্রেডিট',
+ 'Billing history pages':'বিলিং হিস্ট্রি পেজ','Newest activity':'নতুন অ্যাক্টিভিটি','Older activity':'পুরোনো অ্যাক্টিভিটি',
+ 'Billing history could not be verified.':'বিলিং হিস্ট্রি ভেরিফাই করা যায়নি।','Billing history could not be loaded.':'বিলিং হিস্ট্রি লোড করা যায়নি।',
+ 'Verified':'ভেরিফায়েড','Reversed':'রিভার্সড','Payment gateway':'পেমেন্ট গেটওয়ে',
+};

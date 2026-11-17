@@ -20,7 +20,7 @@ export function tenantWorkspaceTarget(tenantId:string,path:string[],method:strin
   const teamRead=path.length===2&&path[0]==='team'&&['catalog','members','invitations'].includes(path[1]);
   const teamWrite=config.writes==='true'&&path[0]==='team'&&(path[1]==='invitations'&&method==='POST'&&(path.length===2||path.length===4&&/^[0-9a-f-]{36}$/i.test(path[2])&&path[3]==='revoke')||path[1]==='roles'&&(method==='POST'&&path.length===2||['PATCH','DELETE'].includes(method)&&path.length===3&&/^[0-9a-f-]{36}$/i.test(path[2]))||path[1]==='members'&&method==='PATCH'&&path.length===4&&/^[0-9a-f-]{36}$/i.test(path[2])&&['access','status'].includes(path[3]));
   const mediaWrite=config.writes==='true'&&path[0]==='media'&&(method==='POST'&&path.length===2&&path[1]==='upload-multiple'||path.length===2&&/^[0-9a-f-]{36}$/i.test(path[1])&&['PATCH','DELETE'].includes(method)||method==='POST'&&(path.length===3&&/^[0-9a-f-]{36}$/i.test(path[1])&&path[2]==='restore'||path.length===4&&path[1]==='uploads'&&/^[0-9a-f-]{36}$/i.test(path[2])&&path[3]==='reconcile'));
-  const read=mediaRead||path.length===2&&path[0]==='billing'&&path[1]==='portal'||path.length===3&&path[0]==='sales'&&/^[0-9a-f-]{36}$/i.test(path[1])&&path[2]==='receipt-logo'||
+  const read=mediaRead||path.length===2&&path[0]==='billing'&&['portal','history'].includes(path[1])||path.length===3&&path[0]==='sales'&&/^[0-9a-f-]{36}$/i.test(path[1])&&path[2]==='receipt-logo'||
     path.length===3&&path[0]==='settings'&&path[1]==='customization'&&path[2]==='active'||
     path.length===2&&path[0]==='pos'&&path[1]==='medicines'||
     path.length===1&&path[0]==='entitlements'||
