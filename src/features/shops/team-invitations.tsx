@@ -1,0 +1,43 @@
+"use client";
+import {useEffect,useRef,useState,type FormEvent} from 'react';
+import {Select} from '@/components/ui/select';
+import {DataSkeleton} from '@/components/ui/skeleton';
+import {sessionBoundary} from '@/lib/api/session-boundary';
+import {useLanguage} from '@/lib/i18n/language-provider';
+import {createWorkspaceClient,WorkspaceError} from './workspace-client';
+import {validInviteBody,validInviteCommand,validInvitePage,type InvitePage,type TeamInvite,type TeamInviteBody} from './team-invitation-policy';
+import type {TeamCatalog} from './team-policy';
+type Attempt={action:'issue';body:TeamInviteBody;key:string}|{action:'revoke';id:string;key:string};
+export function TeamInvitations({tenantId,catalog,writesEnabled,recoveryEnabled,onLock}:{tenantId:string;catalog:TeamCatalog;writesEnabled:boolean;recoveryEnabled:boolean;onLock:(v:boolean)=>void}){
+ const {t}=useLanguage(),client=useRef<ReturnType<typeof createWorkspaceClient>|null>(null),alive=useRef(false),guard=useRef(false);
+ const [list,setList]=useState<InvitePage|null>(null),[page,setPage]=useState(1),[revision,setRevision]=useState(0),[error,setError]=useState(''),[busy,setBusy]=useState(false),[pending,setPending]=useState<Attempt|null>(null),[link,setLink]=useState(''),[copied,setCopied]=useState(false),[confirm,setConfirm]=useState<TeamInvite|null>(null);
+ const [email,setEmail]=useState(''),[roleId,setRoleId]=useState(''),[allBranches,setAllBranches]=useState(false),[branches,setBranches]=useState<string[]>([]),[home,setHome]=useState(''),[hours,setHours]=useState('24');const locked=busy||!!pending;
+ useEffect(()=>{alive.current=true;const c=createWorkspaceClient(tenantId,sessionBoundary.capture().signal);client.current=c;return()=>{alive.current=false;c.dispose();onLock(false);};},[tenantId,onLock]);
+ useEffect(()=>{let active=true;void client.current!.teamInvitations(page).then(value=>{if(!active)return;if(!validInvitePage(value,tenantId,page))throw new WorkspaceError('Invitation list could not be verified.',502);setList(value);}).catch(cause=>{if(active)setError(cause instanceof Error?cause.message:'Invitation could not be loaded.');});return()=>{active=false;};},[tenantId,page,revision]);
+ function reload(){setError('');setList(null);setRevision(v=>v+1);}
+ async function send(attempt:Attempt){
+  if(guard.current)return;guard.current=true;setBusy(true);setPending(attempt);onLock(true);setError('');setLink('');setCopied(false);
+  try{const value=attempt.action==='issue'?await client.current!.teamInvite(attempt.body,attempt.key):await client.current!.revokeTeamInvite(attempt.id,attempt.key);if(!alive.current)return;
+   if(!validInviteCommand(value,tenantId,attempt.action,attempt.action==='revoke'?attempt.id:undefined))throw new WorkspaceError('Invitation save could not be verified.',502);
+   if(attempt.action==='issue')setLink(`${location.origin}/member-invitation#token=${encodeURIComponent(value.token!)}`);
+   setPending(null);setConfirm(null);onLock(false);reload();
+  }catch(cause){if(!alive.current)return;setError(cause instanceof Error?cause.message:'Invitation result is unknown.');if(cause instanceof WorkspaceError&&cause.status>=400&&cause.status<500&&cause.status!==408){setPending(null);onLock(false);setConfirm(null);setList(null);setRevision(v=>v+1);}}
+  finally{guard.current=false;if(alive.current)setBusy(false);}
+ }
+ function submit(e:FormEvent){e.preventDefault();if(locked||!writesEnabled)return;const body={email:email.trim().toLowerCase(),roleId,allBranches,branchIds:allBranches?[]:[...branches].sort(),homeBranchId:home||null,hours:Number(hours)};if(!validInviteBody(body)){setError('Check the invitation fields');return;}void send({action:'issue',body,key:crypto.randomUUID()});}
+ const statuses={PENDING:'Pending',EXPIRED:'Expired',REVOKED:'Revoked',ACCEPTED:'Accepted'};
+ return <section className="tenant-team-invitations" aria-label={t('Member invitations')}>
+  <form className="tenant-team-form" onSubmit={submit}><h3>{t('Invite a member')}</h3><p className="tenant-team-note">{t('The recipient must sign in with the invited email and accept. Pending invitations reserve a seat.')}</p><p className="tenant-team-note">{t('An existing account with this email is required.')}</p><fieldset disabled={locked||!writesEnabled}>
+   <div className="tenant-team-role-fields"><label>{t('Member email')}<input aria-label={t('Member email')} type="email" autoComplete="off" required maxLength={254} value={email} onChange={e=>setEmail(e.target.value)}/></label><label>{t('Invitation role')}<Select aria-label={t('Invitation role')} required value={roleId} onChange={e=>setRoleId(e.target.value)}><option value="">{t('Choose role')}</option>{catalog.roles.filter(r=>r.canAssign).map(r=><option key={r.id} value={r.id}>{r.name}</option>)}</Select></label></div>
+   <label className="tenant-team-check"><input type="checkbox" checked={allBranches} onChange={e=>{setAllBranches(e.target.checked);setBranches([]);setHome('');}}/>{t('All shop branches')}</label>
+   {!allBranches&&<div className="tenant-team-branches" aria-label={t('Invitation branches')}>{catalog.branches.map(b=><label className="tenant-team-check" key={b.id}><input type="checkbox" checked={branches.includes(b.id)} onChange={e=>{setBranches(old=>e.target.checked?[...old,b.id]:old.filter(id=>id!==b.id));if(home===b.id&&!e.target.checked)setHome('');}}/>{b.name}</label>)}</div>}
+   <div className="tenant-team-role-fields"><label>{t('Default branch')}<Select aria-label={t('Invitation default branch')} value={home} onChange={e=>setHome(e.target.value)}><option value="">{t('Choose later in workspace settings')}</option>{catalog.branches.filter(b=>allBranches||branches.includes(b.id)).map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</Select></label><label>{t('Link expires in')}<Select aria-label={t('Link expires in')} value={hours} onChange={e=>setHours(e.target.value)}><option value="1">{t('1 hour')}</option><option value="24">{t('24 hours')}</option><option value="72">{t('3 days')}</option><option value="168">{t('7 days')}</option></Select></label></div>
+   <p className="tenant-team-note">{t('A new invitation to the same email replaces the previous pending link.')}</p><footer><button type="submit">{t('Create invitation link')}</button></footer>
+  </fieldset></form>
+  {error&&<p role="alert">{t(error)}</p>}{pending&&<aside className="tenant-team-retry"><p>{t('Keep this request unchanged until its result is confirmed.')}</p><button disabled={busy} onClick={()=>void send(pending)}>{t(busy?'Saving…':'Retry same request')}</button></aside>}
+  {link&&<section className="tenant-team-form" aria-label={t('Invitation link')}><h3>{t('Share this private link')}</h3><p>{t('Only the account with the invited email can accept. Copy this link before closing.')}</p><label>{t('Invitation link')}<input readOnly value={link} onFocus={e=>e.target.select()}/></label><button type="button" onClick={()=>void navigator.clipboard.writeText(link).then(()=>setCopied(true)).catch(()=>setError('Select and copy the invitation link.'))}>{t(copied?'Copied':'Copy link')}</button></section>}
+  <div className="tenant-team-section-heading"><h3>{t('Invitation history')}</h3><button disabled={locked} onClick={reload}>{t('Reload invitations')}</button></div>
+  {!list&&!error&&<DataSkeleton variant="table" rows={3}>{t('Loading invitations…')}</DataSkeleton>}{list&&<><ul className="tenant-team-role-list">{list.items.map(i=><li key={i.id}><div><strong>{i.email}</strong><p>{i.roleName} · {t(i.allBranches?'All shop branches':'Selected branches')}</p><small>{t(statuses[i.status])} · {t('Expires')}: {new Date(i.expiresAt).toLocaleString(undefined,{timeZone:'Asia/Dhaka'})}</small></div>{['PENDING','EXPIRED'].includes(i.status)&&recoveryEnabled&&<button disabled={locked} onClick={()=>setConfirm(i)}>{t('Revoke invitation')}</button>}</li>)}</ul>{!list.items.length&&<p className="tenant-team-empty">{t('No invitations yet.')}</p>}<nav className="tenant-team-pages" aria-label={t('Invitation pages')}><button disabled={locked||page===1} onClick={()=>{setList(null);setPage(p=>p-1);}}>{t('Previous')}</button><span>{list.page} / {Math.max(1,Math.ceil(list.totalItems/20))}</span><button disabled={locked||page*20>=list.totalItems} onClick={()=>{setList(null);setPage(p=>p+1);}}>{t('Next')}</button></nav></>}
+  {confirm&&<section className="tenant-team-confirm" aria-label={t('Revoke invitation')}><h3>{t('Revoke this invitation?')}</h3><p>{confirm.email}</p><button disabled={locked} onClick={()=>void send({action:'revoke',id:confirm.id,key:crypto.randomUUID()})}>{t('Confirm revoke invitation')}</button><button disabled={locked} onClick={()=>setConfirm(null)}>{t('Cancel')}</button></section>}
+ </section>;
+}

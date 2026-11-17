@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import {validInviteBody} from '@/features/shops/team-invitation-policy';
 import {validTeamBody} from '@/features/shops/team-policy';
 import {readPrivateMediaUpload,privateMediaHeaders} from '@/lib/server/private-media-proxy';
 import {validMediaMutation} from '@/features/shops/media-policy';
@@ -40,7 +41,7 @@ async function proxy(request:Request,context:Context){
     if(!key||!/^[A-Za-z0-9_-]{16,128}$/.test(key)||new URL(request.url).search||request.headers.get('content-type')?.split(';')[0].trim()!=='application/json')return Response.json({success:false,message:'A JSON body and valid save key are required.'},{status:422,headers:noStore});
     const bulk=['import','bulk-price-update'].includes(path[2]),limit=bulk?262144:32768;
     if(path[0]==='team'){
-      try{body=await request.text();const kind=path[1]==='members'?(path[3]==='access'?'member.access':'member.status'):request.method==='POST'?'role.create':request.method==='PATCH'?'role.update':'role.delete';if(new TextEncoder().encode(body).byteLength>32768||!validTeamBody(JSON.parse(body),kind))throw new Error('Invalid team fields');}catch{return Response.json({success:false,message:'Invalid team access fields.'},{status:422,headers:noStore});}
+      try{body=await request.text();const kind=path[1]==='members'?(path[3]==='access'?'member.access':'member.status'):request.method==='POST'?'role.create':request.method==='PATCH'?'role.update':'role.delete';if(new TextEncoder().encode(body).byteLength>32768||!(path[1]==='invitations'?(path.length===2?validInviteBody(JSON.parse(body)):!!JSON.parse(body)&&typeof JSON.parse(body)==='object'&&!Array.isArray(JSON.parse(body))&&Object.keys(JSON.parse(body)).length===0):validTeamBody(JSON.parse(body),kind)))throw new Error('Invalid team fields');}catch{return Response.json({success:false,message:'Invalid team access fields.'},{status:422,headers:noStore});}
       headers['Content-Type']='application/json';headers['Idempotency-Key']=key;
     }else if(path[0]==='media'){
       try{body=await request.text();const value=JSON.parse(body);if(new TextEncoder().encode(body).byteLength>4096||!(path[1]==='uploads'?!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===0:validMediaMutation(value,request.method==='PATCH'?'rename':request.method==='DELETE'?'trash':'restore')))throw new Error('Invalid media fields');}catch{return Response.json({success:false,message:'Invalid media fields.'},{status:422,headers:noStore});}

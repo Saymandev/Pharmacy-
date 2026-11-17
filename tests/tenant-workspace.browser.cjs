@@ -5,7 +5,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));return server.address().port;}
 (async()=>{
  const catalogMode=process.env.TENANT_CATALOG_TEST==='1';
- const teamFixture=process.env.TENANT_TEAM_TEST==='1'?require('./tenant-team.fixture.cjs')({branchId:a1,secondBranch:a2}):null;
+ const teamFixture=process.env.TENANT_TEAM_INVITATIONS_TEST==='1'?require('./team-invitations.fixture.cjs')({branchId:a1,secondBranch:a2}):process.env.TENANT_TEAM_TEST==='1'?require('./tenant-team.fixture.cjs')({branchId:a1,secondBranch:a2}):null;
  const mediaFixture=process.env.TENANT_MEDIA_TEST==='1'?require('./tenant-media.fixture.cjs')({branchId:a1}):null;
  const billingFixture=process.env.TENANT_BILLING_PORTAL_TEST==='1'?require('./billing-portal.fixture.cjs')():null;
  const customizationFixture=process.env.TENANT_CUSTOMIZATION_TEST==='1'?require('./customization-editor.fixture.cjs')():null;
@@ -238,14 +238,14 @@ async function listen(server){await new Promise(resolve=>server.listen(0,'127.0.
  try{
   const upstreamPort=await listen(stub),probe=http.createServer(),port=await listen(probe);await new Promise(resolve=>probe.close(resolve));
   const base=`http://localhost:${port}`;
-  child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--port',String(port)],{cwd:path.resolve(__dirname,'..'),windowsHide:true,env:{...process.env,TENANT_SESSION_PREVIEW_ENABLED:'true',TENANT_WORKSPACE_PREVIEW_ENABLED:'true',TENANT_CATALOG_WRITES_ENABLED:teamFixture||mediaFixture||billingFixture||customizationFixture||salesMode||customerMode||posMode||registerMode||formMode||stockMode||transferMode||bulkMode?'true':'false',TENANT_BACKEND_API_URL:`http://127.0.0.1:${upstreamPort}/api/v1`},stdio:['ignore','pipe','pipe']});
+  child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--port',String(port)],{cwd:path.resolve(__dirname,'..'),windowsHide:true,env:{...process.env,TENANT_SESSION_PREVIEW_ENABLED:'true',TENANT_WORKSPACE_PREVIEW_ENABLED:'true',TENANT_CATALOG_WRITES_ENABLED:teamFixture||mediaFixture||billingFixture||customizationFixture||salesMode||customerMode||posMode||registerMode||formMode||stockMode||transferMode||bulkMode?'true':'false',MEMBER_INVITATION_PREVIEW_ENABLED:'true',MEMBER_INVITATION_BACKEND_API_URL:`http://127.0.0.1:${upstreamPort}/api/v1/member-invitations`,TENANT_BACKEND_API_URL:`http://127.0.0.1:${upstreamPort}/api/v1`},stdio:['ignore','pipe','pipe']});
   child.stdout.on('data',value=>{logs=(logs+value).slice(-5000);});child.stderr.on('data',value=>{logs=(logs+value).slice(-5000);});
   let ready=false;for(let i=0;i<90;i++){if(child.exitCode!==null)throw new Error('Next exited: '+logs);try{if((await fetch(base+'/shops',{signal:AbortSignal.timeout(1000)})).ok){ready=true;break;}}catch{}await sleep(1000);}assert.ok(ready,'Staging fixture did not start: '+logs);
   browser=await chromium.launch({headless:true,executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'});
   const context=await browser.newContext();await context.addCookies([{name:'pharmacy_access',value:'fixture-http-only',domain:'localhost',path:'/api/backend',httpOnly:true,sameSite:'Lax'}]);
   await context.route('**/api/backend/**',async route=>{
    const ep=new URL(route.request().url()).pathname.replace('/api/backend','');
-   if(ep.startsWith('/tenant-workspace'))return route.continue();
+   if(ep.startsWith('/tenant-workspace')||ep.startsWith('/member-invitations'))return route.continue();
    let data;if(ep==='/auth/me')data={id:'u',fullName:'Cashier',role:{name:'Legacy Super Admin',permissions:[{key:'*'}]}};
    else if(ep==='/tenant-session/memberships')data={items:['a','b'].map(id=>supplierContext(id)),nextCursor:null};
    else if(ep.startsWith('/tenant-session/memberships/'))data=supplierContext(ep.split('/').at(-1));

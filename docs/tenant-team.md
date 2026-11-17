@@ -2,7 +2,7 @@
 
 The verified selected-shop workspace offers Team access to all-branch owners or
 members with explicit Team read permissions. A separate scoped BFF permits only
-catalog/member reads, role CRUD and member access/status commands. It has no user
+catalog/member reads, role CRUD, member access/status and invitation commands. It has no user
 creation, password reset or global identity endpoints and never accepts caller
 tenant/auth headers. Strict versioned JSON bodies and save keys gate mutations.
 
@@ -31,9 +31,10 @@ when the subscription is expired; it cannot expand access. The backend remains
 authoritative if a displayed scope becomes stale. UI state/local storage never
 grants permissions. Shared login credentials are managed outside this workspace.
 
-This completes existing-membership/role administration, not new-member onboarding.
-Invitations, account consent/acceptance, HR and remaining billing/notification
-integration still require their own work. All changes remain staged off main/live.
+Existing-membership/role administration is complete. Existing-account invitations
+and consent have a separate implementation in [team-invitations.md](team-invitations.md).
+Global account onboarding, automated invitation delivery, HR and remaining billing/
+notification work remain separate. All changes remain staged off main/live.
 
 Verification entry points: tenant-team.test.mjs and run-tenant-team-browser.cjs,
 scoped ESLint/TypeScript, production build and the companion disposable PostgreSQL
@@ -44,3 +45,6 @@ transport/shop contract tests passed. Team, private Media and owner billing port
 browser scenarios passed. The mobile dark Team layout was visually inspected.
 Backend companion changes passed the full 266-test local PostgreSQL regression.
 Neither main merge nor production deployment/database changes were performed.
+
+
+Member invitations now have a separate staged implementation; see [team-invitations.md](team-invitations.md). Existing-account consent is implemented; global account onboarding and automated delivery remain separate.

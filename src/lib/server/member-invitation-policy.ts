@@ -1,0 +1,4 @@
+export function memberInvitationTarget(path:string[],method:string,config={enabled:process.env.MEMBER_INVITATION_PREVIEW_ENABLED,base:process.env.MEMBER_INVITATION_BACKEND_API_URL}):string|null{
+ if(config.enabled!=='true'||!config.base||method!=='POST'||path.length!==1||!['preview','accept'].includes(path[0]))return null;
+ try{const base=new URL(config.base);if(!['https:','http:'].includes(base.protocol)||base.username||base.password||base.search||base.hash||!base.pathname.replace(/\/$/,'').endsWith('/member-invitations'))return null;return `${base.toString().replace(/\/$/,'')}/${path[0]}`;}catch{return null;}
+}
