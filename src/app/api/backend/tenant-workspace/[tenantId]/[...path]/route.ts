@@ -17,6 +17,7 @@ import {validCustomerProfile,validAdvanceBody} from '@/features/shops/customer-p
 import {validSaleReturnBody,validSaleReturnStatus} from '@/features/shops/sale-return-policy';
 
 type Context={params:Promise<{tenantId:string;path:string[]}>};
+const validQuoteInput=(v:unknown)=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).length===1&&'planVersionId'in v&&typeof v.planVersionId==='string'&&/^[0-9a-f-]{36}$/i.test(v.planVersionId);
 const noStore={'Cache-Control':'no-store'};
 async function proxy(request:Request,context:Context){
   const mutating=['POST','PATCH','DELETE'].includes(request.method);
@@ -55,7 +56,7 @@ async function proxy(request:Request,context:Context){
       try{body=await request.text();const value=JSON.parse(body);if(new TextEncoder().encode(body).byteLength>4096||!(path[1]==='uploads'?!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===0:validMediaMutation(value,request.method==='PATCH'?'rename':request.method==='DELETE'?'trash':'restore')))throw new Error('Invalid media fields');}catch{return Response.json({success:false,message:'Invalid media fields.'},{status:422,headers:noStore});}
       headers['Content-Type']='application/json';headers['Idempotency-Key']=key;
     }else if(path[0]==='billing'){
-      try{body=await request.text();if(new TextEncoder().encode(body).byteLength>4096||!validBillingRequest(JSON.parse(body)))throw new Error('Invalid billing request');}catch{return Response.json({success:false,message:'Invalid billing request fields.'},{status:422,headers:noStore});}
+      try{body=await request.text();if(new TextEncoder().encode(body).byteLength>4096||!(path[1]==='change-quotes'?validQuoteInput(JSON.parse(body)):validBillingRequest(JSON.parse(body))))throw new Error('Invalid billing request');}catch{return Response.json({success:false,message:'Invalid billing request fields.'},{status:422,headers:noStore});}
       headers['Content-Type']='application/json';headers['Idempotency-Key']=key;
     }else if(path[0]==='settings'){
       try{body=await request.text();if(new TextEncoder().encode(body).byteLength>4096||!validCustomizationBody(JSON.parse(body),path[2]==='restore'))throw new Error('Invalid customization');}catch{return Response.json({success:false,message:'Invalid customization fields.'},{status:422,headers:noStore});}
