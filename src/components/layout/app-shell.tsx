@@ -82,7 +82,7 @@ const plannedModules = [
 
 
 export function AppShell() {
-  const { status, user, logout, hasPermission } = useAuth();
+  const { status, user, logout, hasPermission, saasMode } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
@@ -129,11 +129,11 @@ export function AppShell() {
 
   useEffect(() => {
     if (status === "anonymous") router.replace("/login");
-  }, [status, router]);
+    else if(status==='authenticated'&&saasMode)router.replace('/workspace');
+  }, [status, router, saasMode]);
 
   function handleLogout() {
     logout();
-    router.replace("/login");
   }
 
   async function changePassword(event: FormEvent<HTMLFormElement>) {
@@ -153,7 +153,7 @@ export function AppShell() {
     } finally { setPasswordSaving(false); }
   }
 
-  if (status !== "authenticated") {
+  if (status !== "authenticated" || saasMode) {
     return <SessionSkeleton>{t("Opening your workspace…")}</SessionSkeleton>;
   }
 

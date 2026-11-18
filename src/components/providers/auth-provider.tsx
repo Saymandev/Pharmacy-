@@ -15,6 +15,8 @@ import { getCurrentUser, signIn } from "@/features/auth/auth-service";
 import type { CurrentUser } from "@/types/api";
 import { sessionBoundary } from "@/lib/api/session-boundary";
 import { logoutEndpoint } from "@/lib/auth/workspace-entry";
+import { SessionSkeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/lib/i18n/language-provider";
 
 const demoUser: CurrentUser = {
   id: "user-demo-manager",
@@ -33,6 +35,7 @@ const demoUser: CurrentUser = {
 type AuthStatus = "checking" | "authenticated" | "anonymous";
 
 interface AuthContextValue {
+  saasMode: boolean;
   status: AuthStatus;
   user: CurrentUser | null;
   login: (usernameOrEmail: string, password: string) => Promise<void>;
@@ -46,12 +49,16 @@ function announceSessionChange() {
   try { window.localStorage.setItem(SESSION_EVENT, crypto.randomUUID()); } catch { /* Same-tab boundary still works without storage. */ }
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children, saasMode=false }: { children: ReactNode; saasMode?: boolean }) {
+  const {t}=useLanguage();
   const [status, setStatus] = useState<AuthStatus>("checking");
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [sessionVersion, setSessionVersion] = useState(0);
   const authRevision = useRef(0);
   const logoutRequest = useRef<Promise<void>>(Promise.resolve());
+  const logoutInFlight = useRef(false);
+  const [signingOut,setSigningOut]=useState(false);
+  const [logoutError,setLogoutError]=useState("");
 
   useEffect(() => {
     function onStorage(event: StorageEvent) {
@@ -123,19 +130,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    authRevision.current++;
+    if(logoutInFlight.current)return;
+    logoutInFlight.current=true;
+    const revision=++authRevision.current;
     sessionBoundary.reset();
     setSessionVersion(value => value + 1);
-    logoutRequest.current = logoutRequest.current.then(async () => {
-      const response = await fetch(logoutEndpoint(), { method: "POST", credentials: "same-origin" });
-      if (!response.ok) throw new Error("Sign out could not be completed. Reload and try again.");
+    setSigningOut(true);setLogoutError("");
+    logoutRequest.current = logoutRequest.current.catch(()=>{}).then(async () => {
+      const response = await fetch(logoutEndpoint(saasMode?'true':'false'), { method: "POST", credentials: "same-origin", signal:AbortSignal.timeout(15000) });
+      if (!response.ok) throw new Error("Sign out could not be confirmed. Retry sign out.");
       announceSessionChange();
+      if(revision!==authRevision.current)return;
+      setUser(null);setStatus("anonymous");
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Reload after cookie deletion to discard the previous actor's router and component state.
+      window.location.assign("/login");
     });
-    // Keep a rejection available to the next login, without an unhandled promise.
-    void logoutRequest.current.catch(() => {});
-    setUser(null);
-    setStatus("anonymous");
-  }, []);
+    // A failed request preserves the actor and can be retried without latching
+    // its rejected promise into every later logout/login attempt.
+    void logoutRequest.current.catch(() => {setLogoutError("Sign out could not be confirmed. Retry sign out.");}).finally(()=>{logoutInFlight.current=false;setSigningOut(false);});
+  }, [saasMode]);
 
   const hasPermission = useCallback(
     (permission: string) => {
@@ -146,11 +159,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ status, user, login, logout, hasPermission }),
-    [status, user, login, logout, hasPermission],
+    () => ({ status, user, login, logout, hasPermission, saasMode }),
+    [status, user, login, logout, hasPermission, saasMode],
   );
 
-  return <AuthContext.Provider value={value}><SessionContents key={sessionVersion}>{children}</SessionContents></AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>
+    {logoutError&&<div className="session-logout-error" role="alert"><span>{t(logoutError)}</span><button type="button" onClick={logout}>{t('Retry sign out')}</button></div>}
+    {signingOut?<SessionSkeleton>{t('Signing out…')}</SessionSkeleton>:<SessionContents key={sessionVersion}>{children}</SessionContents>}
+  </AuthContext.Provider>;
 }
 
 function SessionContents({ children }: { children: ReactNode }) { return children; }

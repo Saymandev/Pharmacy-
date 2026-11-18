@@ -11,7 +11,7 @@ import { workspaceEntry } from "@/lib/auth/workspace-entry";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { status, login } = useAuth();
+  const { status, login, saasMode } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,8 +21,8 @@ export default function LoginPage() {
   const [setupChecking, setSetupChecking] = useState(true);
 
   useEffect(() => {
-    if (status === "authenticated") router.replace(workspaceEntry());
-  }, [status, router]);
+    if (status === "authenticated") router.replace(workspaceEntry(saasMode?'true':'false'));
+  }, [status, router, saasMode]);
 
   useEffect(() => {
     if (status !== "anonymous") return;
@@ -48,7 +48,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await login(usernameOrEmail.trim(), password);
-      router.replace(workspaceEntry());
+      router.replace(workspaceEntry(saasMode?'true':'false'));
     } catch (caught) {
       setError(caught instanceof ApiClientError ? caught.message : t("We couldn’t sign you in. Please try again."));
       setSubmitting(false);

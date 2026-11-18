@@ -1,14 +1,24 @@
 # SaaS navigation and logout
 
-Build with `NEXT_PUBLIC_SAAS_MODE=true` only for the reviewed SaaS deployment.
-Authenticated home/sign-in opens `/shops`; identity role:null is intentional and
-shop authority comes from fresh memberships. Legacy mode keeps `/dashboard`.
+Set server `SAAS_RUNTIME_ENABLED=true` for the reviewed SaaS deployment. The
+dynamic root layout passes this runtime mode to the auth provider, so navigation
+and logout do not depend on a correctly inlined browser build flag.
+Authenticated home/sign-in opens `/workspace`, which verifies `/platform/session`:
+an explicitly authorized operator opens `/platform`, a 403 opens `/shops`, and
+verification failures show retry rather than granting platform access. Identity
+`role:null` is intentional; shop authority comes from fresh memberships. Legacy
+mode keeps `/dashboard`. Old dashboard bookmarks also resolve through the SaaS
+entry route. `NEXT_PUBLIC_SAAS_MODE=true` may be retained for compatibility.
 
 Set server `SAAS_RUNTIME_ENABLED=true` to use the dedicated cookie-bearing logout
 route `/api/backend/auth/logout`. It validates request origin, forwards the
 HttpOnly access token to backend session revocation, and clears both cookies only
 after success or an already invalid session. A backend failure preserves cookies
-for retry. Tokens are never returned to browser JavaScript.
+for retry. The UI retains the actor and offers retry on failure; a rejected logout
+does not permanently poison later attempts. Successful logout opens a fresh login
+page after cookie deletion. The compatibility logout route uses a RELATIVE 307
+Location so a container's internal `0.0.0.0:3000` URL cannot leak into the browser
+redirect. Tokens are never returned to browser JavaScript.
 
 After the backend/data cutover gate passes, the matching server configuration is:
 

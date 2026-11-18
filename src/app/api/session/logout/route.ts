@@ -8,7 +8,8 @@ export async function POST(request: Request) {
 
   if (process.env.SAAS_RUNTIME_ENABLED === "true") {
     // Redirect so the browser attaches the /api/backend-scoped HttpOnly cookies.
-    return NextResponse.redirect(new URL("/api/backend/auth/logout", request.url), 307);
+    // Keep the browser on its public origin behind container/reverse proxies.
+    return new NextResponse(null, { status: 307, headers: { Location: "/api/backend/auth/logout", "Cache-Control": "no-store" } });
   }
 
   const response = NextResponse.json({ success: true, message: "Signed out." });
