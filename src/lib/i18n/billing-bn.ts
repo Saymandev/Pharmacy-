@@ -1,4 +1,8 @@
 export const billingBangla:Record<string,string>={
+ 'Shop billing':'শপ বিলিং','View billing':'বিলিং দেখুন','Send billing requests':'বিলিং রিকোয়েস্ট পাঠান','View payment proofs':'পেমেন্ট প্রুফ দেখুন',
+ 'Billing view only. Ask the shop owner for request permission.':'শুধু বিলিং দেখার অ্যাকসেস আছে। রিকোয়েস্ট পাঠাতে শপ ওনারের কাছ থেকে পারমিশন নিন।',
+ 'Billing permissions apply across the shop and require all-branch member access. Uploading proofs also requires Send billing requests.':'বিলিং পারমিশন পুরো শপের জন্য, তাই মেম্বারের সব ব্রাঞ্চে অ্যাকসেস লাগবে। প্রুফ আপলোড করতেও বিলিং রিকোয়েস্ট পাঠানোর পারমিশন লাগবে।',
+ 'Billing roles work only when Allow all shop branches is enabled.':'সব শপ ব্রাঞ্চের অ্যাকসেস চালু থাকলেই বিলিং রোল কাজ করবে।',
  'Payment proof attachments':'পেমেন্ট প্রুফ অ্যাটাচমেন্ট',
  'Private PDF, PNG or JPEG · 1 MB per file · up to 3 files per request.':'প্রাইভেট PDF, PNG বা JPEG · প্রতি ফাইল ১ MB · প্রতি রিকোয়েস্টে সর্বোচ্চ ৩টি ফাইল।',
  'Loading proofs…':'প্রুফ লোড হচ্ছে…','No payment proof attached.':'এখনও পেমেন্ট প্রুফ অ্যাটাচ করা হয়নি।',

@@ -21,7 +21,7 @@
     "test:activation": "node --test tests/activation-policy.test.mjs && node tests/run-activation-browser.cjs",
     "test:billing": "node --test tests/billing-policy.test.mjs && node tests/run-billing-browser.cjs",
     "test:entitlements": "node --test tests/entitlements-policy.test.mjs && node tests/run-entitlements-browser.cjs",
-    "test:billing-portal": "node --test tests/billing-portal.test.mjs tests/billing-history.test.mjs tests/billing-request-proofs.test.mjs && node tests/run-billing-portal-browser.cjs",
+    "test:billing-portal": "node --test tests/billing-portal.test.mjs tests/billing-access.test.mjs tests/billing-history.test.mjs tests/billing-request-proofs.test.mjs && node tests/run-billing-portal-browser.cjs",
     "test:tenant-media": "node --test tests/tenant-media.test.mjs && node tests/run-tenant-media-browser.cjs",
     "test:tenant-team": "node --test tests/tenant-team.test.mjs && node tests/run-tenant-team-browser.cjs",
     "test:shop-onboarding": "node --test tests/shop-onboarding.test.mjs && node tests/run-shop-onboarding-browser.cjs",

@@ -1,7 +1,8 @@
 # Owner billing recovery portal
 
-The fresh workspace bootstrap exposes a boolean `billingAccess`; only a verified
-owner sees the subscription/billing entry. The portal is independent of the
+The fresh workspace bootstrap exposes verified-owner `billingAccess` separately
+from explicit `billingCapabilities`. Owners and all-branch billing delegates see
+the subscription/billing entry. The portal is independent of the
 working branch and remains reachable on subscription expiry. The restricted
 backend, not browser role names/local storage, decides eligibility.
 
@@ -38,8 +39,8 @@ Other shop navigation is locked while a review result is unknown; retry preserve
 the exact command. Financial verification/settlement stays in the existing billing
 workflow.
 
-This is a completed workflow within Task 6. Delegated billing users,
-quote/change requests and notification outbox/socket delivery remain
+This is a completed workflow within Task 6. Quote/change requests and
+notification outbox/socket delivery remain
 outstanding. Team/invitations/onboarding, Media and manual HR workspace flows
 have separate completed checkpoints. This work is staged on SaaS feature branches,
 not deployed. Deploy the backend `tenant-billing-history.sql` rollout after its
@@ -92,4 +93,33 @@ retry, close/Escape locking, download bytes and safe filename, foreign-list deni
 and mobile dark layout. Super Admin BFF browser verification passed shop-request
 proof viewing/download alongside the existing billing/review workflow. Mobile
 proof layout was visually inspected. Backend full regression passed 295/295.
-Delegated billing grants remain the next separate task.
+Delegated billing grants were completed in the subsequent staged checkpoint below.
+
+## Delegated billing roles — 2026-11-18
+
+Team roles now offer View billing, Send billing requests and View payment proofs.
+Billing actions require View; the role editor adds/removes dependent keys together.
+Proof uploads additionally require Send billing requests. Billing access applies
+across the shop, so the member must explicitly have Allow all shop branches.
+Existing bounded Team role/member commands, stale versions, audit and exact-key
+retry control the grants. Billing permissions alone cannot administer Team/HR.
+
+The billing entry uses fresh `billingCapabilities` and all-branch scope. The
+legacy `billingAccess` remains a verified-owner flag for Team/HR; it is never set
+from delegated billing permissions. Portal capabilities decide which controls to
+show: readers get invoices/history/updates, requesters get the request form and
+proof readers get download-only attachments. Missing or revoked billing read
+hides the entry. No role-name/JWT wildcard/owner fallback is used. Install the
+backend delegation rollout before enabling the updated bootstrap/frontend.
+
+Billing self-service primitives are complete on feature branches; change/quote
+requests, durable notifications/socket delivery and production rollout/UAT remain.
+
+Verification 2026-11-18: production build, scoped ESLint and 22 policy/transport
+tests passed. Billing BFF scenarios cover delegated read-only/request/proof views,
+forged read-only writes, revoked entry and existing upload/download/retry safety.
+Team BFF scenarios cover automatic billing View dependencies and existing audited
+role/member edits. Mobile dark read-only and permission-list screenshots were
+inspected. Backend business regression passed 240/240 and platform/isolation
+passed 124/124 in separate bounded runs after the combined run hit its fixed
+120-second harness timeout. No live database or main branch was changed.

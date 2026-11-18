@@ -1,4 +1,5 @@
 "use client";
+import {hasBillingAccess} from './billing-access-policy';
 import {canWriteFeature} from './entitlement-policy';
 import {ShopBillingPortal} from './billing-portal';
 import {MediaLibrary} from './media-library';
@@ -78,8 +79,8 @@ export function TenantWorkspace({selected,writesEnabled=false}:{selected:ShopCon
   <WorkspaceAppearance key={selected.tenant.id} tenantId={selected.tenant.id}/>
   {!busy&&context?.allBranches&&(context.billingAccess||context.permissions.includes('user:read')||context.permissions.includes('role:read'))&&<button type="button" onClick={()=>{posOpen.current=true;setTeam(true);}}>{t('Team access')}</button>}
   {team&&context?.allBranches&&<TeamWorkspace key={`team:${selected.tenant.id}`} context={context} writesEnabled={feature('team')} recoveryEnabled={writesEnabled} onClose={()=>{posOpen.current=false;setTeam(false);if(client.current)void load(client.current);}}/>}
-  {context?.billingAccess&&<button type="button" onClick={()=>{posOpen.current=true;setBilling(true);}}>{t('Shop subscription & billing')}</button>}
-  {billing&&context?.billingAccess&&<ShopBillingPortal key={`billing:${selected.tenant.id}`} tenantId={selected.tenant.id} writesEnabled={writesEnabled} onClose={()=>{posOpen.current=false;setBilling(false);if(client.current)void load(client.current);}}/>}
+  {context&&hasBillingAccess(context)&&<button type="button" onClick={()=>{posOpen.current=true;setBilling(true);}}>{t('Shop subscription & billing')}</button>}
+  {billing&&context&&hasBillingAccess(context)&&<ShopBillingPortal key={`billing:${selected.tenant.id}`} tenantId={selected.tenant.id} writesEnabled={writesEnabled} onClose={()=>{posOpen.current=false;setBilling(false);if(client.current)void load(client.current);}}/>}
   {!busy&&context&&branch&&context.permissions.includes('media:read')&&<button type="button" onClick={()=>{posOpen.current=true;setMedia(true);}}>{t('Media library')}</button>}
   {media&&context&&branch&&context.permissions.includes('media:read')&&<MediaLibrary key={`media:${selected.tenant.id}:${branch.id}`} context={context} branch={branch} writesEnabled={feature('communications')} recoveryEnabled={writesEnabled} onClose={()=>{posOpen.current=false;setMedia(false);if(client.current)void load(client.current);}}/>}
   {context?.allBranches&&context.permissions.includes('settings:read')&&<TenantCustomizationEditor key={selected.tenant.id} tenantId={selected.tenant.id} canUpdate={feature('customization')&&context.permissions.includes('settings:update')} busy={busy} onNotice={()=>{}} onError={setError}/>}

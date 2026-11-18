@@ -9,7 +9,7 @@ test('billing claims cannot carry approval, foreign-shop or financial authority 
  assert.equal(validBillingReview({revision:1,status:'RESOLVED',response:'Transfer checked separately'}),true);assert.equal(validBillingReview({revision:1,status:'VERIFIED',response:'Transfer checked separately'}),false);
 });
 test('portal validates scope and excludes draft states; BFF allows only explicit recovery routes',()=>{
- const data={targetTenantId:'a',subscription:null,invoices:[],requests:[]};assert.equal(validBillingPortal(data,'a'),true);assert.equal(validBillingPortal(data,'b'),false);assert.equal(validBillingPortal({...data,invoices:[{state:'DRAFT'}]},'a'),false);
+ const data={targetTenantId:'a',capabilities:['billing:read'],subscription:null,invoices:[],requests:[]};assert.equal(validBillingPortal(data,'a'),true);assert.equal(validBillingPortal(data,'b'),false);assert.equal(validBillingPortal({...data,invoices:[{state:'DRAFT'}]},'a'),false);
  const config={session:'true',workspace:'true',base:'https://backend.test/api/v1',writes:'false'};assert.ok(tenantWorkspaceTarget('a',['billing','portal'],'GET',config));assert.equal(tenantWorkspaceTarget('a',['billing','requests'],'POST',config),null);assert.ok(tenantWorkspaceTarget('a',['billing','requests'],'POST',{...config,writes:'true'}));assert.equal(tenantWorkspaceTarget('a',['billing','invoices','x','settle'],'POST',{...config,writes:'true'}),null);
  const platform={enabled:'true',writes:'true',base:'https://backend.test/platform'};assert.ok(platformTarget(['shops','a','billing-requests'],'GET',platform));assert.ok(platformTarget(['shops','a','billing-requests','r','review'],'POST',platform));assert.equal(platformTarget(['shops','a','billing-requests','r','review'],'DELETE',platform),null);
 });
