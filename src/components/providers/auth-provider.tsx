@@ -14,6 +14,7 @@ import { ApiClientError } from "@/lib/api/client";
 import { getCurrentUser, signIn } from "@/features/auth/auth-service";
 import type { CurrentUser } from "@/types/api";
 import { sessionBoundary } from "@/lib/api/session-boundary";
+import { logoutEndpoint } from "@/lib/auth/workspace-entry";
 
 const demoUser: CurrentUser = {
   id: "user-demo-manager",
@@ -126,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionBoundary.reset();
     setSessionVersion(value => value + 1);
     logoutRequest.current = logoutRequest.current.then(async () => {
-      const response = await fetch("/api/session/logout", { method: "POST", credentials: "same-origin" });
+      const response = await fetch(logoutEndpoint(), { method: "POST", credentials: "same-origin" });
       if (!response.ok) throw new Error("Sign out could not be completed. Reload and try again.");
       announceSessionChange();
     });

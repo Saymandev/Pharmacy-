@@ -10,6 +10,7 @@
     "test": "node --test tests/*.test.mjs",
     "test:session": "node --test tests/session-boundary.test.mjs && node tests/session-boundary.browser.cjs && node tests/branch-consistency.browser.cjs",
     "test:shops": "node --test tests/shop-contract.test.mjs && node tests/shop-access.browser.cjs",
+    "test:saas-runtime": "node --test tests/saas-runtime-entry.test.mjs tests/session-boundary.test.mjs && node tests/saas-runtime.browser.cjs",
     "test:tenant-registers": "node --test tests/tenant-register.test.mjs && node tests/run-tenant-register-browser.cjs",
     "test:tenant-pos": "node --test tests/tenant-pos.test.mjs && node tests/run-tenant-pos-browser.cjs && node tests/run-tenant-pos-credit-browser.cjs",
     "test:tenant-customers": "node --test tests/customer-workspace.test.mjs && node tests/run-tenant-customer-browser.cjs",

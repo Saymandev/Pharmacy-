@@ -7,6 +7,7 @@ import { Eye, EyeOff, LockKeyhole, Pill, ShieldCheck, Sparkles } from "lucide-re
 import { api, ApiClientError } from "@/lib/api/client";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useLanguage } from "@/lib/i18n/language-provider";
+import { workspaceEntry } from "@/lib/auth/workspace-entry";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function LoginPage() {
   const [setupChecking, setSetupChecking] = useState(true);
 
   useEffect(() => {
-    if (status === "authenticated") router.replace("/dashboard");
+    if (status === "authenticated") router.replace(workspaceEntry());
   }, [status, router]);
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await login(usernameOrEmail.trim(), password);
-      router.replace("/dashboard");
+      router.replace(workspaceEntry());
     } catch (caught) {
       setError(caught instanceof ApiClientError ? caught.message : t("We couldn’t sign you in. Please try again."));
       setSubmitting(false);
