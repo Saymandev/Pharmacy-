@@ -1667,6 +1667,7 @@ export const workspaceBangla: Record<string, string> = {
   "Register save response could not be verified.": "রেজিস্টার সেভের রেসপন্স ভেরিফাই করা যায়নি।",
   "Opening cash": "ওপেনিং ক্যাশ",
   "Expected cash": "এক্সপেক্টেড ক্যাশ",
+  "This register has an inherited book deficit. Enter the cash counted and explain the difference. Closing does not adjust account funds.": "এই রেজিস্টারে আগের বুক ব্যালেন্স নেগেটিভ আছে। হাতে থাকা ক্যাশ কাউন্ট দিয়ে ডিফারেন্সের কারণ লেখো। ক্লোজ করলে অ্যাকাউন্টের টাকা বদলাবে না।",
   "Counted cash": "গণনা করা ক্যাশ",
   "Opening note": "ওপেনিং নোট",
   "Closing note": "ক্লোজিং নোট",

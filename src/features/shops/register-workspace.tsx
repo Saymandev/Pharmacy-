@@ -51,6 +51,7 @@ function RegisterDialog({context,branch,writesEnabled,onClose}:{context:ShopCont
   {uncertain&&<div role="alert"><p>{t('Save result is unknown. Retry the same request before continuing.')}</p><button type="button" disabled={saving} onClick={()=>void save()}>{t('Retry same request')}</button></div>}
   {loading?<DataSkeleton variant="form" rows={3}>{t('Loading…')}</DataSkeleton>:<>
    <section><h3>{t(current?'Register open':'No open register')}</h3>{current&&<dl><div><dt>{t('Opening cash')}</dt><dd>{money(current.openingBalance)}</dd></div><div><dt>{t('Expected cash')}</dt><dd>{money(current.closingBalance)}</dd></div></dl>}
+    {current&&Number(current.closingBalance)<0&&<p role="status">{t('This register has an inherited book deficit. Enter the cash counted and explain the difference. Closing does not adjust account funds.')}</p>}
     <p>{t('Opening and closing count physical drawer cash. Account balances are not adjusted.')}</p>
     {!error&&!form&&<button type="button" disabled={locked||!(current?canClose:canOpen)} onClick={()=>{setForm(current?'close':'open');setCount('');setNote('');setConfirmed(false);setNotice('');}}>{t(current?'Close register':'Open register')}</button>}
    </section>

@@ -29,7 +29,8 @@ OWNER_INVITATION_BACKEND_API_URL=https://pharmecy.genify.live/api/v1/owner-invit
 
 This is future cutover configuration, not an instruction to enable flags on the
 current legacy server. The backend now has an explicit `start:saas` server, but
-restored legacy sales/cost/source/time/register reconciliation remains unfinished.
-The user deploys after that gate passes. Native/browser fixtures do not create a
+restored legacy sales/cost/source/time/register reconciliation now passes. Live
+cutover and owner activation still require the reviewed deployment steps.
+Native/browser fixtures do not create a
 live test shop/admin. Member registration and other remaining release adapters
 keep their separate gates disabled.

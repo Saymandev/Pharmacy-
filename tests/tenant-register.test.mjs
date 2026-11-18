@@ -4,7 +4,7 @@ import {tenantWorkspaceTarget} from '../src/lib/server/tenant-workspace-policy.t
 import {createWorkspaceClient} from '../src/features/shops/workspace-client.ts';
 const id='11111111-1111-4111-8111-111111111111',row={id,tenantId:'a',branchId:id,userId:'u',status:'open',openingBalance:'100',closingBalance:'95',actualBalance:null,difference:null,openingNote:null,closingNote:null,openedAt:'2026-11-11T01:00:00Z',closedAt:'2026-11-11T01:00:00Z'};
 test('register payloads require own actor, tenant and branch, bounded cents and closed count',()=>{
- assert.ok(validRegister(row,'a',id,'u'));for(const patch of [{tenantId:'b'},{userId:'other'},{branchId:'other'},{closingBalance:-1},{openingBalance:'NaN'},{status:'closed'},{openingBalance:.001}])assert.equal(validRegister({...row,...patch},'a',id,'u'),false);
+ assert.ok(validRegister(row,'a',id,'u'));for(const patch of [{tenantId:'b'},{userId:'other'},{branchId:'other'},{closingBalance:-100000000},{openingBalance:'NaN'},{status:'closed'},{openingBalance:.001}])assert.equal(validRegister({...row,...patch},'a',id,'u'),false);
  assert.ok(validRegister({...row,status:'closed',actualBalance:94,difference:-1},'a',id,'u'));
  assert.ok(validRegisterBody({branchId:id,openingBalance:0}));assert.equal(validRegisterBody({branchId:id,openingBalance:0,userId:'u'}),false);
  assert.equal(validRegisterBody({branchId:id,expectedBalance:95,actualBalance:94},true),false);assert.ok(validRegisterBody({branchId:id,expectedBalance:95,actualBalance:94,closingNote:'Short count'},true));
@@ -18,3 +18,5 @@ test('register retry retains exact body/key and disposed sessions cannot send',a
  const calls=[],client=createWorkspaceClient('a',new AbortController().signal,async(url,options)=>{calls.push({url,options});return Response.json({success:true,data:row});});const body={branchId:id,openingBalance:100},key='register-key-123456';
  await client.saveRegister(null,body,key);await client.saveRegister(null,body,key);assert.equal(calls[0].options.body,calls[1].options.body);assert.equal(calls[0].options.headers['Idempotency-Key'],key);assert.match(calls[0].url,/tenant-workspace\/a\/pharmacy\/cash-register\/open$/);client.dispose();await assert.rejects(()=>client.activeRegister(id));
 });
+
+test('inherited ledger deficits remain visible and require a nonnegative count and explanation',()=>{assert.ok(validRegister({...row,closingBalance:-20},'a',id,'u'));assert.ok(validRegisterBody({branchId:id,expectedBalance:-20,actualBalance:0,closingNote:'Inherited deficit reviewed'},true));assert.equal(validRegisterBody({branchId:id,expectedBalance:-20,actualBalance:-20},true),false);assert.equal(validRegisterBody({branchId:id,expectedBalance:-20,actualBalance:0},true),false);assert.equal(validRegisterBody({branchId:id,openingBalance:-20}),false);});
