@@ -1,5 +1,6 @@
 // Frontend-owned Finance, HR and Admin interface messages. Backend data stays unchanged.
 export const workspaceBangla: Record<string, string> = {
+  "Prepares owner access and settings after owner acceptance. Verified migrated shops keep their existing branches, stock and financial history.": "ওনার ইনভাইট অ্যাকসেপ্ট করার পর অ্যাকসেস ও সেটিংস রেডি হবে। ভেরিফায়েড মাইগ্রেটেড শপের আগের ব্রাঞ্চ, স্টক ও হিসাব অক্ষত থাকবে।",
   "Shop subscription & billing": "শপ সাবস্ক্রিপশন ও বিলিং",
   "Review your agreement, invoices and renewal requests.": "আপনার প্ল্যান, ইনভয়েস ও রিনিউয়াল রিকোয়েস্ট দেখুন।",
   "Loading billing…": "বিলিং লোড হচ্ছে…",
