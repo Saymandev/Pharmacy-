@@ -20,8 +20,11 @@ import {
   type Subscription,
 } from "./commercial-policy";
 import "./commercial.css";
+import {ShopAudiencePicker} from './shop-audience-picker';
 type Client = ReturnType<typeof createCommercialClient>;
 type Lock = (v: boolean) => void;
+const featureLabels:Record<string,string>={pos:'Point of sale',catalog:'Medicine catalog',inventory:'Inventory',purchases:'Purchases',customers:'Customers',finance:'Finance',reports:'Reports',hr:'HR & attendance',communications:'Communications',team:'Team access',customization:'Customization'};
+const limitLabels={branches:'Branches',seats:'User seats',storageBytes:'Storage (MB)'};
 const initial: PlanConfig = {
   name: "Pharmacy plan",
   currency: "BDT",
@@ -145,11 +148,13 @@ export function PlanCatalog({
   onLock,
   target,
   blocked = false,
+  canReadShops = false,
 }: {
   canManage: boolean;
   onLock: Lock;
   target?: string;
   blocked?: boolean;
+  canReadShops?: boolean;
 }) {
   const { t } = useLanguage(),
     c = useCommercial(onLock),
@@ -164,6 +169,12 @@ export function PlanCatalog({
     [draft, setDraft] = useState<PlanConfig>(initial),
     [reason, setReason] = useState(""),
     [notice, setNotice] = useState("");
+  const [editorOpen,setEditorOpen]=useState(false),[statusPlan,setStatusPlan]=useState<PlanVersion|null>(null),[statusReason,setStatusReason]=useState('');
+  const editorDialog=useRef<HTMLDialogElement>(null),statusDialog=useRef<HTMLDialogElement>(null);
+  useEffect(()=>{const node=editorDialog.current;if(editorOpen)node?.showModal();return()=>node?.close();},[editorOpen]);
+  useEffect(()=>{const node=statusDialog.current;if(statusPlan)node?.showModal();return()=>node?.close();},[statusPlan]);
+  const closeEditor=()=>{if(c.disabled)return;setEditorOpen(false);onLock(false);};
+  const closeStatus=()=>{if(c.disabled)return;setStatusPlan(null);onLock(false);};
   const { client: transportRef, setError: reportError } = c;
   useEffect(() => {
     let active = true;
@@ -197,6 +208,7 @@ export function PlanCatalog({
     };
   }, [page, reload, transportRef, reportError]);
   const saved = () => {
+    setEditorOpen(false);setStatusPlan(null);
     setNotice(
       "Plan changes saved. Existing subscribers keep their agreed version.",
     );
@@ -233,10 +245,11 @@ export function PlanCatalog({
     setCloneId(edit ? undefined : p.id);
     setReason("");
     setNotice("");
+    setEditorOpen(true);onLock(true);
   }
   return (
     <section className="commercial-panel" aria-label={t("Plans and versions")}>
-      <fieldset disabled={blocked && !c.disabled}>
+      <fieldset disabled={blocked && !c.disabled && !editorOpen && !statusPlan}>
         <header>
           <div>
             <h2>{t("Plans and versions")}</h2>
@@ -246,6 +259,7 @@ export function PlanCatalog({
               )}
             </p>
           </div>
+          {canManage&&<button type="button" disabled={c.disabled} onClick={()=>{setEditing(null);setCloneId(undefined);setDraft(structuredClone(initial));setPlanKey('pharmacy-standard');setReason('');setEditorOpen(true);onLock(true);}}>{t('Create plan draft')}</button>}
           <button
             disabled={c.disabled || loading}
             onClick={() => setReload((v) => v + 1)}
@@ -267,10 +281,10 @@ export function PlanCatalog({
                       {p.config.name} · v{p.version}
                     </strong>
                     <small>
-                      {p.planKey} · {p.status} · {p.config.audience.kind}
+                      {p.planKey} · {t(p.status)} · {t(p.config.audience.kind)}
                     </small>
                     <p>
-                      BDT {p.config.price} / {p.config.term.kind}
+                              BDT {p.config.price} / {t(p.config.term.kind)}
                     </p>
                     <details>
                       <summary>{t("Preview agreed terms")}</summary>
@@ -281,20 +295,20 @@ export function PlanCatalog({
                       <p>
                         {commercialFeatures
                           .filter((k) => p.config.features[k])
-                          .map((k) => t(k))
+                          .map((k) => t(featureLabels[k]))
                           .join(" · ") || t("No modules enabled")}
                       </p>
                       <ul>
                         {Object.entries(p.config.limits).map(([k, v]) => (
                           <li key={k}>
-                            {t(k)}: {v === null ? t("Unlimited") : v}
+                            {t(limitLabels[k as keyof typeof limitLabels])}: {v === null ? t("Unlimited") : k==='storageBytes'?Number((Number(v)/1048576).toFixed(2)):v}
                           </li>
                         ))}
                       </ul>
                       {p.config.audience.kind === "DEDICATED" && (
                         <p>
                           {t("Eligible shops")}:{" "}
-                          {p.config.audience.tenantIds.join(", ")}
+                          {p.config.audience.tenantIds.length}
                         </p>
                       )}
                     </details>
@@ -314,25 +328,8 @@ export function PlanCatalog({
                       )}
                       {p.status !== "RETIRED" && (
                         <button
-                          disabled={
-                            c.busy || (!c.uncertain && reason.trim().length < 5)
-                          }
-                          onClick={() =>
-                            void c.write(
-                              `plans/${p.id}/status`,
-                              "POST",
-                              {
-                                revision: p.revision,
-                                status:
-                                  p.status === "DRAFT"
-                                    ? "PUBLISHED"
-                                    : "RETIRED",
-                                reason,
-                              },
-                              (v) => validPlan(v as PlanVersion),
-                              saved,
-                            )
-                          }
+                          disabled={c.disabled}
+                          onClick={() => {setStatusPlan(p);setStatusReason('');onLock(true);}}
                         >
                           {t(
                             c.uncertain
@@ -366,8 +363,10 @@ export function PlanCatalog({
             </nav>
           </>
         )}
-        {canManage && (
+        {canManage && editorOpen && (<dialog ref={editorDialog} className="platform-confirm commercial-editor-dialog" aria-label={t(editing?'Edit draft':'Create plan draft')} onCancel={e=>{e.preventDefault();closeEditor();}}>
           <form onSubmit={save} className="commercial-editor">
+            <header><span>{t('Plan configuration')}</span><button type="button" disabled={c.disabled} onClick={closeEditor}>{t('Close')}</button></header>
+            {c.error&&<p role="alert">{t(c.error)}</p>}
             <h3>
               {t(
                 editing
@@ -415,6 +414,7 @@ export function PlanCatalog({
                 <label>
                   {t("Audience")}
                   <Select
+                    aria-label={t('Audience')}
                     value={draft.audience.kind}
                     onChange={(e) =>
                       setDraft((v) => ({
@@ -429,39 +429,14 @@ export function PlanCatalog({
                       }))
                     }
                   >
-                    <option>PUBLIC</option>
-                    <option>DEDICATED</option>
+                    <option value="PUBLIC">{t('PUBLIC')}</option>
+                    <option value="DEDICATED">{t('DEDICATED')}</option>
                   </Select>
                 </label>
-                {draft.audience.kind === "DEDICATED" && (
-                  <label>
-                    {t("Dedicated shop IDs")}
-                    <input
-                      required
-                      value={draft.audience.tenantIds.join(",")}
-                      onChange={(e) =>
-                        setDraft((v) => ({
-                          ...v,
-                          audience: {
-                            kind: "DEDICATED",
-                            tenantIds: e.target.value
-                              .split(",")
-                              .map((s) => s.trim())
-                              .filter(Boolean),
-                          },
-                        }))
-                      }
-                    />
-                    <small>
-                      {t(
-                        "Comma-separated shop IDs. Other shops cannot use this agreement.",
-                      )}
-                    </small>
-                  </label>
-                )}
                 <label>
                   {t("Term")}
                   <Select
+                    aria-label={t('Term')}
                     value={draft.term.kind}
                     onChange={(e) =>
                       setDraft((v) => ({
@@ -475,7 +450,7 @@ export function PlanCatalog({
                   >
                     {["MONTHLY", "ANNUAL", "FIXED_DAYS", "LIFETIME"].map(
                       (k) => (
-                        <option key={k}>{k}</option>
+                        <option key={k} value={k}>{t(k)}</option>
                       ),
                     )}
                   </Select>
@@ -529,6 +504,7 @@ export function PlanCatalog({
                   />
                 </label>
               </div>
+              {draft.audience.kind==='DEDICATED'&&<ShopAudiencePicker allowed={canReadShops} value={draft.audience.tenantIds} onChange={ids=>setDraft(v=>({...v,audience:{kind:'DEDICATED',tenantIds:ids}}))}/>}
               <h4>{t("Enabled modules")}</h4>
               <div className="commercial-features">
                 {commercialFeatures.map((k) => (
@@ -543,7 +519,7 @@ export function PlanCatalog({
                         }))
                       }
                     />
-                    {t(k)}
+                    {t(featureLabels[k])}
                   </label>
                 ))}
               </div>
@@ -555,22 +531,24 @@ export function PlanCatalog({
               </p>
               <div className="commercial-grid">
                 {(["branches", "seats", "storageBytes"] as const).map((k) => (
-                  <label key={k}>
-                    {t(k)}
+                  <div key={k} className="commercial-limit"><label>
+                    {t(limitLabels[k])}
                     <input
                       type="number"
                       min={0}
                       disabled={draft.limits[k] === null}
-                      value={draft.limits[k] ?? ""}
+                      step={k==='storageBytes'?'0.01':'1'}
+                      value={draft.limits[k]===null?'':k==='storageBytes'?Number((draft.limits[k]!/1048576).toFixed(2)):draft.limits[k]}
                       onChange={(e) =>
                         setDraft((v) => ({
                           ...v,
-                          limits: { ...v.limits, [k]: Number(e.target.value) },
+                          limits: { ...v.limits, [k]: k==='storageBytes'?Math.round(Number(e.target.value)*1048576):Number(e.target.value) },
                         }))
                       }
                     />
-                    <span>
+                    </label><label className="commercial-unlimited">
                       <input
+                        aria-label={`${t('Unlimited')}: ${t(limitLabels[k])}`}
                         type="checkbox"
                         checked={draft.limits[k] === null}
                         onChange={(e) =>
@@ -584,8 +562,8 @@ export function PlanCatalog({
                         }
                       />
                       {t("Unlimited")}
-                    </span>
-                  </label>
+                    </label>
+                  </div>
                 ))}
               </div>
             </fieldset>
@@ -613,8 +591,9 @@ export function PlanCatalog({
                     : "Save draft",
               )}
             </button>
-          </form>
+          </form></dialog>
         )}
+        {statusPlan&&<dialog ref={statusDialog} className="platform-confirm" aria-label={t(statusPlan.status==='DRAFT'?'Publish version':'Retire version')} onCancel={e=>{e.preventDefault();closeStatus();}}><form onSubmit={e=>{e.preventDefault();void c.write(`plans/${statusPlan.id}/status`,'POST',{revision:statusPlan.revision,status:statusPlan.status==='DRAFT'?'PUBLISHED':'RETIRED',reason:statusReason},v=>validPlan(v as PlanVersion),saved);}}><h2>{t(statusPlan.status==='DRAFT'?'Publish version':'Retire version')}</h2><p>{statusPlan.config.name} · v{statusPlan.version}</p><p>{t('Existing subscribers keep their agreed version.')}</p>{c.error&&<p role="alert">{t(c.error)}</p>}<fieldset disabled={c.disabled}><label>{t('Commercial change reason')}<textarea autoFocus required minLength={5} maxLength={1000} value={statusReason} onChange={e=>setStatusReason(e.target.value)}/></label></fieldset><footer><button type="button" disabled={c.disabled} onClick={closeStatus}>{t('Cancel')}</button><button type="submit" disabled={c.busy||statusReason.trim().length<5}>{t(c.uncertain?'Retry same request':'Confirm')}</button></footer></form></dialog>}
       </fieldset>
     </section>
   );
@@ -775,11 +754,11 @@ export function ShopSubscription({
             {subscription ? (
               <>
                 <strong>
-                  {subscription.snapshot.name} · {subscription.state}
+                  {subscription.snapshot.name} · {t(subscription.state)}
                 </strong>
                 <p>
                   BDT {subscription.snapshot.price} /{" "}
-                  {subscription.snapshot.term.kind}
+                  {t(subscription.snapshot.term.kind)}
                 </p>
                 <dl>
                   <dt>{t("Period start")}</dt>

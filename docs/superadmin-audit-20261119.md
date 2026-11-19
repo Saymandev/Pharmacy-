@@ -1,5 +1,9 @@
 # Super Admin product and UI audit — 19 November 2026
 
+Follow-up: the first shell/control/overview and plan workflow delivery is recorded
+in [console verification](platform-console-verification.md). Findings below
+describe the audited baseline; the full requirement coverage is still open.
+
 Status: audit completed; the product gaps below are OPEN. This document does not
 mark SaaS-018–029 complete or claim a percentage of product completion.
 
