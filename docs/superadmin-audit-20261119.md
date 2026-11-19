@@ -3,6 +3,8 @@
 Follow-up: the first shell/control/overview and plan workflow delivery is recorded
 in [console verification](platform-console-verification.md). Findings below
 describe the audited baseline; the full requirement coverage is still open.
+The global subscription directory follow-up is recorded in
+[subscription directory verification](subscription-directory-verification.md).
 
 Status: audit completed; the product gaps below are OPEN. This document does not
 mark SaaS-018–029 complete or claim a percentage of product completion.

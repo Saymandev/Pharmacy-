@@ -19,6 +19,7 @@
     "test:tenant-reports": "node --test tests/tenant-reports.test.mjs && node tests/run-tenant-reports-browser.cjs",
     "test:platform-admin": "node --test tests/platform-admin.test.mjs && node tests/platform-admin.browser.cjs",
     "test:platform-console": "node tests/run-platform-console-browser.cjs",
+    "test:subscription-directory": "node --test tests/subscription-directory.test.mjs && node tests/run-subscription-directory-browser.cjs",
     "test:commercial": "node --test tests/commercial-policy.test.mjs && node tests/run-commercial-browser.cjs",
     "test:activation": "node --test tests/activation-policy.test.mjs && node tests/run-activation-browser.cjs",
     "test:billing": "node --test tests/billing-policy.test.mjs && node tests/run-billing-browser.cjs",
